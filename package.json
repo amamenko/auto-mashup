@@ -1,0 +1,22 @@
+{
+  "name": "auto-mashup",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "ffmpeg": "^0.0.4",
+    "fluent-ffmpeg": "^2.1.2",
+    "node-wget": "^0.4.3",
+    "python-shell": "^3.0.0",
+    "youtube-mp3-downloader": "^0.7.7",
+    "ytdl-core": "^4.9.0"
+  }
+}
