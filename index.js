@@ -3,15 +3,110 @@ const app = express();
 const fs = require("fs");
 const ytdl = require("ytdl-core");
 const ffmpeg = require("fluent-ffmpeg");
+const { PythonShell } = require("python-shell");
+const { getChart } = require("billboard-top-100");
+const SpotifyWebApi = require("spotify-web-api-node");
+require("dotenv").config();
 
 const port = process.env.PORT || 4000;
 
-let { PythonShell } = require("python-shell");
-const packageName = "spleeter";
-
-const options = {
-  args: [packageName],
+var spotifyCredentials = {
+  clientId: process.env.SPOTIFY_CLIENT_ID,
+  clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
 };
+
+const spotifyApi = new SpotifyWebApi(spotifyCredentials);
+
+const getTrack = () => {
+  getChart((err, chart) => {
+    if (err) {
+      console.log(err);
+    } else {
+      const topSong = chart.songs[0];
+
+      spotifyApi
+        .searchTracks(`track:${topSong.title} artist:${topSong.artist}`)
+        .then(
+          (data) => {
+            const firstResultID = data.body.tracks.items[0].id;
+            return firstResultID;
+          },
+          (err) => {
+            console.log("Something went wrong!", err);
+          }
+        )
+        .then((id) => {
+          spotifyApi.getAudioAnalysisForTrack(id).then(
+            (data) => {
+              const allKeys = [
+                "C",
+                "C#",
+                "D",
+                "D#",
+                "E",
+                "F",
+                "F#",
+                "G",
+                "G#",
+                "A",
+                "A#",
+                "B",
+              ];
+              const trackDetails = data.body.track;
+
+              const tempo = Math.round(trackDetails.tempo);
+              const key = allKeys[trackDetails.key];
+              const mode = trackDetails.mode === 1 ? "major" : "minor";
+              const duration = trackDetails.duration;
+              const fadeOut = trackDetails.start_of_fade_out;
+              const vocalStart = data.body.sections[1].start;
+              const numberOfBars = data.body.bars.length;
+              const startOfFinal4Bars = data.body.bars[numberOfBars - 4].start;
+
+              const trackDataJSON = {
+                tempo,
+                key,
+                mode,
+                duration,
+                fadeOut,
+                vocalStart,
+                startOfFinal4Bars,
+              };
+
+              console.log(trackDataJSON);
+            },
+            (err) => {
+              done(err);
+            }
+          );
+        });
+    }
+  });
+};
+
+if (spotifyApi.getAccessToken()) {
+  getTrack();
+} else {
+  // Retrieve an access token
+  spotifyApi
+    .clientCredentialsGrant()
+    .then(
+      (data) => {
+        console.log("The access token expires in " + data.body["expires_in"]);
+        console.log("The access token is " + data.body["access_token"]);
+
+        // Save the access token so that it's used in future calls
+        spotifyApi.setAccessToken(data.body["access_token"]);
+      },
+      (err) => {
+        console.log(
+          "Something went wrong when retrieving an access token",
+          err.message
+        );
+      }
+    )
+    .then(() => getTrack());
+}
 
 const getYouTubeAudio = async (videoID) => {
   const basicInfo = await ytdl.getBasicInfo(videoID);
@@ -42,10 +137,12 @@ const getYouTubeAudio = async (videoID) => {
         `\nDone in ${(Date.now() - start) / 1000}s\nSaved to ${filePath}.`
       );
 
-      // Make sure Spleeter is installed
+      // Make sure Spleeter, madmom is installed
       PythonShell.run(
-        "./python_scripts/install_spleeter.py",
-        options,
+        "./python_scripts/install_package.py",
+        {
+          args: ["spleeter"],
+        },
         (err) => {
           if (err) {
             throw err;

@@ -11,11 +11,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "billboard-top-100": "^2.5.9",
+    "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "ffmpeg": "^0.0.4",
     "fluent-ffmpeg": "^2.1.2",
     "node-wget": "^0.4.3",
     "python-shell": "^3.0.0",
+    "spotify-web-api-node": "^5.0.2",
     "youtube-mp3-downloader": "^0.7.7",
     "ytdl-core": "^4.9.0"
   }
