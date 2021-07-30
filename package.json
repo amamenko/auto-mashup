@@ -11,11 +11,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.21.1",
     "billboard-top-100": "^2.5.9",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "ffmpeg": "^0.0.4",
     "fluent-ffmpeg": "^2.1.2",
+    "genius-lyrics-api": "^3.0.6",
     "node-wget": "^0.4.3",
     "python-shell": "^3.0.0",
     "spotify-web-api-node": "^5.0.2",

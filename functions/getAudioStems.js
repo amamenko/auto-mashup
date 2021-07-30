@@ -32,7 +32,7 @@ const getAudioStems = async (videoID) => {
         `\nDone in ${(Date.now() - start) / 1000}s\nSaved to ${filePath}.`
       );
 
-      //   Make sure Spleeter is installed
+      // Make sure Spleeter is installed
       PythonShell.run(
         "./python_scripts/install_package.py",
         { args: ["spleeter"] },
