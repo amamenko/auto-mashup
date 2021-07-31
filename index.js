@@ -4,6 +4,7 @@ const SpotifyWebApi = require("spotify-web-api-node");
 const getTrack = require("./functions/getTrack");
 const { getLyrics } = require("genius-lyrics-api");
 const axios = require("axios");
+const stringSimilarity = require("string-similarity");
 require("dotenv").config();
 
 const port = process.env.PORT || 4000;
@@ -18,8 +19,6 @@ const spotifyApi = new SpotifyWebApi(spotifyCredentials);
 const getTrackTimes = async () => {
   const title = "";
   const artist = "";
-  // Match non-letter, non-number, non-white-space characters
-  const replaceRegex = /[^a-zA-Z\d\s]/gi;
 
   const options = {
     apiKey: process.env.GENIUS_CLIENT_ACCESS_TOKEN,
@@ -41,18 +40,12 @@ const getTrackTimes = async () => {
           geniusLyricsArr.push(sectionObj);
           sectionObj = {};
         }
-        sectionName = lyricsSplit[i]
-          .toLowerCase()
-          .replace(replaceRegex, "")
-          .trim();
+        sectionName = lyricsSplit[i];
         sectionLine = -1;
         sectionObj["sectionName"] = sectionName;
       } else {
         sectionLine++;
-        sectionObj[`line_` + sectionLine] = lyricsSplit[i]
-          .toLowerCase()
-          .replace(replaceRegex, "")
-          .trim();
+        sectionObj[`line_` + sectionLine] = lyricsSplit[i];
 
         if (i === lyricsSplit.length - 1) {
           geniusLyricsArr.push(sectionObj);
@@ -68,21 +61,122 @@ const getTrackTimes = async () => {
       .then((res) => {
         const textylLyricsArr = res.data;
 
-        const linesPerSection = [
-          0,
-          ...geniusLyricsArr.map((item) => Object.keys(item).length - 1),
-        ];
+        const newGeniusArr = [];
 
-        let currentLine = 0;
-
-        for (let i = 0; i < linesPerSection.length; i++) {
-          currentLine += linesPerSection[i];
-
-          if (textylLyricsArr[currentLine]) {
-            geniusLyricsArr[i]["startTime"] =
-              textylLyricsArr[currentLine].seconds;
+        for (let i = 0; i < geniusLyricsArr.length; i++) {
+          let sectionName = "";
+          for (const [key, value] of Object.entries(geniusLyricsArr[i])) {
+            if (key === "sectionName") {
+              sectionName = value;
+            } else {
+              if (key.includes("line")) {
+                newGeniusArr.push({
+                  sectionName: sectionName,
+                  lineNumber: Number(key.split("_")[1]),
+                  lyrics: value,
+                });
+              }
+            }
           }
         }
+
+        const matchArr = [];
+
+        let highestIndex = -1;
+
+        const sectionArr = newGeniusArr.map((item) => item.sectionName);
+        const onlyLyricsArr = newGeniusArr.map((item) =>
+          item.lyrics.toLowerCase().replace(/[^\w\s]/gi, "")
+        );
+
+        for (let i = 0; i < textylLyricsArr.length; i++) {
+          if (matchArr.length === 0) {
+            const match = stringSimilarity.findBestMatch(
+              textylLyricsArr[i].lyrics.toLowerCase().replace(/[^\w\s]/gi, ""),
+              onlyLyricsArr
+            ).bestMatch;
+
+            const matchIndex = onlyLyricsArr.findIndex(
+              (item, index) => index >= highestIndex && item === match.target
+            );
+
+            if (matchIndex >= 0) {
+              highestIndex = matchIndex;
+            }
+
+            const firstMatch = newGeniusArr[matchIndex];
+
+            matchArr.push({
+              sectionName: firstMatch.sectionName,
+              seconds: textylLyricsArr[i].seconds,
+              lyrics: match.target,
+            });
+          } else {
+            let allSections = [
+              ...new Set(newGeniusArr.map((item) => item.sectionName)),
+            ];
+
+            for (let j = 0; j < geniusLyricsArr.length; j++) {
+              const specificSectionName = geniusLyricsArr[j].sectionName;
+
+              const nextUp =
+                allSections[
+                  allSections.findIndex(
+                    (item) => item === matchArr[matchArr.length - 1].sectionName
+                  ) + 1
+                ];
+
+              if (specificSectionName === nextUp) {
+                if (
+                  !matchArr
+                    .map((item) => item.sectionName)
+                    .includes(specificSectionName)
+                ) {
+                  const onlyApplicableArr = newGeniusArr.filter(
+                    (item) => item.sectionName === specificSectionName
+                  );
+                  const onlyApplicableLyricsArr = onlyApplicableArr.map(
+                    (item) => item.lyrics.replace(/[^\w\s]/gi, "")
+                  );
+
+                  const lyricMatch = stringSimilarity.findBestMatch(
+                    textylLyricsArr[i].lyrics
+                      .toLowerCase()
+                      .replace(/[^\w\s]/gi, ""),
+                    onlyApplicableLyricsArr
+                  ).bestMatch;
+
+                  const lyricMatchIndex = onlyApplicableLyricsArr.findIndex(
+                    (item) => item === lyricMatch.target
+                  );
+
+                  if (onlyApplicableArr[lyricMatchIndex].lineNumber === 0) {
+                    if (lyricMatch.rating > 0.7) {
+                      if (
+                        !matchArr
+                          .map((item) => item.sectionName)
+                          .includes(specificSectionName) &&
+                        matchArr.map(
+                          (item) => item.sectionName.split(/[[\s+:()]+/gi)[1]
+                        )[matchArr.length - 1] !==
+                          specificSectionName.split(/[[\s+:()]+/gi)[1]
+                      ) {
+                        matchArr.push({
+                          sectionName: nextUp,
+                          seconds: textylLyricsArr[i].seconds,
+                          lyrics: lyricMatch.target,
+                        });
+                        break;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        console.log(matchArr);
       });
   });
 };

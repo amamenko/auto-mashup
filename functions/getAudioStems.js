@@ -18,7 +18,7 @@ const getAudioStems = async (videoID) => {
     quality: "highestaudio",
   });
 
-  const filePath = "YouTubeAudio.mp3";
+  const filePath = "YouTubeAudio.wav";
 
   let start = Date.now();
   ffmpeg(stream)
