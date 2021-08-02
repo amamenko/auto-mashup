@@ -40,7 +40,35 @@ const getTrackTimes = async () => {
           geniusLyricsArr.push(sectionObj);
           sectionObj = {};
         }
-        sectionName = lyricsSplit[i];
+
+        const allFullSectionNames = geniusLyricsArr.map(
+          (item) => item.sectionName
+        );
+        const allSectionNames = geniusLyricsArr.map(
+          (item) => item.sectionName.split(" ")[0]
+        );
+
+        sectionName = lyricsSplit[i]
+          .split(/\[([^\]]+)]/gi)[1]
+          .split(/[ [:]+/gi)[0]
+          .toLowerCase();
+
+        if (allSectionNames.includes(sectionName)) {
+          const newNumberArr = [
+            ...new Set(
+              allFullSectionNames.filter(
+                (item) => item.split(" ")[0] === sectionName
+              )
+            ),
+          ];
+
+          const newNumber = newNumberArr.length + 1;
+
+          sectionName = sectionName + " " + newNumber;
+        } else {
+          sectionName = sectionName + " 1";
+        }
+
         sectionLine = -1;
         sectionObj["sectionName"] = sectionName;
       } else {
@@ -68,14 +96,13 @@ const getTrackTimes = async () => {
           for (const [key, value] of Object.entries(geniusLyricsArr[i])) {
             if (key === "sectionName") {
               sectionName = value;
-            } else {
-              if (key.includes("line")) {
-                newGeniusArr.push({
-                  sectionName: sectionName,
-                  lineNumber: Number(key.split("_")[1]),
-                  lyrics: value,
-                });
-              }
+            }
+            if (key.includes("line")) {
+              newGeniusArr.push({
+                sectionName: sectionName,
+                lineNumber: Number(key.split("_")[1]),
+                lyrics: value,
+              });
             }
           }
         }
@@ -84,7 +111,6 @@ const getTrackTimes = async () => {
 
         let highestIndex = -1;
 
-        const sectionArr = newGeniusArr.map((item) => item.sectionName);
         const onlyLyricsArr = newGeniusArr.map((item) =>
           item.lyrics.toLowerCase().replace(/[^\w\s]/gi, "")
         );
@@ -112,9 +138,17 @@ const getTrackTimes = async () => {
               lyrics: match.target,
             });
           } else {
-            let allSections = [
-              ...new Set(newGeniusArr.map((item) => item.sectionName)),
-            ];
+            let allSections = newGeniusArr
+              .map((item) => item.sectionName)
+              .filter((item, index, arr) => {
+                if (item === arr[index - 1]) {
+                  return false;
+                } else {
+                  return true;
+                }
+              });
+
+            let allowedIndex = 0;
 
             for (let j = 0; j < geniusLyricsArr.length; j++) {
               const specificSectionName = geniusLyricsArr[j].sectionName;
@@ -126,17 +160,20 @@ const getTrackTimes = async () => {
                   ) + 1
                 ];
 
+              const alreadyMatchedSections = matchArr.map(
+                (item) => item.sectionName
+              );
+
               if (specificSectionName === nextUp) {
                 if (
-                  !matchArr
-                    .map((item) => item.sectionName)
-                    .includes(specificSectionName)
+                  alreadyMatchedSections[alreadyMatchedSections.length - 1] !==
+                  specificSectionName
                 ) {
                   const onlyApplicableArr = newGeniusArr.filter(
                     (item) => item.sectionName === specificSectionName
                   );
                   const onlyApplicableLyricsArr = onlyApplicableArr.map(
-                    (item) => item.lyrics.replace(/[^\w\s]/gi, "")
+                    (item) => item.lyrics.toLowerCase().replace(/[^\w\s]/gi, "")
                   );
 
                   const lyricMatch = stringSimilarity.findBestMatch(
@@ -147,36 +184,44 @@ const getTrackTimes = async () => {
                   ).bestMatch;
 
                   const lyricMatchIndex = onlyApplicableLyricsArr.findIndex(
-                    (item) => item === lyricMatch.target
+                    (item) => item.includes(lyricMatch.target)
                   );
 
-                  if (onlyApplicableArr[lyricMatchIndex].lineNumber === 0) {
-                    if (lyricMatch.rating > 0.7) {
-                      if (
-                        !matchArr
-                          .map((item) => item.sectionName)
-                          .includes(specificSectionName) &&
-                        matchArr.map(
-                          (item) => item.sectionName.split(/[[\s+:()]+/gi)[1]
-                        )[matchArr.length - 1] !==
-                          specificSectionName.split(/[[\s+:()]+/gi)[1]
-                      ) {
-                        matchArr.push({
-                          sectionName: nextUp,
-                          seconds: textylLyricsArr[i].seconds,
-                          lyrics: lyricMatch.target,
-                        });
-                        break;
-                      }
+                  const matchJSON = {
+                    sectionName: nextUp,
+                    seconds: textylLyricsArr[i].seconds,
+                    lyrics: lyricMatch.target,
+                  };
+
+                  if (
+                    onlyApplicableArr[lyricMatchIndex].lineNumber ===
+                    allowedIndex
+                  ) {
+                    if (lyricMatch.rating >= 0.45) {
+                      console.log({
+                        nextUp,
+                        allowedIndex,
+                        rating: lyricMatch.rating,
+                      });
+                      matchArr.push(matchJSON);
+                      break;
                     }
                   }
+                }
+              }
+
+              if (j === geniusLyricsArr.length - 1) {
+                if (allowedIndex < 6) {
+                  j = -1;
+                  allowedIndex++;
+                  continue;
                 }
               }
             }
           }
         }
 
-        console.log(matchArr);
+        // console.log(matchArr);
       });
   });
 };
