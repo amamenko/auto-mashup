@@ -87,7 +87,7 @@ const getTrackTimes = async () => {
           encodeURI(artist.toLowerCase() + " " + title.toLowerCase())
       )
       .then((res) => {
-        const textylLyricsArr = res.data;
+        const originalTextylLyricsArr = res.data;
 
         const newGeniusArr = [];
 
@@ -115,10 +115,22 @@ const getTrackTimes = async () => {
           item.lyrics.toLowerCase().replace(/[^\w\s]/gi, "")
         );
 
+        const textylLyricsArr = originalTextylLyricsArr
+          .map((item) => {
+            return {
+              seconds: item.seconds,
+              lyrics: item.lyrics
+                .toLowerCase()
+                .replace(/[^\w\s]/gi, "")
+                .replace("\r", ""),
+            };
+          })
+          .filter((item) => item.lyrics);
+
         for (let i = 0; i < textylLyricsArr.length; i++) {
           if (matchArr.length === 0) {
             const match = stringSimilarity.findBestMatch(
-              textylLyricsArr[i].lyrics.toLowerCase().replace(/[^\w\s]/gi, ""),
+              textylLyricsArr[i].lyrics,
               onlyLyricsArr
             ).bestMatch;
 
@@ -153,12 +165,13 @@ const getTrackTimes = async () => {
             for (let j = 0; j < geniusLyricsArr.length; j++) {
               const specificSectionName = geniusLyricsArr[j].sectionName;
 
-              const nextUp =
-                allSections[
-                  allSections.findIndex(
-                    (item) => item === matchArr[matchArr.length - 1].sectionName
-                  ) + 1
-                ];
+              const finalIndex = allSections.findIndex(
+                (item) => item === matchArr[matchArr.length - 1].sectionName
+              );
+
+              const lastSection = allSections[finalIndex];
+
+              const nextUp = allSections[finalIndex + 1];
 
               const alreadyMatchedSections = matchArr.map(
                 (item) => item.sectionName
@@ -169,6 +182,12 @@ const getTrackTimes = async () => {
                   alreadyMatchedSections[alreadyMatchedSections.length - 1] !==
                   specificSectionName
                 ) {
+                  const lastApplicableArr = newGeniusArr.filter(
+                    (item) => item.sectionName === lastSection
+                  );
+                  const lastApplicableLyricsArr = lastApplicableArr.map(
+                    (item) => item.lyrics.toLowerCase().replace(/[^\w\s]/gi, "")
+                  );
                   const onlyApplicableArr = newGeniusArr.filter(
                     (item) => item.sectionName === specificSectionName
                   );
@@ -176,42 +195,55 @@ const getTrackTimes = async () => {
                     (item) => item.lyrics.toLowerCase().replace(/[^\w\s]/gi, "")
                   );
 
-                  const lyricMatch = stringSimilarity.findBestMatch(
-                    textylLyricsArr[i].lyrics
-                      .toLowerCase()
-                      .replace(/[^\w\s]/gi, ""),
-                    onlyApplicableLyricsArr
-                  ).bestMatch;
+                  const findMatch = (lyricArr) => {
+                    if (
+                      lyricArr &&
+                      lyricArr.length > 0 &&
+                      Array.isArray(lyricArr)
+                    ) {
+                      return stringSimilarity.findBestMatch(
+                        textylLyricsArr[i].lyrics,
+                        lyricArr
+                      );
+                    } else {
+                      return null;
+                    }
+                  };
+
+                  const oldLyricMatch = findMatch(lastApplicableLyricsArr);
+
+                  const lyricMatch = findMatch(onlyApplicableLyricsArr);
 
                   const lyricMatchIndex = onlyApplicableLyricsArr.findIndex(
-                    (item) => item.includes(lyricMatch.target)
+                    (item) => item.includes(lyricMatch.bestMatch.target)
                   );
 
                   const matchJSON = {
                     sectionName: nextUp,
                     seconds: textylLyricsArr[i].seconds,
-                    lyrics: lyricMatch.target,
+                    lyrics: lyricMatch.bestMatch.target,
                   };
 
                   if (
                     onlyApplicableArr[lyricMatchIndex].lineNumber ===
                     allowedIndex
                   ) {
-                    if (lyricMatch.rating >= 0.45) {
-                      console.log({
-                        nextUp,
-                        allowedIndex,
-                        rating: lyricMatch.rating,
-                      });
-                      matchArr.push(matchJSON);
-                      break;
+                    if (
+                      !oldLyricMatch.bestMatch ||
+                      oldLyricMatch.bestMatch.rating <=
+                        lyricMatch.bestMatch.rating
+                    ) {
+                      if (lyricMatch.bestMatch.rating >= 0.45) {
+                        matchArr.push(matchJSON);
+                        break;
+                      }
                     }
                   }
                 }
               }
 
               if (j === geniusLyricsArr.length - 1) {
-                if (allowedIndex < 6) {
+                if (allowedIndex < 3) {
                   j = -1;
                   allowedIndex++;
                   continue;
