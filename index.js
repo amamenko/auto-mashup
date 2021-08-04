@@ -127,11 +127,13 @@ const getTrackTimes = async () => {
           })
           .filter((item) => item.lyrics);
 
+        let skippedSection = [];
+
         for (let i = 0; i < textylLyricsArr.length; i++) {
           if (matchArr.length === 0) {
             const match = stringSimilarity.findBestMatch(
               textylLyricsArr[i].lyrics,
-              onlyLyricsArr
+              onlyLyricsArr.slice(0, 5)
             ).bestMatch;
 
             const matchIndex = onlyLyricsArr.findIndex(
@@ -169,9 +171,15 @@ const getTrackTimes = async () => {
                 (item) => item === matchArr[matchArr.length - 1].sectionName
               );
 
-              const lastSection = allSections[finalIndex];
+              let lastSection = allSections[finalIndex];
 
-              const nextUp = allSections[finalIndex + 1];
+              let nextUp = allSections[finalIndex + 1];
+
+              if (skippedSection.length >= 3) {
+                lastSection = allSections[finalIndex + 1];
+                nextUp = allSections[finalIndex + 2];
+                i = i - 2;
+              }
 
               const alreadyMatchedSections = matchArr.map(
                 (item) => item.sectionName
@@ -180,7 +188,7 @@ const getTrackTimes = async () => {
               if (specificSectionName === nextUp) {
                 if (
                   alreadyMatchedSections[alreadyMatchedSections.length - 1] !==
-                  specificSectionName
+                  nextUp
                 ) {
                   const lastApplicableArr = newGeniusArr.filter(
                     (item) => item.sectionName === lastSection
@@ -189,7 +197,7 @@ const getTrackTimes = async () => {
                     (item) => item.lyrics.toLowerCase().replace(/[^\w\s]/gi, "")
                   );
                   const onlyApplicableArr = newGeniusArr.filter(
-                    (item) => item.sectionName === specificSectionName
+                    (item) => item.sectionName === nextUp
                   );
                   const onlyApplicableLyricsArr = onlyApplicableArr.map(
                     (item) => item.lyrics.toLowerCase().replace(/[^\w\s]/gi, "")
@@ -201,10 +209,12 @@ const getTrackTimes = async () => {
                       lyricArr.length > 0 &&
                       Array.isArray(lyricArr)
                     ) {
-                      return stringSimilarity.findBestMatch(
-                        textylLyricsArr[i].lyrics,
-                        lyricArr
-                      );
+                      if (textylLyricsArr[i]) {
+                        return stringSimilarity.findBestMatch(
+                          textylLyricsArr[i].lyrics,
+                          lyricArr
+                        );
+                      }
                     } else {
                       return null;
                     }
@@ -215,27 +225,57 @@ const getTrackTimes = async () => {
                   const lyricMatch = findMatch(onlyApplicableLyricsArr);
 
                   const lyricMatchIndex = onlyApplicableLyricsArr.findIndex(
-                    (item) => item.includes(lyricMatch.bestMatch.target)
+                    (item) => {
+                      if (lyricMatch) {
+                        if (lyricMatch.bestMatch) {
+                          return item.includes(lyricMatch.bestMatch.target);
+                        }
+                      }
+                    }
                   );
 
-                  const matchJSON = {
-                    sectionName: nextUp,
-                    seconds: textylLyricsArr[i].seconds,
-                    lyrics: lyricMatch.bestMatch.target,
-                  };
+                  if (lyricMatch) {
+                    const allRatings = lyricMatch.ratings.map(
+                      (item) => item.rating
+                    );
 
-                  if (
-                    onlyApplicableArr[lyricMatchIndex].lineNumber ===
-                    allowedIndex
-                  ) {
-                    if (
-                      !oldLyricMatch.bestMatch ||
-                      oldLyricMatch.bestMatch.rating <=
-                        lyricMatch.bestMatch.rating
-                    ) {
-                      if (lyricMatch.bestMatch.rating >= 0.45) {
-                        matchArr.push(matchJSON);
-                        break;
+                    const matchJSON = {
+                      sectionName: nextUp,
+                      seconds: textylLyricsArr[i].seconds,
+                      lyrics: lyricMatch.bestMatch.target,
+                    };
+
+                    if (allRatings.every((item) => item === 0)) {
+                      skippedSection.push({
+                        sectionName: nextUp,
+                      });
+                      break;
+                    } else {
+                      if (
+                        onlyApplicableArr[lyricMatchIndex].lineNumber ===
+                        allowedIndex
+                      ) {
+                        if (
+                          matchArr.map(
+                            (item) => item.seconds !== matchJSON.seconds
+                          )
+                        ) {
+                          if (
+                            !oldLyricMatch.bestMatch ||
+                            oldLyricMatch.bestMatch.rating <=
+                              lyricMatch.bestMatch.rating
+                          ) {
+                            if (lyricMatch.bestMatch.rating >= 0.45) {
+                              matchArr.push(matchJSON);
+
+                              if (skippedSection.length > 0) {
+                                skippedSection = [];
+                              }
+
+                              break;
+                            }
+                          }
+                        }
                       }
                     }
                   }
@@ -253,7 +293,7 @@ const getTrackTimes = async () => {
           }
         }
 
-        // console.log(matchArr);
+        console.log(matchArr);
       });
   });
 };
