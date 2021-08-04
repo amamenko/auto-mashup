@@ -293,7 +293,7 @@ const getTrackTimes = async () => {
           }
         }
 
-        console.log(matchArr);
+        // console.log(matchArr);
       });
   });
 };
