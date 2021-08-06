@@ -176,9 +176,24 @@ const getTrackTimes = async () => {
               let nextUp = allSections[finalIndex + 1];
 
               if (skippedSection.length >= 3) {
-                lastSection = allSections[finalIndex + 1];
-                nextUp = allSections[finalIndex + 2];
-                i = i - 2;
+                newLastSection = allSections[finalIndex + 1];
+                newNextUp = allSections[finalIndex + 2];
+
+                if (newLastSection && newNextUp) {
+                  matchArr.push({
+                    sectionName: nextUp,
+                    seconds: null,
+                    lyrics: null,
+                  });
+
+                  console.log(nextUp);
+
+                  lastSection = newLastSection;
+                  nextUp = newNextUp;
+
+                  i -= 15;
+                }
+                skippedSection = [];
               }
 
               const alreadyMatchedSections = matchArr.map(
@@ -246,20 +261,18 @@ const getTrackTimes = async () => {
                     };
 
                     if (allRatings.every((item) => item === 0)) {
-                      skippedSection.push({
-                        sectionName: nextUp,
-                      });
-                      break;
+                      if (matchArr.length >= 5) {
+                        skippedSection.push({
+                          sectionName: nextUp,
+                        });
+                        break;
+                      }
                     } else {
                       if (
                         onlyApplicableArr[lyricMatchIndex].lineNumber ===
                         allowedIndex
                       ) {
-                        if (
-                          matchArr.map(
-                            (item) => item.seconds !== matchJSON.seconds
-                          )
-                        ) {
+                        if (oldLyricMatch && lyricMatch) {
                           if (
                             !oldLyricMatch.bestMatch ||
                             oldLyricMatch.bestMatch.rating <=
@@ -283,8 +296,9 @@ const getTrackTimes = async () => {
               }
 
               if (j === geniusLyricsArr.length - 1) {
-                if (allowedIndex < 3) {
+                if (allowedIndex < 7) {
                   j = -1;
+
                   allowedIndex++;
                   continue;
                 }
@@ -293,7 +307,7 @@ const getTrackTimes = async () => {
           }
         }
 
-        // console.log(matchArr);
+        console.log(matchArr.filter((item) => item.seconds !== null));
       });
   });
 };
