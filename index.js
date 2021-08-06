@@ -24,7 +24,6 @@ const getTrackTimes = async () => {
     apiKey: process.env.GENIUS_CLIENT_ACCESS_TOKEN,
     title: title,
     artist: artist,
-    optimizeQuery: true,
   };
 
   getLyrics(options).then((lyrics) => {
@@ -175,7 +174,7 @@ const getTrackTimes = async () => {
 
               let nextUp = allSections[finalIndex + 1];
 
-              if (skippedSection.length >= 3) {
+              if (skippedSection.length >= 1) {
                 newLastSection = allSections[finalIndex + 1];
                 newNextUp = allSections[finalIndex + 2];
 
@@ -185,8 +184,6 @@ const getTrackTimes = async () => {
                     seconds: null,
                     lyrics: null,
                   });
-
-                  console.log(nextUp);
 
                   lastSection = newLastSection;
                   nextUp = newNextUp;
@@ -253,6 +250,9 @@ const getTrackTimes = async () => {
                     const allRatings = lyricMatch.ratings.map(
                       (item) => item.rating
                     );
+                    const allOldRatings = oldLyricMatch.ratings.map(
+                      (item) => item.rating
+                    );
 
                     const matchJSON = {
                       sectionName: nextUp,
@@ -260,12 +260,25 @@ const getTrackTimes = async () => {
                       lyrics: lyricMatch.bestMatch.target,
                     };
 
-                    if (allRatings.every((item) => item === 0)) {
-                      if (matchArr.length >= 5) {
-                        skippedSection.push({
-                          sectionName: nextUp,
-                        });
-                        break;
+                    if (
+                      allRatings.every((item) => item === 0) &&
+                      allOldRatings.every((item) => item <= 0.2)
+                    ) {
+                      if (matchArr.length >= 3) {
+                        const generalSection = nextUp.split(" ")[0];
+
+                        if (
+                          !generalSection.includes("chorus") &&
+                          generalSection !== "bridge" &&
+                          generalSection !== "outro" &&
+                          generalSection !== "verse"
+                        ) {
+                          skippedSection.push({
+                            sectionName: nextUp,
+                          });
+                          allowedIndex = 0;
+                          break;
+                        }
                       }
                     } else {
                       if (
@@ -278,14 +291,30 @@ const getTrackTimes = async () => {
                             oldLyricMatch.bestMatch.rating <=
                               lyricMatch.bestMatch.rating
                           ) {
-                            if (lyricMatch.bestMatch.rating >= 0.45) {
-                              matchArr.push(matchJSON);
+                            if (
+                              lyricMatch.bestMatch.rating >=
+                              0.45 + Number("0." + allowedIndex)
+                            ) {
+                              const allSeconds = matchArr
+                                .map((item) => item.seconds)
+                                .filter((item) => item);
 
-                              if (skippedSection.length > 0) {
-                                skippedSection = [];
+                              const lastDuration =
+                                allSeconds[allSeconds.length - 1];
+
+                              if (
+                                lastDuration
+                                  ? textylLyricsArr[i].seconds >= lastDuration
+                                  : true
+                              ) {
+                                matchArr.push(matchJSON);
+
+                                if (skippedSection.length > 0) {
+                                  skippedSection = [];
+                                }
+
+                                break;
                               }
-
-                              break;
                             }
                           }
                         }
@@ -296,7 +325,7 @@ const getTrackTimes = async () => {
               }
 
               if (j === geniusLyricsArr.length - 1) {
-                if (allowedIndex < 7) {
+                if (allowedIndex < 5) {
                   j = -1;
 
                   allowedIndex++;
