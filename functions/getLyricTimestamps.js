@@ -77,7 +77,7 @@ const getLyricTimestamps = async (options) => {
             if (key === "sectionName") {
               sectionName = value;
             }
-            if (key.includes("line")) {
+            if (key === "line_0" || key === "line_1" || key === "line_2") {
               newGeniusArr.push({
                 sectionName: sectionName,
                 lineNumber: Number(key.split("_")[1]),
@@ -197,10 +197,6 @@ const getLyricTimestamps = async (options) => {
                     (item) => item.lyrics.toLowerCase().replace(/[^\w\s]/gi, "")
                   );
 
-                  const lengthDifference = Math.abs(
-                    textylLyricsArr.length - onlyLyricsArr.length
-                  );
-
                   const findMatch = (lyricArr) => {
                     if (
                       lyricArr &&
@@ -262,6 +258,7 @@ const getLyricTimestamps = async (options) => {
                           !generalSection.includes("coro") &&
                           !generalSection.includes("estribillo") &&
                           generalSection !== "puente" &&
+                          generalSection !== "bridge" &&
                           generalSection !== "outro" &&
                           generalSection !== "verse" &&
                           generalSection !== "verso"
