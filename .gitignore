@@ -9,6 +9,8 @@
 /build
 
 /output
+YouTubeSubtitles.vtt
+YouTubeSubtitles.json
 
 # misc
 .DS_Store
