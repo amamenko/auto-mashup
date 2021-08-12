@@ -1,11 +1,12 @@
 const { getLyrics } = require("genius-lyrics-api");
-const axios = require("axios");
 const stringSimilarity = require("string-similarity");
 
 const getLyricTimestamps = async (options) => {
   return await getLyrics(options).then(async (lyrics) => {
     const geniusLyricsArr = [];
     const lyricsSplit = lyrics.split(/[\r\n]+/gi);
+    const youtubeCaptions = options.youtubeCaptions;
+
     let sectionObj = {};
     let sectionName;
     let sectionLine = -1;
@@ -57,258 +58,379 @@ const getLyricTimestamps = async (options) => {
       }
     }
 
-    return await axios
-      .get(
-        "https://api.textyl.co/api/lyrics?q=" +
-          encodeURI(
-            options.artist.toLowerCase() +
-              " " +
-              options.originalTitle.toLowerCase()
-          )
-      )
-      .then((res) => {
-        const originalTextylLyricsArr = res.data;
+    const newGeniusArr = [];
+    const newGeniusArrFinal = [];
 
-        const newGeniusArr = [];
+    for (let i = 0; i < geniusLyricsArr.length; i++) {
+      let sectionName = "";
 
-        for (let i = 0; i < geniusLyricsArr.length; i++) {
-          let sectionName = "";
-          for (const [key, value] of Object.entries(geniusLyricsArr[i])) {
-            if (key === "sectionName") {
-              sectionName = value;
-            }
-            if (key === "line_0" || key === "line_1" || key === "line_2") {
-              newGeniusArr.push({
-                sectionName: sectionName,
-                lineNumber: Number(key.split("_")[1]),
-                lyrics: value,
-              });
-            }
-          }
+      for (const [key, value] of Object.entries(geniusLyricsArr[i])) {
+        if (key === "sectionName") {
+          sectionName = value;
         }
 
-        const matchArr = [];
+        const pushedSection = {
+          sectionName: sectionName,
+          lineNumber: Number(key.split("_")[1]),
+          lyrics: value,
+        };
 
-        let highestIndex = -1;
+        if (key === "line_0" || key === "line_1" || key === "line_2") {
+          newGeniusArr.push(pushedSection);
+        }
 
-        const onlyLyricsArr = newGeniusArr.map((item) =>
-          item.lyrics.toLowerCase().replace(/[^\w\s]/gi, "")
+        if (key === `line_${Object.keys(geniusLyricsArr[i]).length - 2}`) {
+          newGeniusArrFinal.push(pushedSection);
+        }
+      }
+    }
+
+    const matchArr = [];
+    const finalMatchArr = [];
+
+    const replacementRegex = /[^\w\s]/gi;
+
+    let highestIndex = -1;
+    let highestFinalIndex = -1;
+
+    const onlyLyricsArr = newGeniusArr.map((item) =>
+      item.lyrics.toLowerCase().replace(replacementRegex, "")
+    );
+
+    const onlyFinalLyricsArr = newGeniusArrFinal.map((item) =>
+      item.lyrics.toLowerCase().replace(replacementRegex, "")
+    );
+
+    const youtubeLyricsArr = youtubeCaptions
+      .map((item) => {
+        return {
+          start: item.start,
+          end: item.end,
+          lyrics: item.lyrics,
+        };
+      })
+      .filter((item) => item.lyrics);
+
+    let skippedSection = [];
+
+    for (let i = 0; i < youtubeLyricsArr.length; i++) {
+      if (finalMatchArr.length === 0) {
+        const match = stringSimilarity.findBestMatch(
+          youtubeLyricsArr[i].lyrics,
+          onlyFinalLyricsArr
+        ).bestMatch;
+
+        const matchIndex = onlyFinalLyricsArr.findIndex(
+          (item, index) => index >= highestFinalIndex && item === match.target
         );
 
-        const textylLyricsArr = originalTextylLyricsArr
-          .map((item) => {
-            return {
-              seconds: item.seconds,
-              lyrics: item.lyrics
-                .toLowerCase()
-                .replace(/[^\w\s]/gi, "")
-                .replace("\r", ""),
-            };
-          })
-          .filter((item) => item.lyrics);
+        if (matchIndex >= 0) {
+          highestFinalIndex = matchIndex;
+        }
 
-        let skippedSection = [];
+        const firstMatch = newGeniusArrFinal[matchIndex];
 
-        for (let i = 0; i < textylLyricsArr.length; i++) {
-          if (matchArr.length === 0) {
-            const match = stringSimilarity.findBestMatch(
-              textylLyricsArr[i].lyrics,
-              onlyLyricsArr.slice(0, 5)
-            ).bestMatch;
+        finalMatchArr.push({
+          sectionName: firstMatch.sectionName,
+          start: youtubeLyricsArr[i].start,
+          end: youtubeLyricsArr[i].end,
+          lyrics: match.target,
+        });
+        continue;
+      }
 
-            const matchIndex = onlyLyricsArr.findIndex(
-              (item, index) => index >= highestIndex && item === match.target
+      if (matchArr.length === 0) {
+        const match = stringSimilarity.findBestMatch(
+          youtubeLyricsArr[i].lyrics,
+          onlyLyricsArr.slice(0, 5)
+        ).bestMatch;
+
+        const matchIndex = onlyLyricsArr.findIndex(
+          (item, index) => index >= highestIndex && item === match.target
+        );
+
+        if (matchIndex >= 0) {
+          highestIndex = matchIndex;
+        }
+
+        const firstMatch = newGeniusArr[matchIndex];
+
+        const finalLyricsMatch = finalMatchArr.filter(
+          (item) => item.sectionName === firstMatch.sectionName
+        )[0];
+
+        matchArr.push({
+          sectionName: firstMatch.sectionName,
+          start: youtubeLyricsArr[i].start,
+          end: finalLyricsMatch
+            ? finalLyricsMatch.end
+            : youtubeLyricsArr[i].end,
+          lyrics: match.target,
+        });
+        continue;
+      } else {
+        let allSections = newGeniusArr
+          .map((item) => item.sectionName)
+          .filter((item, index, arr) => {
+            if (item === arr[index - 1]) {
+              return false;
+            } else {
+              return true;
+            }
+          });
+
+        const findMatch = (lyricArr) => {
+          if (lyricArr && lyricArr.length > 0 && Array.isArray(lyricArr)) {
+            if (youtubeLyricsArr[i]) {
+              return stringSimilarity.findBestMatch(
+                youtubeLyricsArr[i].lyrics,
+                lyricArr
+              );
+            }
+          } else {
+            return null;
+          }
+        };
+
+        const loopOverFinalLyrics = async () => {
+          for (let k = 0; k < newGeniusArrFinal.length; k++) {
+            const specificSectionName = newGeniusArrFinal[k].sectionName;
+
+            const finalIndex = allSections.findIndex(
+              (item) =>
+                item === finalMatchArr[finalMatchArr.length - 1].sectionName
             );
 
-            if (matchIndex >= 0) {
-              highestIndex = matchIndex;
-            }
+            let lastSection = allSections[finalIndex];
 
-            const firstMatch = newGeniusArr[matchIndex];
+            let nextUp = allSections[finalIndex + 1];
 
-            matchArr.push({
-              sectionName: firstMatch.sectionName,
-              seconds: textylLyricsArr[i].seconds,
-              lyrics: match.target,
-            });
-            continue;
-          } else {
-            let allSections = newGeniusArr
-              .map((item) => item.sectionName)
-              .filter((item, index, arr) => {
-                if (item === arr[index - 1]) {
-                  return false;
-                } else {
-                  return true;
-                }
-              });
+            const alreadyMatchedSections = finalMatchArr.map(
+              (item) => item.sectionName
+            );
 
-            let allowedIndex = 0;
+            if (specificSectionName === nextUp) {
+              if (
+                alreadyMatchedSections[alreadyMatchedSections.length - 1] !==
+                nextUp
+              ) {
+                const lastApplicableArr = newGeniusArrFinal.filter(
+                  (item) => item.sectionName === lastSection
+                );
+                const lastApplicableLyricsArr = lastApplicableArr.map((item) =>
+                  item.lyrics.toLowerCase().replace(/[^\w\s]/gi, "")
+                );
+                const onlyApplicableArr = newGeniusArrFinal.filter(
+                  (item) => item.sectionName === nextUp
+                );
+                const onlyApplicableLyricsArr = onlyApplicableArr.map((item) =>
+                  item.lyrics.toLowerCase().replace(/[^\w\s]/gi, "")
+                );
 
-            for (let j = 0; j < geniusLyricsArr.length; j++) {
-              const specificSectionName = geniusLyricsArr[j].sectionName;
+                const oldLyricMatch = findMatch(lastApplicableLyricsArr);
 
-              const finalIndex = allSections.findIndex(
-                (item) => item === matchArr[matchArr.length - 1].sectionName
-              );
+                const lyricMatch = findMatch(onlyApplicableLyricsArr);
 
-              let lastSection = allSections[finalIndex];
-
-              let nextUp = allSections[finalIndex + 1];
-
-              if (skippedSection.length >= 1) {
-                newLastSection = allSections[finalIndex + 1];
-                newNextUp = allSections[finalIndex + 2];
-
-                if (newLastSection && newNextUp) {
-                  matchArr.push({
+                if (lyricMatch) {
+                  const matchJSON = {
                     sectionName: nextUp,
-                    seconds: null,
-                    lyrics: null,
-                  });
-
-                  lastSection = newLastSection;
-                  nextUp = newNextUp;
-
-                  i -= 15;
-                }
-                skippedSection = [];
-              }
-
-              const alreadyMatchedSections = matchArr.map(
-                (item) => item.sectionName
-              );
-
-              if (specificSectionName === nextUp) {
-                if (
-                  alreadyMatchedSections[alreadyMatchedSections.length - 1] !==
-                  nextUp
-                ) {
-                  const lastApplicableArr = newGeniusArr.filter(
-                    (item) => item.sectionName === lastSection
-                  );
-                  const lastApplicableLyricsArr = lastApplicableArr.map(
-                    (item) => item.lyrics.toLowerCase().replace(/[^\w\s]/gi, "")
-                  );
-                  const onlyApplicableArr = newGeniusArr.filter(
-                    (item) => item.sectionName === nextUp
-                  );
-                  const onlyApplicableLyricsArr = onlyApplicableArr.map(
-                    (item) => item.lyrics.toLowerCase().replace(/[^\w\s]/gi, "")
-                  );
-
-                  const findMatch = (lyricArr) => {
-                    if (
-                      lyricArr &&
-                      lyricArr.length > 0 &&
-                      Array.isArray(lyricArr)
-                    ) {
-                      if (textylLyricsArr[i]) {
-                        return stringSimilarity.findBestMatch(
-                          textylLyricsArr[i].lyrics,
-                          lyricArr
-                        );
-                      }
-                    } else {
-                      return null;
-                    }
+                    start: youtubeLyricsArr[i].start,
+                    end: youtubeLyricsArr[i].end,
+                    lyrics: lyricMatch.bestMatch.target,
                   };
 
-                  const oldLyricMatch = findMatch(lastApplicableLyricsArr);
-
-                  const lyricMatch = findMatch(onlyApplicableLyricsArr);
-
-                  const lyricMatchIndex = onlyApplicableLyricsArr.findIndex(
-                    (item) => {
-                      if (lyricMatch) {
-                        if (lyricMatch.bestMatch) {
-                          return item.includes(lyricMatch.bestMatch.target);
-                        }
-                      }
-                    }
-                  );
-
-                  if (lyricMatch) {
-                    const allRatings = lyricMatch.ratings.map(
-                      (item) => item.rating
-                    );
-                    const allOldRatings = oldLyricMatch.ratings.map(
-                      (item) => item.rating
-                    );
-
-                    const matchJSON = {
-                      sectionName: nextUp,
-                      seconds: textylLyricsArr[i].seconds,
-                      lyrics: lyricMatch.bestMatch.target,
-                    };
-
+                  if (oldLyricMatch && lyricMatch) {
                     if (
-                      allRatings.every((item) => item === 0) &&
-                      (allOldRatings.every((item) => item <= 0.2) ||
-                        onlyApplicableLyricsArr.length < 3)
+                      !oldLyricMatch.bestMatch ||
+                      (oldLyricMatch.bestMatch.rating <=
+                        lyricMatch.bestMatch.rating &&
+                        Math.abs(
+                          lyricMatch.bestMatch.rating -
+                            oldLyricMatch.bestMatch.rating
+                        ) > 0.15)
                     ) {
-                      const generalSection = nextUp.split(" ")[0];
-
-                      if (
-                        allSections.indexOf(nextUp) <=
-                        allSections.length - 2
-                      ) {
+                      if (lyricMatch.bestMatch.rating >= 0.45) {
                         if (
-                          !generalSection.includes("chorus") &&
-                          !generalSection.includes("coro") &&
-                          !generalSection.includes("estribillo") &&
-                          generalSection !== "puente" &&
-                          generalSection !== "bridge" &&
-                          generalSection !== "outro" &&
-                          generalSection !== "verse" &&
-                          generalSection !== "verso"
+                          !finalMatchArr
+                            .map((item) => item.sectionName)
+                            .includes(nextUp)
                         ) {
-                          skippedSection.push({
-                            sectionName: nextUp,
-                          });
-                          allowedIndex = 0;
+                          finalMatchArr.push(matchJSON);
+
                           break;
                         }
                       }
-                    } else {
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          return;
+        };
+
+        const loopOverFirstLyrics = async () => {
+          await loopOverFinalLyrics();
+
+          let allowedIndex = 0;
+
+          for (let j = 0; j < geniusLyricsArr.length; j++) {
+            const specificSectionName = geniusLyricsArr[j].sectionName;
+
+            const finalIndex = allSections.findIndex(
+              (item) => item === matchArr[matchArr.length - 1].sectionName
+            );
+
+            let lastSection = allSections[finalIndex];
+
+            let nextUp = allSections[finalIndex + 1];
+
+            const correspondingFinalLastSection = finalMatchArr.filter(
+              (item) => item.sectionName === lastSection
+            )[0];
+
+            const correspondingFinalMatch = finalMatchArr.filter(
+              (item) => item.sectionName === nextUp
+            )[0];
+
+            if (skippedSection.length >= 1) {
+              newLastSection = allSections[finalIndex + 1];
+              newNextUp = allSections[finalIndex + 2];
+
+              if (newLastSection && newNextUp) {
+                matchArr.push({
+                  sectionName: nextUp,
+                  lyrics: null,
+                });
+
+                lastSection = newLastSection;
+                nextUp = newNextUp;
+
+                i -= 15;
+              }
+              skippedSection = [];
+            }
+
+            const alreadyMatchedSections = matchArr.map(
+              (item) => item.sectionName
+            );
+
+            if (specificSectionName === nextUp) {
+              if (
+                alreadyMatchedSections[alreadyMatchedSections.length - 1] !==
+                nextUp
+              ) {
+                const lastApplicableArr = newGeniusArr.filter(
+                  (item) => item.sectionName === lastSection
+                );
+                const lastApplicableLyricsArr = lastApplicableArr.map((item) =>
+                  item.lyrics.toLowerCase().replace(/[^\w\s]/gi, "")
+                );
+                const onlyApplicableArr = newGeniusArr.filter(
+                  (item) => item.sectionName === nextUp
+                );
+                const onlyApplicableLyricsArr = onlyApplicableArr.map((item) =>
+                  item.lyrics.toLowerCase().replace(/[^\w\s]/gi, "")
+                );
+
+                const oldLyricMatch = findMatch(lastApplicableLyricsArr);
+
+                const lyricMatch = findMatch(onlyApplicableLyricsArr);
+
+                const lyricMatchIndex = onlyApplicableLyricsArr.findIndex(
+                  (item) => {
+                    if (lyricMatch) {
+                      if (lyricMatch.bestMatch) {
+                        return item.includes(lyricMatch.bestMatch.target);
+                      }
+                    }
+                  }
+                );
+
+                if (lyricMatch) {
+                  const allRatings = lyricMatch.ratings.map(
+                    (item) => item.rating
+                  );
+                  const allOldRatings = oldLyricMatch.ratings.map(
+                    (item) => item.rating
+                  );
+
+                  const matchJSON = {
+                    sectionName: nextUp,
+                    lyrics: lyricMatch.bestMatch.target,
+                    start: youtubeLyricsArr[i].start,
+                  };
+
+                  if (
+                    allRatings.every((item) => item === 0) &&
+                    (allOldRatings.every((item) => item <= 0.2) ||
+                      onlyApplicableLyricsArr.length < 3)
+                  ) {
+                    const generalSection = nextUp.split(" ")[0];
+
+                    if (allSections.indexOf(nextUp) <= allSections.length - 2) {
                       if (
-                        onlyApplicableArr[lyricMatchIndex].lineNumber ===
-                        allowedIndex
+                        !generalSection.includes("chorus") &&
+                        !generalSection.includes("coro") &&
+                        !generalSection.includes("estribillo") &&
+                        generalSection !== "puente" &&
+                        generalSection !== "bridge" &&
+                        generalSection !== "outro" &&
+                        generalSection !== "verse" &&
+                        generalSection !== "verso"
                       ) {
-                        if (oldLyricMatch && lyricMatch) {
+                        skippedSection.push({
+                          sectionName: nextUp,
+                        });
+                        allowedIndex = 0;
+                        break;
+                      }
+                    }
+                  } else {
+                    if (
+                      onlyApplicableArr[lyricMatchIndex].lineNumber ===
+                      allowedIndex
+                    ) {
+                      if (oldLyricMatch && lyricMatch) {
+                        if (
+                          !oldLyricMatch.bestMatch ||
+                          (oldLyricMatch.bestMatch.rating <=
+                            lyricMatch.bestMatch.rating &&
+                            (allowedIndex > 1
+                              ? Math.abs(
+                                  lyricMatch.bestMatch.rating -
+                                    oldLyricMatch.bestMatch.rating
+                                ) > 0.15
+                              : true))
+                        ) {
                           if (
-                            !oldLyricMatch.bestMatch ||
-                            (oldLyricMatch.bestMatch.rating <=
-                              lyricMatch.bestMatch.rating &&
-                              (allowedIndex > 1
-                                ? Math.abs(
-                                    lyricMatch.bestMatch.rating -
-                                      oldLyricMatch.bestMatch.rating
-                                  ) > 0.15
-                                : true))
+                            lyricMatch.bestMatch.rating >=
+                            0.45 + Number(allowedIndex / 20)
                           ) {
                             if (
-                              lyricMatch.bestMatch.rating >=
-                              0.45 + Number(allowedIndex / 40)
+                              !matchArr
+                                .map((item) => item.sectionName)
+                                .includes(nextUp)
                             ) {
-                              const allSeconds = matchArr
-                                .map((item) => item.seconds)
-                                .filter((item) => item);
-
-                              const lastDuration =
-                                allSeconds[allSeconds.length - 1];
-
                               if (
-                                lastDuration
-                                  ? textylLyricsArr[i].seconds > lastDuration
-                                  : true
+                                !correspondingFinalMatch ||
+                                youtubeLyricsArr[i].start <=
+                                  correspondingFinalMatch.start
                               ) {
                                 if (
-                                  !matchArr
-                                    .map((item) => item.sectionName)
-                                    .includes(nextUp)
+                                  !correspondingFinalLastSection ||
+                                  youtubeLyricsArr[i].start >=
+                                    correspondingFinalLastSection.end
                                 ) {
-                                  matchArr.push(matchJSON);
+                                  if (correspondingFinalMatch) {
+                                    matchArr.push({
+                                      ...matchJSON,
+                                      end: correspondingFinalMatch.end,
+                                    });
+                                  } else {
+                                    matchArr.push(matchJSON);
+                                  }
 
                                   allowedIndex = 0;
 
@@ -327,21 +449,27 @@ const getLyricTimestamps = async (options) => {
                   }
                 }
               }
+            }
 
-              if (j === geniusLyricsArr.length - 1) {
-                if (allowedIndex < 3) {
-                  j = -1;
+            if (j === geniusLyricsArr.length - 1) {
+              if (allowedIndex < 3) {
+                j = -1;
 
-                  allowedIndex++;
-                  continue;
-                }
+                allowedIndex++;
+                continue;
               }
             }
           }
-        }
+        };
 
-        return matchArr.filter((item) => item.seconds !== null);
-      });
+        loopOverFirstLyrics();
+      }
+    }
+
+    // console.log(finalMatchArr);
+    // console.log(matchArr);
+
+    // return matchArr;
   });
 };
 
