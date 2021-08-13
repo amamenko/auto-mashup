@@ -91,7 +91,6 @@ const getLyricTimestamps = async (options) => {
     const replacementRegex = /[^\w\s]/gi;
 
     let highestIndex = -1;
-    let highestFinalIndex = -1;
 
     const onlyLyricsArr = newGeniusArr.map((item) =>
       item.lyrics.toLowerCase().replace(replacementRegex, "")
@@ -115,28 +114,35 @@ const getLyricTimestamps = async (options) => {
 
     for (let i = 0; i < youtubeLyricsArr.length; i++) {
       if (finalMatchArr.length === 0) {
-        const match = stringSimilarity.findBestMatch(
-          youtubeLyricsArr[i].lyrics,
-          onlyFinalLyricsArr
-        ).bestMatch;
+        const firstYouTubeLyrics = youtubeLyricsArr.slice(0, 10);
 
-        const matchIndex = onlyFinalLyricsArr.findIndex(
-          (item, index) => index >= highestFinalIndex && item === match.target
-        );
+        for (j = 0; j < firstYouTubeLyrics.length; j++) {
+          const match = stringSimilarity.findBestMatch(
+            firstYouTubeLyrics[j].lyrics,
+            onlyFinalLyricsArr.slice(0, 5)
+          ).bestMatch;
 
-        if (matchIndex >= 0) {
-          highestFinalIndex = matchIndex;
+          const matchIndex = onlyFinalLyricsArr.findIndex(
+            (item) => item === match.target
+          );
+
+          if (matchIndex >= 0) {
+            highestFinalIndex = matchIndex;
+          }
+
+          const firstMatch = newGeniusArrFinal[matchIndex];
+
+          if (match.rating >= 0.8) {
+            finalMatchArr.push({
+              sectionName: firstMatch.sectionName,
+              start: firstYouTubeLyrics[j].start,
+              end: firstYouTubeLyrics[j].end,
+              lyrics: match.target,
+            });
+
+            break;
+          }
         }
-
-        const firstMatch = newGeniusArrFinal[matchIndex];
-
-        finalMatchArr.push({
-          sectionName: firstMatch.sectionName,
-          start: youtubeLyricsArr[i].start,
-          end: youtubeLyricsArr[i].end,
-          lyrics: match.target,
-        });
-        continue;
       }
 
       if (matchArr.length === 0) {
@@ -239,15 +245,17 @@ const getLyricTimestamps = async (options) => {
                     lyrics: lyricMatch.bestMatch.target,
                   };
 
+                  const skipSectionFunction = () => {
+                    if (k === newGeniusArrFinal.length - 1) {
+                      finalMatchArr.push({ sectionName: nextUp });
+                    }
+                  };
+
                   if (oldLyricMatch && lyricMatch) {
                     if (
                       !oldLyricMatch.bestMatch ||
-                      (oldLyricMatch.bestMatch.rating <=
-                        lyricMatch.bestMatch.rating &&
-                        Math.abs(
-                          lyricMatch.bestMatch.rating -
-                            oldLyricMatch.bestMatch.rating
-                        ) > 0.15)
+                      oldLyricMatch.bestMatch.rating <=
+                        lyricMatch.bestMatch.rating
                     ) {
                       if (lyricMatch.bestMatch.rating >= 0.45) {
                         if (
@@ -258,16 +266,22 @@ const getLyricTimestamps = async (options) => {
                           finalMatchArr.push(matchJSON);
 
                           break;
+                        } else {
+                          skipSectionFunction();
                         }
+                      } else {
+                        skipSectionFunction();
                       }
+                    } else {
+                      skipSectionFunction();
                     }
+                  } else {
+                    skipSectionFunction();
                   }
                 }
               }
             }
           }
-
-          return;
         };
 
         const loopOverFirstLyrics = async () => {
@@ -466,10 +480,7 @@ const getLyricTimestamps = async (options) => {
       }
     }
 
-    // console.log(finalMatchArr);
-    // console.log(matchArr);
-
-    // return matchArr;
+    return matchArr;
   });
 };
 

@@ -23,8 +23,8 @@ const spotifyCredentials = {
 const spotifyApi = new SpotifyWebApi(spotifyCredentials);
 
 const getTrackTimes = async (youtubeCaptions) => {
-  let title = "Blinding Lights";
-  const artist = "The Weeknd";
+  let title = "";
+  const artist = "";
 
   const options = {
     apiKey: process.env.GENIUS_CLIENT_ACCESS_TOKEN,
@@ -100,125 +100,82 @@ let videoID = "";
 const format = "vtt";
 const lang = "en";
 
-// ytdl.getInfo(videoID).then((info) => {
-//   const tracks =
-//     info.player_response.captions.playerCaptionsTracklistRenderer.captionTracks;
+ytdl.getInfo(videoID).then((info) => {
+  const tracks =
+    info.player_response.captions.playerCaptionsTracklistRenderer.captionTracks;
 
-//   if (tracks && tracks.length) {
-//     console.log(
-//       "Found captions for",
-//       tracks.map((t) => t.name.simpleText).join(", ")
-//     );
+  if (tracks && tracks.length) {
+    console.log(
+      "Found captions for",
+      tracks.map((t) => t.name.simpleText).join(", ")
+    );
 
-//     const track = tracks.find((t) => t.languageCode === lang);
+    const track = tracks.find((t) => t.languageCode === lang);
 
-//     if (track) {
-//       console.log("Retrieving captions:", track.name.simpleText);
-//       console.log("URL", track.baseUrl);
+    if (track) {
+      console.log("Retrieving captions:", track.name.simpleText);
+      console.log("URL", track.baseUrl);
 
-//       const output = `YouTubeSubtitles.${format}`;
+      const output = `YouTubeSubtitles.${format}`;
 
-//       console.log("Saving to", output);
+      console.log("Saving to", output);
 
-//       const pathOfFile = path.resolve(__dirname, output);
+      const pathOfFile = path.resolve(__dirname, output);
 
-//       https.get(
-//         `${track.baseUrl}&fmt=${format !== "xml" ? format : ""}`,
-//         (res) => {
-//           res.pipe(fs.createWriteStream(pathOfFile)).on("finish", () => {
-//             const vttSubtitles = fs.readFileSync(pathOfFile, "utf8");
+      https.get(
+        `${track.baseUrl}&fmt=${format !== "xml" ? format : ""}`,
+        (res) => {
+          res.pipe(fs.createWriteStream(pathOfFile)).on("finish", () => {
+            const vttSubtitles = fs.readFileSync(pathOfFile, "utf8");
 
-//             // Convert .vtt to .json
-//             const newJSONFile = subsrt.convert(vttSubtitles, {
-//               format: "json",
-//             });
+            // Convert .vtt to .json
+            const newJSONFile = subsrt.convert(vttSubtitles, {
+              format: "json",
+            });
 
-//             const parsedJSON = JSON.parse(newJSONFile);
+            const parsedJSON = JSON.parse(newJSONFile);
 
-//             if (parsedJSON) {
-//               if (parsedJSON.length > 0) {
-//                 const subtitleData = parsedJSON[0].data;
-//                 const subtitleArr = subtitleData.split("\n\n");
+            if (parsedJSON) {
+              if (parsedJSON.length > 0) {
+                const subtitleData = parsedJSON[0].data;
+                const subtitleArr = subtitleData.split("\n\n");
 
-//                 const lyricsArr = [];
+                const lyricsArr = [];
 
-//                 for (let i = 0; i < subtitleArr.length; i++) {
-//                   const currentItem = subtitleArr[i];
-//                   const currentSections = currentItem.split("\n");
-//                   const timeSplit = currentSections[0].split(" --> ");
+                for (let i = 0; i < subtitleArr.length; i++) {
+                  const currentItem = subtitleArr[i];
+                  const currentSections = currentItem.split("\n");
+                  const timeSplit = currentSections[0].split(" --> ");
+                  const newLyrics = currentSections
+                    .slice(1)
+                    .join(" ")
+                    .toLowerCase()
+                    .replace(/(^|\s)♪($|\s)/gi, "");
 
-//                   if (currentItem[0] === "0") {
-//                     lyricsArr.push({
-//                       start: timeSplit[0],
-//                       end: timeSplit[1],
-//                       lyrics: currentSections
-//                         .slice(1)
-//                         .join(" ")
-//                         .toLowerCase()
-//                         .replace(/(^|\s)♪($|\s)/gi, ""),
-//                     });
-//                   }
-//                 }
+                  if (currentItem[0] === "0") {
+                    if (/\d|[A-z]/.test(newLyrics)) {
+                      lyricsArr.push({
+                        start: timeSplit[0],
+                        end: timeSplit[1],
+                        lyrics: newLyrics,
+                      });
+                    }
+                  }
+                }
 
-//                 console.log(lyricsArr);
-//               }
-//             }
-//           });
-//         }
-//       );
-//     } else {
-//       console.log("Could not find captions for", lang);
-//     }
-//   } else {
-//     console.log("No captions found for this video");
-//   }
-// });
-
-const getTimestamps = () => {
-  const output = `YouTubeSubtitles.${format}`;
-
-  const pathOfFile = path.resolve(__dirname, output);
-
-  const vttSubtitles = fs.readFileSync(pathOfFile, "utf8");
-
-  // Convert .vtt to .json
-  const newJSONFile = subsrt.convert(vttSubtitles, {
-    format: "json",
-  });
-
-  const parsedJSON = JSON.parse(newJSONFile);
-
-  if (parsedJSON) {
-    if (parsedJSON.length > 0) {
-      const subtitleData = parsedJSON[0].data;
-      const subtitleArr = subtitleData.split("\n\n");
-
-      const lyricsArr = [];
-
-      for (let i = 0; i < subtitleArr.length; i++) {
-        const currentItem = subtitleArr[i];
-        const currentSections = currentItem.split("\n");
-        const timeSplit = currentSections[0].split(" --> ");
-
-        if (currentItem[0] === "0") {
-          lyricsArr.push({
-            start: timeSplit[0],
-            end: timeSplit[1],
-            lyrics: currentSections
-              .slice(1)
-              .join(" ")
-              .toLowerCase()
-              .replace(/(^|\s)♪($|\s)/gi, ""),
+                getTrackTimes(lyricsArr);
+              }
+            }
           });
         }
-      }
-
-      getTrackTimes(lyricsArr);
+      );
+    } else {
+      console.log("Could not find captions for", lang);
     }
+  } else {
+    console.log("No captions found for this video");
   }
-};
-
-getTimestamps();
+});
 
 // if (spotifyApi.getAccessToken()) {
 //   getTrack(spotifyApi);
