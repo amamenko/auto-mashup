@@ -60,9 +60,10 @@ const getTrack = (spotifyApi) => {
                 startOfFinal8Bars,
               };
 
-              await searchYouTube(topSong.title, topSong.artist, duration).then(
-                (id) => getYouTubeAudio(id)
-              );
+              await searchYouTube(topSong.title, topSong.artist, duration);
+              //   .then(
+              //   (id) => getYouTubeAudio(id)
+              // );
 
               console.log(trackDataJSON);
             },
