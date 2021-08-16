@@ -1,5 +1,6 @@
 const { getChart } = require("billboard-top-100");
 const getYouTubeAudio = require("./getAudioStems");
+const getSubtitleJSON = require("./getSubtitleJSON");
 const searchYouTube = require("./searchYouTube");
 
 const getTrack = (spotifyApi) => {
@@ -44,9 +45,6 @@ const getTrack = (spotifyApi) => {
               const mode = trackDetails.mode === 1 ? "major" : "minor";
               const duration = trackDetails.duration;
               const fadeOut = trackDetails.start_of_fade_out;
-              const vocalStart = data.body.sections[1].start;
-              const numberOfBars = data.body.bars.length;
-              const startOfFinal8Bars = data.body.bars[numberOfBars - 8].start;
 
               const trackDataJSON = {
                 title: topSong.title,
@@ -56,14 +54,19 @@ const getTrack = (spotifyApi) => {
                 mode,
                 duration,
                 fadeOut,
-                vocalStart,
-                startOfFinal8Bars,
               };
 
-              await searchYouTube(topSong.title, topSong.artist, duration);
-              //   .then(
-              //   (id) => getYouTubeAudio(id)
-              // );
+              await searchYouTube(topSong.title, topSong.artist, duration)
+                .then(async (id) => {
+                  console.log(id);
+                  // getYouTubeAudio(id)
+                  return await getSubtitleJSON(
+                    id,
+                    topSong.title,
+                    topSong.artist
+                  );
+                })
+                .then((res) => console.log(res));
 
               console.log(trackDataJSON);
             },
