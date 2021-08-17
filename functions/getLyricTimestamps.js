@@ -114,27 +114,29 @@ const getLyricTimestamps = async (options) => {
         const firstYouTubeLyrics = youtubeLyricsArr.slice(0, 20);
 
         for (j = 0; j < firstYouTubeLyrics.length; j++) {
-          const match = stringSimilarity.findBestMatch(
+          const matchArr = stringSimilarity.findBestMatch(
             firstYouTubeLyrics[j].lyrics,
             onlyFinalLyricsArr
-          ).bestMatch;
+          ).ratings;
 
-          const matchIndex = onlyFinalLyricsArr.findIndex(
-            (item) => item === match.target
-          );
+          const foundMatch = matchArr.find((el) => el.rating >= 0.55);
 
-          if (matchIndex >= 0) {
-            highestFinalIndex = matchIndex;
-          }
+          if (foundMatch) {
+            const matchIndex = onlyFinalLyricsArr.findIndex(
+              (item) => item === foundMatch.target
+            );
 
-          const firstMatch = newGeniusArrFinal[matchIndex];
+            if (matchIndex >= 0) {
+              highestFinalIndex = matchIndex;
+            }
 
-          if (match.rating >= 0.55) {
+            const firstMatch = newGeniusArrFinal[matchIndex];
+
             finalMatchArr.push({
               sectionName: firstMatch.sectionName,
               start: firstYouTubeLyrics[j].start,
               end: firstYouTubeLyrics[j].end,
-              lyrics: match.target,
+              lyrics: foundMatch.target,
             });
 
             break;

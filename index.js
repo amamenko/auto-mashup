@@ -4,6 +4,7 @@ const SpotifyWebApi = require("spotify-web-api-node");
 const getTrack = require("./functions/getTrack");
 const searchVideo = require("./functions/usetube/usetubeSearchVideo");
 const getVideoSubtitles = require("./functions/usetube/usetubeGetVideoSubtitles");
+const getSubtitleJSON = require("./functions/getSubtitleJSON");
 require("dotenv").config();
 
 const port = process.env.PORT || 4000;

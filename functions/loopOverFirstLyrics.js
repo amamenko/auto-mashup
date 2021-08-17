@@ -35,6 +35,7 @@ const loopOverFirstLyrics = async (
 
   await loopOverFinalLyrics(
     newGeniusArrFinal,
+    newGeniusArr,
     finalMatchArr,
     youtubeLyricsArr,
     findMatch,
@@ -179,10 +180,19 @@ const loopOverFirstLyrics = async (
                         youtubeLyricsArr[i].start <=
                           correspondingFinalMatch.start
                       ) {
+                        const youtubeStart = Number(
+                          youtubeLyricsArr[i].start.split(":")[2]
+                        );
+                        let finalSectionEnd = 0;
+
+                        if (correspondingFinalLastSection) {
+                          finalSectionEnd = Number(
+                            correspondingFinalLastSection.end.split(":")[2]
+                          );
+                        }
                         if (
                           !correspondingFinalLastSection ||
-                          youtubeLyricsArr[i].start >=
-                            correspondingFinalLastSection.end
+                          Math.abs(youtubeStart - finalSectionEnd) <= 1.5
                         ) {
                           if (correspondingFinalMatch) {
                             matchArr.push({
