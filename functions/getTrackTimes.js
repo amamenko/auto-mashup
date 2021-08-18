@@ -40,8 +40,8 @@ const getTrackTimes = async (youtubeCaptions, trackTitle, artist) => {
               options.title = newTitleArr[0].trim();
             }
 
-            await getLyricTimestamps(options).then(async (lyricArr) => {
-              console.log({ lyricArr });
+            return await getLyricTimestamps(options).then(async (lyricArr) => {
+              // console.log({ lyricArr });
               if (lyricArr) {
                 if (lyricArr.length <= 4) {
                   if (resultArr[1]) {

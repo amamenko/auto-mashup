@@ -88,7 +88,11 @@ const loopOverFinalLyrics = async (
                       .map((item) => item.sectionName)
                       .includes(nextUp)
                   ) {
-                    if (!nextSectionMatch || nextSectionMatch.rating >= 0.55) {
+                    if (
+                      !nextSectionMatch ||
+                      !nextSectionMatch.rating ||
+                      nextSectionMatch.rating >= 0.55
+                    ) {
                       finalMatchArr.push(matchJSON);
 
                       break;

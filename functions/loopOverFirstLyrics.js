@@ -190,9 +190,10 @@ const loopOverFirstLyrics = async (
                             correspondingFinalLastSection.end.split(":")[2]
                           );
                         }
+
                         if (
                           !correspondingFinalLastSection ||
-                          Math.abs(youtubeStart - finalSectionEnd) <= 1.5
+                          youtubeStart - finalSectionEnd >= -1.5
                         ) {
                           if (correspondingFinalMatch) {
                             matchArr.push({

@@ -116,7 +116,7 @@ const getLyricTimestamps = async (options) => {
         for (j = 0; j < firstYouTubeLyrics.length; j++) {
           const matchArr = stringSimilarity.findBestMatch(
             firstYouTubeLyrics[j].lyrics,
-            onlyFinalLyricsArr
+            onlyFinalLyricsArr.slice(0, 3)
           ).ratings;
 
           const foundMatch = matchArr.find((el) => el.rating >= 0.55);
@@ -190,7 +190,7 @@ const getLyricTimestamps = async (options) => {
         );
       }
     }
-
+    // console.log(finalMatchArr);
     return matchArr;
   });
 };

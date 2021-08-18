@@ -1,6 +1,5 @@
 const { getChart } = require("billboard-top-100");
 const getYouTubeAudio = require("./getAudioStems");
-const getSubtitleJSON = require("./getSubtitleJSON");
 const searchYouTube = require("./searchYouTube");
 
 const getTrack = (spotifyApi) => {
@@ -8,7 +7,7 @@ const getTrack = (spotifyApi) => {
     if (err) {
       console.log(err);
     } else {
-      const topSong = chart.songs[0];
+      const topSong = chart.songs[1];
 
       spotifyApi
         .searchTracks(`track:${topSong.title} artist:${topSong.artist}`)
@@ -56,17 +55,7 @@ const getTrack = (spotifyApi) => {
                 fadeOut,
               };
 
-              await searchYouTube(topSong.title, topSong.artist, duration)
-                .then(async (id) => {
-                  console.log(id);
-                  // getYouTubeAudio(id)
-                  return await getSubtitleJSON(
-                    id,
-                    topSong.title,
-                    topSong.artist
-                  );
-                })
-                .then((res) => console.log(res));
+              await searchYouTube(topSong.title, topSong.artist);
 
               console.log(trackDataJSON);
             },
