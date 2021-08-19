@@ -72,8 +72,10 @@ const loopOverFinalLyrics = async (
             };
 
             const skipSectionFunction = () => {
-              if (k === newGeniusArrFinal.length - 1) {
+              if (i === youtubeLyricsArr.length - 1) {
                 finalMatchArr.push({ sectionName: nextUp });
+                i = -1;
+                k++;
               }
             };
 
@@ -82,7 +84,7 @@ const loopOverFinalLyrics = async (
                 !oldLyricMatch.bestMatch ||
                 oldLyricMatch.bestMatch.rating <= lyricMatch.bestMatch.rating
               ) {
-                if (lyricMatch.bestMatch.rating >= 0.45) {
+                if (lyricMatch.bestMatch.rating >= 0.7) {
                   if (
                     !finalMatchArr
                       .map((item) => item.sectionName)
