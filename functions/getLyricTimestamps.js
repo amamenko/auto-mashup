@@ -3,7 +3,7 @@ const stringSimilarity = require("string-similarity");
 const loopOverFirstLyrics = require("./loopOverFirstLyrics");
 
 const getLyricTimestamps = async (options) => {
-  return await getLyrics(options).then(async (lyrics) => {
+  const returnedLyrics = await getLyrics(options).then(async (lyrics) => {
     const geniusLyricsArr = [];
     const lyricsSplit = lyrics.split(/[\r\n]+/gi);
     const youtubeCaptions = options.youtubeCaptions;
@@ -190,9 +190,10 @@ const getLyricTimestamps = async (options) => {
         );
       }
     }
-    // console.log(finalMatchArr);
     return matchArr;
   });
+
+  return returnedLyrics.filter((item) => item.start);
 };
 
 module.exports = getLyricTimestamps;

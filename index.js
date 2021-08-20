@@ -64,7 +64,7 @@ const spotifyApi = new SpotifyWebApi(spotifyCredentials);
 //   });
 // };
 
-getSubtitleJSON(null, "", "");
+// getSubtitleJSON(null, "", "");
 
 // if (spotifyApi.getAccessToken()) {
 //   getTrack(spotifyApi);

@@ -1,6 +1,8 @@
 const loopOverFinalLyrics = require("./loopOverFinalLyrics");
 const stringSimilarity = require("string-similarity");
 
+let skippedSection = [];
+
 const loopOverFirstLyrics = async (
   geniusLyricsArr,
   newGeniusArr,
@@ -44,8 +46,6 @@ const loopOverFirstLyrics = async (
   );
 
   let allowedIndex = 0;
-
-  let skippedSection = [];
 
   for (let j = 0; j < geniusLyricsArr.length; j++) {
     const specificSectionName = geniusLyricsArr[j].sectionName;
@@ -186,9 +186,11 @@ const loopOverFirstLyrics = async (
                         let finalSectionEnd = 0;
 
                         if (correspondingFinalLastSection) {
-                          finalSectionEnd = Number(
-                            correspondingFinalLastSection.end.split(":")[2]
-                          );
+                          if (correspondingFinalLastSection.end) {
+                            finalSectionEnd = Number(
+                              correspondingFinalLastSection.end.split(":")[2]
+                            );
+                          }
                         }
 
                         if (

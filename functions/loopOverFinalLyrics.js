@@ -1,5 +1,7 @@
 const stringSimilarity = require("string-similarity");
 
+const skipArr = [];
+
 const loopOverFinalLyrics = async (
   newGeniusArrFinal,
   newGeniusArr,
@@ -72,10 +74,16 @@ const loopOverFinalLyrics = async (
             };
 
             const skipSectionFunction = () => {
-              if (i === youtubeLyricsArr.length - 1) {
-                finalMatchArr.push({ sectionName: nextUp });
-                i = -1;
-                k++;
+              if (lyricMatch.bestMatch.rating === 0) {
+                skipArr.push(matchJSON);
+
+                if (
+                  skipArr.filter((item) => item.sectionName === nextUp)
+                    .length >= 5
+                ) {
+                  finalMatchArr.push({ sectionName: nextUp });
+                  k++;
+                }
               }
             };
 
