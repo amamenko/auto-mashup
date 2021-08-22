@@ -1,15 +1,15 @@
 const ytdl = require("ytdl-core");
 const getTrackTimes = require("./getTrackTimes");
 const languageCodeArr = require("./languageCodeArr");
-const https = require("https");
-const fs = require("fs");
-const path = require("path");
 const subsrt = require("subsrt");
+const axios = require("axios");
+const path = require("path");
+const fs = require("fs");
 
 const getSubtitleJSON = async (videoID, title, artist) => {
   const format = "vtt";
 
-  // await ytdl.getInfo(videoID).then((info) => {
+  // return await ytdl.getInfo(videoID).then(async (info) => {
   //   const tracks =
   //     info.player_response.captions.playerCaptionsTracklistRenderer
   //       .captionTracks;
@@ -33,15 +33,14 @@ const getSubtitleJSON = async (videoID, title, artist) => {
 
   const output = `YouTubeSubtitles.${format}`;
 
-  //       console.log("Saving to", output);
-
   const pathOfFile = path.resolve(__dirname, output);
 
-  //       https.get(
-  //         `${track.baseUrl}&fmt=${format !== "xml" ? format : ""}`,
-  //         (res) => {
-  //           res.pipe(fs.createWriteStream(pathOfFile)).on("finish", () => {
+  // const result = await axios
+  //   .get(`${track.baseUrl}&fmt=${format !== "xml" ? format : ""}`)
+  //   .then(async (res) => {
   const vttSubtitles = fs.readFileSync(pathOfFile, "utf8");
+
+  // const vttSubtitles = res.data;
 
   // Convert .vtt to .json
   const newJSONFile = subsrt.convert(vttSubtitles, {
@@ -51,8 +50,6 @@ const getSubtitleJSON = async (videoID, title, artist) => {
   const parsedJSON = JSON.parse(newJSONFile);
 
   if (parsedJSON) {
-    // Delete .vtt file, we already have it in JSON form
-    // fs.unlinkSync(pathOfFile);
     if (parsedJSON.length > 0) {
       const subtitleData = parsedJSON[0].data;
       const subtitleArr = subtitleData.split("\n\n");
@@ -92,12 +89,25 @@ const getSubtitleJSON = async (videoID, title, artist) => {
 
       const sortedLyricsArr = lyricsArr.sort(compareTimes);
 
-      return getTrackTimes(sortedLyricsArr, title, artist);
+      const splitRegex = /(featuring)|(ft\.)|(&)|(x)|(feat\.)/gi;
+
+      const artistArr = artist
+        .split(splitRegex)
+        .filter((item) => item && !item.match(splitRegex))
+        .map((item) => item.trim());
+
+      const times = await getTrackTimes(
+        sortedLyricsArr,
+        title,
+        artistArr[1] ? artistArr[0] + " " + artistArr[1] : artistArr[0]
+      );
+
+      return times;
     }
   }
-  //           });
-  //         }
-  //       );
+  // });
+
+  // return result;
   //     } else {
   //       console.log(
   //         "Could not find captions in list:",

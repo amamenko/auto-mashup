@@ -79,7 +79,7 @@ const loopOverFinalLyrics = async (
 
                 if (
                   skipArr.filter((item) => item.sectionName === nextUp)
-                    .length >= 5
+                    .length >= 15
                 ) {
                   finalMatchArr.push({ sectionName: nextUp });
                   k++;
@@ -92,7 +92,7 @@ const loopOverFinalLyrics = async (
                 !oldLyricMatch.bestMatch ||
                 oldLyricMatch.bestMatch.rating <= lyricMatch.bestMatch.rating
               ) {
-                if (lyricMatch.bestMatch.rating >= 0.7) {
+                if (lyricMatch.bestMatch.rating >= 0.6) {
                   if (
                     !finalMatchArr
                       .map((item) => item.sectionName)

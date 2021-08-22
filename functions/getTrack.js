@@ -3,14 +3,18 @@ const getYouTubeAudio = require("./getAudioStems");
 const searchYouTube = require("./searchYouTube");
 
 const getTrack = (spotifyApi) => {
-  getChart((err, chart) => {
+  getChart(async (err, chart) => {
     if (err) {
       console.log(err);
     } else {
-      const topSong = chart.songs[1];
+      const topSong = chart.songs[4];
 
-      spotifyApi
-        .searchTracks(`track:${topSong.title} artist:${topSong.artist}`)
+      return await spotifyApi
+        .searchTracks(
+          `track:${topSong.title} artist:${
+            topSong.artist.split("Featuring")[0]
+          }`
+        )
         .then(
           (data) => {
             const firstResultID = data.body.tracks.items[0].id;
@@ -55,9 +59,9 @@ const getTrack = (spotifyApi) => {
                 fadeOut,
               };
 
-              await searchYouTube(topSong.title, topSong.artist);
-
               console.log(trackDataJSON);
+
+              return await searchYouTube(topSong.title, topSong.artist);
             },
             (err) => {
               done(err);

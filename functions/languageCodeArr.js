@@ -1,6 +1,7 @@
 const languageCodeArr = [
   // English U.S.
   "en",
+  "en-US",
   // Puerto Rico
   "en-PR",
   // Canada

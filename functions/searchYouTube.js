@@ -2,7 +2,7 @@ const getSubtitleJSON = require("./getSubtitleJSON");
 const searchVideo = require("./usetube/usetubeSearchVideo");
 
 const searchYouTube = async (trackTitle, trackArtist) => {
-  const videos = await searchVideo(`${trackTitle} ${trackArtist} `).then(
+  const videos = await searchVideo(`${trackTitle} ${trackArtist} lyrics`).then(
     async (results) => {
       if (results) {
         if (results.videos) {
@@ -18,44 +18,98 @@ const searchYouTube = async (trackTitle, trackArtist) => {
     }
   );
 
-  const filterRegex = /(live)|(instrumental)|(karaoke)|(parody)|(\(cover\))/gi;
+  const filterRegex =
+    /(live)|(instrumental)|(tik[\s]*tok)|(karaoke)|(parody)|(\(cover\))/gi;
 
-  const filteredVids = videos.filter(
-    (video) => !filterRegex.test(video.original_title)
-  );
+  const mustContainRegex = /(video)|(audio)|(lyrics)/gi;
 
-  const firstThree = filteredVids.slice(0, 3);
+  if (videos) {
+    const filteredVids = videos.filter(
+      (video) =>
+        !filterRegex.test(video.original_title) &&
+        mustContainRegex.test(video.original_title) &&
+        video.original_title.toLowerCase().includes(trackTitle.toLowerCase())
+    );
 
-  const allResultsArr = [];
+    const firstThree = filteredVids.slice(0, 3);
 
-  for (let i = 0; i < firstThree.length; i++) {
-    setTimeout(async () => {
-      console.log(
-        `Getting subtitles for video ${i + 1} of ${firstThree.length}`
-      );
-      await getSubtitleJSON(firstThree[i].id, trackTitle, trackArtist)
+    console.log(filteredVids);
+
+    const loopOverVideos = async () => {
+      const allResultsArr = [];
+
+      const promiseArray = [];
+
+      for (let i = 0; i < firstThree.length; i++) {
+        const delayedTimeoutPromise = async (delay) => {
+          return new Promise((resolve, reject) => {
+            setTimeout(async () => {
+              console.log(
+                `Getting subtitles for video ${i + 1} of ${
+                  firstThree.length
+                }: ${firstThree[i].original_title}`
+              );
+
+              return await getSubtitleJSON(
+                firstThree[i].id,
+                trackTitle,
+                trackArtist
+              )
+                .then((arr) => {
+                  console.log("Subtitle function resolved!");
+                  if (arr) {
+                    const result = {
+                      id: firstThree[i].id,
+                      arr,
+                      arrLength: arr.length,
+                    };
+                    allResultsArr.push(result);
+
+                    resolve(result);
+                    return result;
+                  } else {
+                    reject;
+                    return;
+                  }
+                })
+                .catch((err) => {
+                  console.log("Subtitle function resulted in an error!");
+                  console.log(err);
+                  return;
+                });
+            }, delay);
+          });
+        };
+
+        promiseArray.push(delayedTimeoutPromise(i * 20000));
+      }
+
+      return Promise.all(promiseArray)
         .then((arr) => {
-          if (arr) {
-            allResultsArr.push({
-              id: firstThree[i].id,
-              arr,
-              arrLength: arr.length,
-            });
-          }
+          console.log("All promises resolved!");
+          return arr;
         })
         .catch((err) => {
-          return;
+          console.log("Error in iterable promises");
+          console.log(err);
         });
-    }, i * 15000);
+    };
+
+    return await loopOverVideos().then((arr) => {
+      const allResultLengths = arr.map((item) => item.arrLength);
+
+      const bestMatch = arr.find(
+        (item) => item.arrLength === Math.max(...allResultLengths)
+      );
+
+      console.log({ bestMatch });
+      console.log({ array: bestMatch.arr });
+
+      return bestMatch;
+    });
+  } else {
+    console.log("No videos found!");
   }
-
-  const allResultLengths = allResultsArr.map((item) => item.arrLength);
-
-  const bestMatch = allResultsArr.find(
-    (item) => item.length === Math.max(allResultLengths)
-  );
-
-  console.log(bestMatch);
 };
 
 module.exports = searchYouTube;

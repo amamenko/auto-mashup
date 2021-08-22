@@ -12,7 +12,9 @@ const getTrackTimes = async (youtubeCaptions, trackTitle, artist) => {
     youtubeCaptions,
   };
 
-  searchSong(options)
+  console.log(options);
+
+  const resultLyrics = await searchSong(options)
     .then(async (res) => {
       if (res) {
         if (res.length > 0) {
@@ -30,7 +32,7 @@ const getTrackTimes = async (youtubeCaptions, trackTitle, artist) => {
               return true;
             }
           });
-
+          console.log(resultArr);
           if (resultArr[0]) {
             const titleRegex = /(\s{1}by\s{1})(?!.*\1)/gi;
 
@@ -41,7 +43,6 @@ const getTrackTimes = async (youtubeCaptions, trackTitle, artist) => {
             }
 
             return await getLyricTimestamps(options).then(async (lyricArr) => {
-              // console.log({ lyricArr });
               if (lyricArr) {
                 if (lyricArr.length < 4) {
                   if (resultArr[1]) {
@@ -72,6 +73,9 @@ const getTrackTimes = async (youtubeCaptions, trackTitle, artist) => {
       }
     })
     .catch((err) => console.log(err));
+
+  console.log(resultLyrics);
+  return resultLyrics;
 };
 
 module.exports = getTrackTimes;
