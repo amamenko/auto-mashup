@@ -5,6 +5,7 @@ const subsrt = require("subsrt");
 const axios = require("axios");
 const path = require("path");
 const fs = require("fs");
+const removeAccents = require("remove-accents");
 
 const getSubtitleJSON = async (videoID, title, artist) => {
   const format = "vtt";
@@ -89,17 +90,35 @@ const getSubtitleJSON = async (videoID, title, artist) => {
 
       const sortedLyricsArr = lyricsArr.sort(compareTimes);
 
-      const splitRegex = /(featuring)|(ft\.)|(&)|(x)|(feat\.)/gi;
+      const splitRegex =
+        /(\()|(\))|(featuring)|(ft\.)|(&)|x(?!( &)|( and )|( featuring)|( feat\.)|( ft\.)|$)|(feat\.)|( and )/gi;
+      const filterOutArr = [
+        "&",
+        "and",
+        "x",
+        "X",
+        "+",
+        "Featuring",
+        "feat.",
+        "ft.",
+        "featuring",
+        "(",
+        ")",
+      ];
 
       const artistArr = artist
         .split(splitRegex)
-        .filter((item) => item && !item.match(splitRegex))
+        .filter((item) => item && !filterOutArr.includes(item))
         .map((item) => item.trim());
+
+      console.log(artistArr);
 
       const times = await getTrackTimes(
         sortedLyricsArr,
         title,
-        artistArr[1] ? artistArr[0] + " " + artistArr[1] : artistArr[0]
+        artistArr[0] ? removeAccents(artistArr[0]) : "",
+        artistArr[1] ? removeAccents(artistArr[1]) : "",
+        artistArr[2] ? removeAccents(artistArr[2]) : ""
       );
 
       return times;

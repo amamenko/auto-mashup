@@ -1,7 +1,15 @@
 const { searchSong } = require("genius-lyrics-api");
 const getLyricTimestamps = require("./getLyricTimestamps");
+const stringSimilarity = require("string-similarity");
+const removeAccents = require("remove-accents");
 
-const getTrackTimes = async (youtubeCaptions, trackTitle, artist) => {
+const getTrackTimes = async (
+  youtubeCaptions,
+  trackTitle,
+  artist,
+  artist2,
+  artist3
+) => {
   let title = trackTitle;
 
   const options = {
@@ -10,9 +18,8 @@ const getTrackTimes = async (youtubeCaptions, trackTitle, artist) => {
     title: title,
     artist: artist,
     youtubeCaptions,
+    optimizeQuery: true,
   };
-
-  console.log(options);
 
   const resultLyrics = await searchSong(options)
     .then(async (res) => {
@@ -23,7 +30,9 @@ const getTrackTimes = async (youtubeCaptions, trackTitle, artist) => {
             .map((item) => item.toLowerCase());
 
           const resultArr = res.filter((item) => {
-            const currentTitleArr = item.title.toLowerCase().split(/\s+/);
+            const currentTitleArr = removeAccents(
+              item.title.toLowerCase()
+            ).split(/\s+/);
 
             if (
               currentTitleArr.some((item) => artistArr.includes(item)) &&
@@ -32,11 +41,122 @@ const getTrackTimes = async (youtubeCaptions, trackTitle, artist) => {
               return true;
             }
           });
-          console.log(resultArr);
-          if (resultArr[0]) {
+
+          const urlArr = resultArr
+            .map((item) => {
+              return {
+                ...item,
+                url: item.url
+                  .split(".com/")[1]
+                  .replace(/(-)/gi, " ")
+                  .toLowerCase(),
+              };
+            })
+            .filter((item) => {
+              let possibleTitle = "";
+
+              if (artist3) {
+                possibleTitle =
+                  artist.toLowerCase() +
+                  " " +
+                  artist2.toLowerCase() +
+                  " " +
+                  artist3.toLowerCase() +
+                  " " +
+                  trackTitle.toLowerCase();
+              } else if (artist2) {
+                possibleTitle =
+                  artist.toLowerCase() +
+                  " " +
+                  artist2.toLowerCase() +
+                  " " +
+                  trackTitle.toLowerCase();
+              } else {
+                possibleTitle =
+                  artist.toLowerCase() + " " + trackTitle.toLowerCase();
+              }
+
+              const similarity1 = stringSimilarity.compareTwoStrings(
+                possibleTitle + " lyrics",
+                item.url
+              );
+
+              const similarity2 = stringSimilarity.compareTwoStrings(
+                possibleTitle + " remix lyrics",
+                item.url
+              );
+
+              // console.log({
+              //   url: item.url,
+              //   possibleTitle,
+              //   similarity1,
+              //   similarity2,
+              // });
+
+              if (similarity1 >= 0.87 || similarity2 >= 0.87) {
+                return true;
+              } else {
+                let newTitle = "";
+                if (artist3) {
+                  newTitle =
+                    artist.toLowerCase() +
+                    " " +
+                    artist2.toLowerCase() +
+                    " " +
+                    trackTitle.toLowerCase();
+                } else {
+                  if (artist2) {
+                    newTitle =
+                      artist.toLowerCase() + " " + trackTitle.toLowerCase();
+                  }
+                }
+
+                const newSimilarity1 = stringSimilarity.compareTwoStrings(
+                  newTitle + " lyrics",
+                  item.url
+                );
+
+                const newSimilarity2 = stringSimilarity.compareTwoStrings(
+                  newTitle + " remix lyrics",
+                  item.url
+                );
+
+                if (newSimilarity1 >= 0.87 || newSimilarity2 >= 0.87) {
+                  return true;
+                } else {
+                  let newestTitle = "";
+                  if (artist3) {
+                    newestTitle =
+                      artist.toLowerCase() + " " + trackTitle.toLowerCase();
+
+                    const newestSimilarity1 =
+                      stringSimilarity.compareTwoStrings(
+                        newestTitle + " lyrics",
+                        item.url
+                      );
+
+                    const newestSimilarity2 =
+                      stringSimilarity.compareTwoStrings(
+                        newestTitle + " remix lyrics",
+                        item.url
+                      );
+
+                    if (
+                      newestSimilarity1 >= 0.87 ||
+                      newestSimilarity2 >= 0.87
+                    ) {
+                      return true;
+                    }
+                  }
+                }
+              }
+            });
+
+          console.log({ urlArr });
+          if (urlArr[0]) {
             const titleRegex = /(\s{1}by\s{1})(?!.*\1)/gi;
 
-            const newTitleArr = resultArr[0].title.split(titleRegex);
+            const newTitleArr = urlArr[0].title.split(titleRegex);
 
             if (title !== newTitleArr[0].trim()) {
               options.title = newTitleArr[0].trim();
@@ -45,10 +165,10 @@ const getTrackTimes = async (youtubeCaptions, trackTitle, artist) => {
             return await getLyricTimestamps(options).then(async (lyricArr) => {
               if (lyricArr) {
                 if (lyricArr.length < 4) {
-                  if (resultArr[1]) {
+                  if (urlArr[1]) {
                     const newOptions = {
                       ...options,
-                      title: resultArr[1].title.split(titleRegex)[0].trim(),
+                      title: urlArr[1].title.split(titleRegex)[0].trim(),
                     };
 
                     return await getLyricTimestamps(newOptions).then(

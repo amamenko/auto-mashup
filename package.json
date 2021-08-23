@@ -22,6 +22,7 @@
     "https": "^1.0.0",
     "node-wget": "^0.4.3",
     "python-shell": "^3.0.0",
+    "remove-accents": "^0.4.2",
     "spotify-web-api-node": "^5.0.2",
     "string-similarity": "^4.0.4",
     "subsrt": "^1.1.1",
