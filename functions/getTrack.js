@@ -1,6 +1,7 @@
 const { getChart } = require("billboard-top-100");
 const getYouTubeAudio = require("./getAudioStems");
 const searchYouTube = require("./searchYouTube");
+const filterOutArr = require("./arrays/filterOutArr");
 
 const getTrack = (spotifyApi) => {
   getChart(async (err, chart) => {
@@ -9,12 +10,18 @@ const getTrack = (spotifyApi) => {
     } else {
       const topSong = chart.songs[4];
 
-      return await spotifyApi
-        .searchTracks(
-          `track:${topSong.title} artist:${
-            topSong.artist.split("Featuring")[0]
-          }`
+      const splitRegex =
+        /(\()|(\))|(, )|( with )|(featuring)|(ft\.)|(&)|x(?!( &)|( and )|( featuring)|( feat\.)|( ft\.)|$)|(feat\.)|( and )/gi;
+
+      const filteredArtist = topSong.artist
+        .split(splitRegex)
+        .filter(
+          (item) => item && !filterOutArr.includes(item.trim().toLowerCase())
         )
+        .map((item) => item.trim());
+
+      return await spotifyApi
+        .searchTracks(`track:${topSong.title} artist:${filteredArtist[0]}`)
         .then(
           (data) => {
             const firstResultID = data.body.tracks.items[0].id;

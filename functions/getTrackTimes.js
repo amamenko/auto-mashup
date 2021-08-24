@@ -15,10 +15,9 @@ const getTrackTimes = async (
   const options = {
     apiKey: process.env.GENIUS_CLIENT_ACCESS_TOKEN,
     originalTitle: title,
-    title: title,
-    artist: artist,
+    title,
+    artist,
     youtubeCaptions,
-    optimizeQuery: true,
   };
 
   const resultLyrics = await searchSong(options)
@@ -32,7 +31,7 @@ const getTrackTimes = async (
           const resultArr = res.filter((item) => {
             const currentTitleArr = removeAccents(
               item.title.toLowerCase()
-            ).split(/\s+/);
+            ).split(/(\s+)|(,)/);
 
             if (
               currentTitleArr.some((item) => artistArr.includes(item)) &&
@@ -54,27 +53,25 @@ const getTrackTimes = async (
             })
             .filter((item) => {
               let possibleTitle = "";
+              const cleanUpRegex = /(')|(\.)+/gi;
+
+              const formatTitleFunction = (title) => {
+                return title
+                  .toLowerCase()
+                  .replace(cleanUpRegex, "")
+                  .replace(/(-)/gi, " ");
+              };
 
               if (artist3) {
                 possibleTitle =
-                  artist.toLowerCase() +
-                  " " +
-                  artist2.toLowerCase() +
-                  " " +
-                  artist3.toLowerCase() +
-                  " " +
-                  trackTitle.toLowerCase();
+                  artist + " " + artist2 + " " + artist3 + " " + trackTitle;
               } else if (artist2) {
-                possibleTitle =
-                  artist.toLowerCase() +
-                  " " +
-                  artist2.toLowerCase() +
-                  " " +
-                  trackTitle.toLowerCase();
+                possibleTitle = artist + " " + artist2 + " " + trackTitle;
               } else {
-                possibleTitle =
-                  artist.toLowerCase() + " " + trackTitle.toLowerCase();
+                possibleTitle = artist + " " + trackTitle;
               }
+
+              possibleTitle = formatTitleFunction(possibleTitle);
 
               const similarity1 = stringSimilarity.compareTwoStrings(
                 possibleTitle + " lyrics",
@@ -86,30 +83,19 @@ const getTrackTimes = async (
                 item.url
               );
 
-              // console.log({
-              //   url: item.url,
-              //   possibleTitle,
-              //   similarity1,
-              //   similarity2,
-              // });
-
               if (similarity1 >= 0.87 || similarity2 >= 0.87) {
                 return true;
               } else {
                 let newTitle = "";
                 if (artist3) {
-                  newTitle =
-                    artist.toLowerCase() +
-                    " " +
-                    artist2.toLowerCase() +
-                    " " +
-                    trackTitle.toLowerCase();
+                  newTitle = artist + " " + artist2 + " " + trackTitle;
                 } else {
                   if (artist2) {
-                    newTitle =
-                      artist.toLowerCase() + " " + trackTitle.toLowerCase();
+                    newTitle = artist + " " + trackTitle;
                   }
                 }
+
+                newTitle = formatTitleFunction(newTitle);
 
                 const newSimilarity1 = stringSimilarity.compareTwoStrings(
                   newTitle + " lyrics",
@@ -126,8 +112,9 @@ const getTrackTimes = async (
                 } else {
                   let newestTitle = "";
                   if (artist3) {
-                    newestTitle =
-                      artist.toLowerCase() + " " + trackTitle.toLowerCase();
+                    newestTitle = artist + " " + trackTitle;
+
+                    newestTitle = formatTitleFunction(newestTitle);
 
                     const newestSimilarity1 =
                       stringSimilarity.compareTwoStrings(
@@ -152,7 +139,6 @@ const getTrackTimes = async (
               }
             });
 
-          console.log({ urlArr });
           if (urlArr[0]) {
             const titleRegex = /(\s{1}by\s{1})(?!.*\1)/gi;
 
