@@ -8,7 +8,7 @@ const getTrack = (spotifyApi) => {
     if (err) {
       console.log(err);
     } else {
-      const topSong = chart.songs[4];
+      const topSong = chart.songs[0];
 
       const splitRegex =
         /(\()|(\))|(, )|( with )|(featuring)|(ft\.)|(&)|x(?!( &)|( and )|( featuring)|( feat\.)|( ft\.)|$)|(feat\.)|( and )/gi;
@@ -68,7 +68,11 @@ const getTrack = (spotifyApi) => {
 
               console.log(trackDataJSON);
 
-              return await searchYouTube(topSong.title, topSong.artist);
+              return await searchYouTube(topSong.title, topSong.artist).then(
+                (match) => {
+                  console.log({ match });
+                }
+              );
             },
             (err) => {
               done(err);

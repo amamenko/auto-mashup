@@ -4,7 +4,15 @@ const ffmpeg = require("fluent-ffmpeg");
 const { PythonShell } = require("python-shell");
 
 const getAudioStems = async (videoID) => {
-  const basicInfo = await ytdl.getBasicInfo(videoID);
+  const reqOptions = {
+    requestOptions: {
+      headers: {
+        cookie: process.env.YOUTUBE_COOKIES,
+      },
+    },
+  };
+
+  const basicInfo = await ytdl.getBasicInfo(videoID, reqOptions);
 
   if (basicInfo) {
     if (basicInfo.videoDetails) {
@@ -16,6 +24,7 @@ const getAudioStems = async (videoID) => {
   // Download audio from YouTube
   let stream = ytdl(videoID, {
     quality: "highestaudio",
+    ...reqOptions,
   });
 
   const filePath = "YouTubeAudio.wav";

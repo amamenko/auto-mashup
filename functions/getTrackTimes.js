@@ -180,7 +180,6 @@ const getTrackTimes = async (
     })
     .catch((err) => console.log(err));
 
-  console.log(resultLyrics);
   return resultLyrics;
 };
 

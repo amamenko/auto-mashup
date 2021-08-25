@@ -92,7 +92,7 @@ const loopOverFinalLyrics = async (
                 !oldLyricMatch.bestMatch ||
                 oldLyricMatch.bestMatch.rating <= lyricMatch.bestMatch.rating
               ) {
-                if (lyricMatch.bestMatch.rating >= 0.6) {
+                if (lyricMatch.bestMatch.rating >= 0.57) {
                   if (
                     !finalMatchArr
                       .map((item) => item.sectionName)

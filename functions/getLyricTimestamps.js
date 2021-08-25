@@ -191,6 +191,7 @@ const getLyricTimestamps = async (options) => {
           );
         }
       }
+
       return matchArr;
     } else {
       console.log("No lyrics served");

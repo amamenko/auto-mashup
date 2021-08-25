@@ -33,8 +33,6 @@ const searchYouTube = async (trackTitle, trackArtist) => {
 
     const firstThree = filteredVids.slice(0, 3);
 
-    console.log(filteredVids);
-
     const loopOverVideos = async () => {
       const allResultsArr = [];
 
@@ -101,9 +99,6 @@ const searchYouTube = async (trackTitle, trackArtist) => {
       const bestMatch = arr.find(
         (item) => item.arrLength === Math.max(...allResultLengths)
       );
-
-      console.log({ bestMatch });
-      console.log({ array: bestMatch.arr });
 
       return bestMatch;
     });
