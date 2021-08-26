@@ -11,6 +11,8 @@
 /output
 YouTubeSubtitles.vtt
 YouTubeSubtitles.json
+*.mp3
+*.wav
 
 # misc
 .DS_Store

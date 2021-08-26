@@ -5,6 +5,9 @@ const getTrack = require("./functions/getTrack");
 const searchVideo = require("./functions/usetube/usetubeSearchVideo");
 const getVideoSubtitles = require("./functions/usetube/usetubeGetVideoSubtitles");
 const getSubtitleJSON = require("./functions/getSubtitleJSON");
+const esPkg = require("essentia.js");
+const essentia = new esPkg.Essentia(esPkg.EssentiaWASM);
+
 require("dotenv").config();
 
 const port = process.env.PORT || 4000;
@@ -63,8 +66,6 @@ const spotifyApi = new SpotifyWebApi(spotifyCredentials);
 //     }
 //   });
 // };
-
-getSubtitleJSON("", "", "");
 
 // if (spotifyApi.getAccessToken()) {
 //   getTrack(spotifyApi);

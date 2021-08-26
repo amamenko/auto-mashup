@@ -8,7 +8,7 @@ const getTrack = (spotifyApi) => {
     if (err) {
       console.log(err);
     } else {
-      const topSong = chart.songs[0];
+      const topSong = chart.songs[7];
 
       const splitRegex =
         /(\()|(\))|(, )|( with )|(featuring)|(ft\.)|(&)|x(?!( &)|( and )|( featuring)|( feat\.)|( ft\.)|$)|(feat\.)|( and )/gi;
@@ -49,12 +49,14 @@ const getTrack = (spotifyApi) => {
                 "B",
               ];
               const trackDetails = data.body.track;
+              const sectionDetails = data.body.sections;
+              const allSectionBPMs = sectionDetails.map((item) => item.tempo);
 
-              const tempo = Math.round(trackDetails.tempo);
+              const tempo = trackDetails.tempo;
               const key = allKeys[trackDetails.key];
               const mode = trackDetails.mode === 1 ? "major" : "minor";
-              const duration = trackDetails.duration;
-              const fadeOut = trackDetails.start_of_fade_out;
+              const maxBPM = Math.max(...allSectionBPMs);
+              const minBPM = Math.min(...allSectionBPMs);
 
               const trackDataJSON = {
                 title: topSong.title,
@@ -62,17 +64,41 @@ const getTrack = (spotifyApi) => {
                 tempo,
                 key,
                 mode,
-                duration,
-                fadeOut,
               };
 
-              console.log(trackDataJSON);
+              console.log({
+                ...trackDataJSON,
+                tempo,
+                maxBPM,
+                minBPM,
+              });
 
-              return await searchYouTube(topSong.title, topSong.artist).then(
-                (match) => {
-                  console.log({ match });
-                }
-              );
+              // return await searchYouTube(topSong.title, topSong.artist).then(
+              //   (match) => {
+              //     if (match.arr.length >= 4) {
+              //       const matchID = match.id;
+              //       const matchDuration = match.duration;
+              //       const matchArr = match.arr.map((item) => {
+              //         if (item.end) {
+              //           return {
+              //             sectionName: item.sectionName,
+              //             start: item.start,
+              //             end: item.end,
+              //           };
+              //         } else {
+              //           return {
+              //             sectionName: item.sectionName,
+              //             start: item.start,
+              //           };
+              //         }
+              //       });
+              //       console.log({ match });
+              //       getYouTubeAudio(matchID);
+              //     } else {
+              //       return;
+              //     }
+              //   }
+              // );
             },
             (err) => {
               done(err);

@@ -12,8 +12,8 @@ const searchVideo = async (terms, token, apikey) => {
     // initial videos search
     if (!token) {
       let data = await getData(
-        "https://m.youtube.com/results?videoEmbeddable=true&search_query=" +
-          encodeURI(terms) +
+        "https://www.youtube.com/results?search_query=" +
+          encodeURIComponent(terms) +
           // Added this portion to include only videos with subtitles/closed captions
           "&sp=EgIoAQ%253D%253D"
       );
@@ -50,7 +50,7 @@ const searchVideo = async (terms, token, apikey) => {
     };
   } catch (e) {
     console.log("search videos error, terms: " + terms);
-    // console.log(e)
+    console.log(e);
   }
 };
 

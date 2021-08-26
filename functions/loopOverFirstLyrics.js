@@ -197,6 +197,24 @@ const loopOverFirstLyrics = async (
                           !correspondingFinalLastSection ||
                           youtubeStart - finalSectionEnd >= -1.5
                         ) {
+                          const bestRating = lyricMatch.bestMatch.rating;
+                          const nextBestRating = Math.max(
+                            ...lyricMatch.ratings
+                              .map((item) => item.rating)
+                              .filter((item) => item !== bestRating)
+                          );
+
+                          if (
+                            bestRating <= 0.7 &&
+                            bestRating >= 0.55 &&
+                            nextBestRating <= 0.7 &&
+                            nextBestRating >= 0.55
+                          ) {
+                            matchJSON.lyrics = lyricMatch.ratings.find(
+                              (item) => item.rating === nextBestRating
+                            ).target;
+                          }
+
                           if (correspondingFinalMatch) {
                             matchArr.push({
                               ...matchJSON,

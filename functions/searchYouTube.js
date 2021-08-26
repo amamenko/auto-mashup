@@ -19,7 +19,7 @@ const searchYouTube = async (trackTitle, trackArtist) => {
   );
 
   const filterRegex =
-    /(live)|(instrumental)|(tik[\s]*tok)|(karaoke)|(parody)|(\(cover\))/gi;
+    /(live)|(instrumental)|(tik[\s]*tok)|(karaoke)|(reaction video)|(minecraft)|(\(reaction\))|(- reaction)|(kidz bop)|(\| verified)|(parody)|(pronunciation)|(\(cover\))/gim;
 
   const mustContainRegex = /(video)|(audio)|(lyrics)/gi;
 
@@ -32,6 +32,8 @@ const searchYouTube = async (trackTitle, trackArtist) => {
     );
 
     const firstThree = filteredVids.slice(0, 3);
+
+    console.log({ firstThree });
 
     const loopOverVideos = async () => {
       const allResultsArr = [];
@@ -54,10 +56,10 @@ const searchYouTube = async (trackTitle, trackArtist) => {
                 trackArtist
               )
                 .then((arr) => {
-                  console.log("Subtitle function resolved!");
                   if (arr) {
                     const result = {
                       id: firstThree[i].id,
+                      duration: firstThree[i].duration,
                       arr,
                       arrLength: arr.length,
                     };
