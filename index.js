@@ -8,6 +8,10 @@ const getSubtitleJSON = require("./functions/getSubtitleJSON");
 const esPkg = require("essentia.js");
 const essentia = new esPkg.Essentia(esPkg.EssentiaWASM);
 const fs = require("fs");
+const AudioContext = require("web-audio-api").AudioContext;
+global.fetch = require("node-fetch");
+const path = require("path");
+const XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 require("dotenv").config();
 
 const port = process.env.PORT || 4000;
@@ -19,26 +23,43 @@ const spotifyCredentials = {
 
 const spotifyApi = new SpotifyWebApi(spotifyCredentials);
 
-const filePath = "./accompaniment.wav";
-const wavFileBuffer = fs.readFileSync(filePath);
+const filePath = "http://localhost:4000/audio";
+const audioCtx = new AudioContext();
 
-// const audioData = wavFileBuffer.getChannelData(0);
-// const signal = typedFloat32Array2Vec(audioData);
+const getData = () => {
+  audioCtx.decodeAudioData(
+    filePath,
+    (buffer) => {
+      console.log(buffer);
+      return buffer;
+    },
+    (e) => console.log("Error with decoding audio data" + e.err)
+  );
 
-// compute beat tracking
-const computBeatTrackerMultiFeature = (signal) => {
-  var ticks = new Module.VectorFloat();
-  var confidence = 0;
-  essentia.beatTrackerMultiFeature(signal, ticks, confidence);
-  var beatTicks = vec2typedFloat32Array(ticks);
-  console.log("confidence: ", confidence);
-  // bad hack to free the vectors
-  ticks.resize(0, 1);
-  console.log(beatTicks);
-  return beatTicks;
+  // Convert the JS float32 typed array into std::vector<float>
+  // const inputSignalVector = essentia.arrayToVector(buffer.getChannelData(0));
 };
 
-// computBeatTrackerMultiFeature(signal);
+getData();
+
+//   console.log(audioBuffer);
+//   // Convert the JS float32 typed array into std::vector<float>
+//   // const inputSignalVector = essentia.arrayToVector(
+//   //   audioBuffer.getChannelData(0)
+//   // );
+//   // const beats = essentia.BeatTrackerMultiFeature(inputSignalVector);
+//   // console.log(beats);
+// };
+
+// getAudioBuffer();
+
+app.get("/audio", (req, res) => {
+  res.writeHead(200, {
+    "Content-Type": "audio/wav",
+  });
+
+  fs.createReadStream(filePath).pipe(res);
+});
 
 // const getVideo = async () => {
 //   await searchVideo("").then(async (results) => {
