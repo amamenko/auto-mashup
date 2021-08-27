@@ -7,7 +7,7 @@ const getVideoSubtitles = require("./functions/usetube/usetubeGetVideoSubtitles"
 const getSubtitleJSON = require("./functions/getSubtitleJSON");
 const esPkg = require("essentia.js");
 const essentia = new esPkg.Essentia(esPkg.EssentiaWASM);
-
+const fs = require("fs");
 require("dotenv").config();
 
 const port = process.env.PORT || 4000;
@@ -18,6 +18,27 @@ const spotifyCredentials = {
 };
 
 const spotifyApi = new SpotifyWebApi(spotifyCredentials);
+
+const filePath = "./accompaniment.wav";
+const wavFileBuffer = fs.readFileSync(filePath);
+
+// const audioData = wavFileBuffer.getChannelData(0);
+// const signal = typedFloat32Array2Vec(audioData);
+
+// compute beat tracking
+const computBeatTrackerMultiFeature = (signal) => {
+  var ticks = new Module.VectorFloat();
+  var confidence = 0;
+  essentia.beatTrackerMultiFeature(signal, ticks, confidence);
+  var beatTicks = vec2typedFloat32Array(ticks);
+  console.log("confidence: ", confidence);
+  // bad hack to free the vectors
+  ticks.resize(0, 1);
+  console.log(beatTicks);
+  return beatTicks;
+};
+
+// computBeatTrackerMultiFeature(signal);
 
 // const getVideo = async () => {
 //   await searchVideo("").then(async (results) => {

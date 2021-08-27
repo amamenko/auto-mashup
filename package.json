@@ -28,6 +28,8 @@
     "string-similarity": "^4.0.4",
     "subsrt": "^1.1.1",
     "wav-decoder": "^1.3.0",
+    "wavefile": "^11.0.0",
+    "web-audio-api": "^0.2.2",
     "write": "^1.0.3",
     "youtube-captions-scraper": "^1.0.3",
     "youtube-mp3-downloader": "^0.7.7",
