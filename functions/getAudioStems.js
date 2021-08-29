@@ -2,6 +2,9 @@ const fs = require("fs");
 const ytdl = require("ytdl-core");
 const ffmpeg = require("fluent-ffmpeg");
 const { PythonShell } = require("python-shell");
+const getBeatPositions = require("./getBeatPositions");
+const esPkg = require("essentia.js");
+const essentia = new esPkg.Essentia(esPkg.EssentiaWASM);
 
 const getAudioStems = async (videoID) => {
   const reqOptions = {
@@ -29,7 +32,8 @@ const getAudioStems = async (videoID) => {
 
   const filePath = "YouTubeAudio.wav";
 
-  let start = Date.now();
+  const start = Date.now();
+
   ffmpeg(stream)
     .audioBitrate(128)
     .save(filePath)
@@ -67,6 +71,23 @@ const getAudioStems = async (videoID) => {
                   console.log(
                     "Removed pretrained_models directory and local audio file"
                   );
+
+                  // Get beat positions from accompaniment track
+                  const beatSuccessCallback = async (buffer) => {
+                    // Convert the JS float32 typed array into std::vector<float>
+                    const inputSignalVector = await essentia.arrayToVector(
+                      buffer.getChannelData(0)
+                    );
+
+                    const beats = await essentia.BeatTrackerMultiFeature(
+                      inputSignalVector,
+                      tempo
+                    );
+
+                    const beatPositions = essentia.vectorToArray(beats.ticks);
+                  };
+
+                  getBeatPositions(beatSuccessCallback);
                 }
               }
             );

@@ -21,7 +21,6 @@
     "fluent-ffmpeg": "^2.1.2",
     "genius-lyrics-api": "^3.0.6",
     "https": "^1.0.0",
-    "node-fetch": "^2.6.1",
     "node-wget": "^0.4.3",
     "python-shell": "^3.0.0",
     "remove-accents": "^0.4.2",

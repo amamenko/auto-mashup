@@ -1,5 +1,5 @@
 const { getChart } = require("billboard-top-100");
-const getYouTubeAudio = require("./getAudioStems");
+const getAudioStems = require("./getAudioStems");
 const searchYouTube = require("./searchYouTube");
 const filterOutArr = require("./arrays/filterOutArr");
 
@@ -73,32 +73,32 @@ const getTrack = (spotifyApi) => {
                 minBPM,
               });
 
-              // return await searchYouTube(topSong.title, topSong.artist).then(
-              //   (match) => {
-              //     if (match.arr.length >= 4) {
-              //       const matchID = match.id;
-              //       const matchDuration = match.duration;
-              //       const matchArr = match.arr.map((item) => {
-              //         if (item.end) {
-              //           return {
-              //             sectionName: item.sectionName,
-              //             start: item.start,
-              //             end: item.end,
-              //           };
-              //         } else {
-              //           return {
-              //             sectionName: item.sectionName,
-              //             start: item.start,
-              //           };
-              //         }
-              //       });
-              //       console.log({ match });
-              //       getYouTubeAudio(matchID);
-              //     } else {
-              //       return;
-              //     }
-              //   }
-              // );
+              return await searchYouTube(topSong.title, topSong.artist).then(
+                (match) => {
+                  if (match.arr.length >= 4) {
+                    const matchID = match.id;
+                    const matchDuration = match.duration;
+                    const matchArr = match.arr.map((item) => {
+                      if (item.end) {
+                        return {
+                          sectionName: item.sectionName,
+                          start: item.start,
+                          end: item.end,
+                        };
+                      } else {
+                        return {
+                          sectionName: item.sectionName,
+                          start: item.start,
+                        };
+                      }
+                    });
+                    console.log({ match });
+                    getAudioStems(matchID);
+                  } else {
+                    return;
+                  }
+                }
+              );
             },
             (err) => {
               done(err);
