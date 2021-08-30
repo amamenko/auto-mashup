@@ -8,7 +8,9 @@ const getTrack = (spotifyApi) => {
     if (err) {
       console.log(err);
     } else {
-      const topSong = chart.songs[7];
+      const topSong = chart.songs[0];
+      const songRank = chart.songs[0].rank;
+      const songCover = chart.songs[0].cover;
 
       const splitRegex =
         /(\()|(\))|(, )|( with )|(featuring)|(ft\.)|(&)|x(?!( &)|( and )|( featuring)|( feat\.)|( ft\.)|$)|(feat\.)|( and )/gi;
