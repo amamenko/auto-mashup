@@ -5,15 +5,10 @@ const getTrack = require("./functions/getTrack");
 const { listCharts } = require("billboard-top-100");
 const fs = require("fs");
 const path = require("path");
+const getBeatPositions = require("./functions/getBeatPositions");
 require("dotenv").config();
-const lamejs = require("lamejs");
-const AudioContext = require("web-audio-api").AudioContext;
-const audioCtx = new AudioContext();
-const esPkg = require("essentia.js");
-const essentia = new esPkg.Essentia(esPkg.EssentiaWASM);
-const Blob = require("node-blob");
-
 const port = process.env.PORT || 4000;
+const MP3Cutter = require("mp3-cutter");
 
 const spotifyCredentials = {
   clientId: process.env.SPOTIFY_CLIENT_ID,
@@ -21,6 +16,13 @@ const spotifyCredentials = {
 };
 
 const spotifyApi = new SpotifyWebApi(spotifyCredentials);
+
+// MP3Cutter.cut({
+//   src: "output/YouTubeAudio/accompaniment.mp3",
+//   target: "target.mp3",
+//   start: 25,
+//   end: 360,
+// });
 
 // listCharts((err, charts) => {
 //   if (err) {
@@ -56,50 +58,6 @@ const spotifyApi = new SpotifyWebApi(spotifyCredentials);
 //     console.log({ filteredCharts, length: filteredCharts.length });
 //   }
 // });
-
-const audioBuffer = fs.readFileSync(
-  path.resolve("output/YouTubeAudio", "accompaniment.wav")
-);
-
-var mp3Data = [];
-
-const successCallback = (buffer) => {
-  const mp3encoder = new lamejs.Mp3Encoder(2, 44100, 128);
-  const left = buffer;
-  const right = buffer;
-  const sampleBlockSize = 1152;
-  for (let i = 0; i < buffer.length; i += sampleBlockSize) {
-    leftChunk = left.subarray(i, i + sampleBlockSize);
-    rightChunk = right.subarray(i, i + sampleBlockSize);
-    let mp3buf = mp3encoder.encodeBuffer(leftChunk, rightChunk);
-    if (mp3buf.length > 0) {
-      mp3Data.push(mp3buf);
-    }
-  }
-  mp3buf = mp3encoder.flush(); //finish writing mp3
-  if (mp3buf.length > 0) {
-    mp3Data.push(mp3buf);
-  }
-  const fullLength = mp3Data.map((item) => item.byteLength);
-  console.log({
-    fullLength: fullLength.reduce((a, b) => a + b) / 1000000.0,
-  });
-
-  var blob = new Blob(mp3Data, { type: "audio/mp3" });
-  console.log({
-    blob,
-    blobSize: blob.size,
-  });
-  // var url = window.URL.createObjectURL(blob);
-  // console.log("MP3 URl: ", url);
-};
-// successCallback(audioBuffer);
-
-const whatever = async () => {
-  await audioCtx.decodeAudioData(audioBuffer, successCallback, (e) =>
-    console.log("Error with decoding audio data" + e.err)
-  );
-};
 
 // if (spotifyApi.getAccessToken()) {
 //   getTrack(spotifyApi);

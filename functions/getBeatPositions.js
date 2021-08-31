@@ -5,7 +5,7 @@ const path = require("path");
 
 const getBeatPositions = async (successCallback) => {
   const audioBuffer = fs.readFileSync(
-    path.resolve("output/YouTubeAudio", "accompaniment.wav")
+    path.resolve("output/YouTubeAudio", "accompaniment.mp3")
   );
 
   await audioCtx.decodeAudioData(audioBuffer, successCallback, (e) =>

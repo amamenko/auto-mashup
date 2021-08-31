@@ -85,6 +85,9 @@ const getAudioStems = async (videoID) => {
                     );
 
                     const beatPositions = essentia.vectorToArray(beats.ticks);
+                    const roundedBeatPositions = [...beatPositions].map(
+                      (item) => Number(item.toFixed(4))
+                    );
                   };
 
                   getBeatPositions(beatSuccessCallback);
