@@ -51,29 +51,20 @@ const getTrack = (spotifyApi) => {
                 "B",
               ];
               const trackDetails = data.body.track;
-              const sectionDetails = data.body.sections;
-              const allSectionBPMs = sectionDetails.map((item) => item.tempo);
 
               const tempo = trackDetails.tempo;
               const key = allKeys[trackDetails.key];
               const mode = trackDetails.mode === 1 ? "major" : "minor";
-              const maxBPM = Math.max(...allSectionBPMs);
-              const minBPM = Math.min(...allSectionBPMs);
 
               const trackDataJSON = {
                 title: topSong.title,
                 artist: topSong.artist,
+                rank: songRank,
+                cover: songCover,
                 tempo,
                 key,
                 mode,
               };
-
-              console.log({
-                ...trackDataJSON,
-                tempo,
-                maxBPM,
-                minBPM,
-              });
 
               return await searchYouTube(topSong.title, topSong.artist).then(
                 (match) => {
@@ -94,8 +85,13 @@ const getTrack = (spotifyApi) => {
                         };
                       }
                     });
-                    console.log({ match });
-                    getAudioStems(matchID);
+
+                    getAudioStems(
+                      matchID,
+                      matchDuration,
+                      matchArr,
+                      trackDataJSON
+                    );
                   } else {
                     return;
                   }

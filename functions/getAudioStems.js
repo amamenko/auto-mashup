@@ -5,8 +5,15 @@ const { PythonShell } = require("python-shell");
 const getBeatPositions = require("./getBeatPositions");
 const esPkg = require("essentia.js");
 const essentia = new esPkg.Essentia(esPkg.EssentiaWASM);
+const MP3Cutter = require("./mp3Cutter/cutter");
+const sendDataToContentful = require("./sendDataToContentful");
 
-const getAudioStems = async (videoID) => {
+const getAudioStems = async (
+  videoID,
+  matchDuration,
+  matchArr,
+  trackDataJSON
+) => {
   const reqOptions = {
     requestOptions: {
       headers: {
@@ -88,6 +95,38 @@ const getAudioStems = async (videoID) => {
                     const roundedBeatPositions = [...beatPositions].map(
                       (item) => Number(item.toFixed(4))
                     );
+
+                    if (matchDuration > 360) {
+                      MP3Cutter.cut({
+                        src: "output/YouTubeAudio/accompaniment.mp3",
+                        target: "output/YouTubeAudio/accompaniment_cut.mp3",
+                        start: 0,
+                        // Keep total track time at 6 minutes maximum to keep file at ~6 MB
+                        end: 360,
+                        callback: () =>
+                          MP3Cutter.cut({
+                            src: "output/YouTubeAudio/vocals.mp3",
+                            target: "output/YouTubeAudio/vocals_cut.mp3",
+                            start: 0,
+                            // Keep total track time at 6 minutes maximum to keep file at ~6 MB
+                            end: 360,
+                            callback: () =>
+                              sendDataToContentful(
+                                trackDataJSON,
+                                360,
+                                matchArr,
+                                roundedBeatPositions
+                              ),
+                          }),
+                      });
+                    } else {
+                      sendDataToContentful(
+                        trackDataJSON,
+                        matchDuration,
+                        matchArr,
+                        roundedBeatPositions
+                      );
+                    }
                   };
 
                   getBeatPositions(beatSuccessCallback);

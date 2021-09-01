@@ -6,9 +6,9 @@ const { listCharts } = require("billboard-top-100");
 const fs = require("fs");
 const path = require("path");
 const getBeatPositions = require("./functions/getBeatPositions");
+const sendDataToContentful = require("./functions/sendDataToContentful");
 require("dotenv").config();
 const port = process.env.PORT || 4000;
-const MP3Cutter = require("mp3-cutter");
 
 const spotifyCredentials = {
   clientId: process.env.SPOTIFY_CLIENT_ID,
@@ -17,12 +17,7 @@ const spotifyCredentials = {
 
 const spotifyApi = new SpotifyWebApi(spotifyCredentials);
 
-// MP3Cutter.cut({
-//   src: "output/YouTubeAudio/accompaniment.mp3",
-//   target: "target.mp3",
-//   start: 25,
-//   end: 360,
-// });
+sendDataToContentful();
 
 // listCharts((err, charts) => {
 //   if (err) {
