@@ -3,8 +3,8 @@ const getAudioStems = require("./getAudioStems");
 const searchYouTube = require("./searchYouTube");
 const filterOutArr = require("./arrays/filterOutArr");
 
-const getTrack = (spotifyApi) => {
-  getChart(async (err, chart) => {
+const getTrack = (currentChart, spotifyApi) => {
+  getChart(currentChart, async (err, chart) => {
     if (err) {
       console.log(err);
     } else {
@@ -64,6 +64,7 @@ const getTrack = (spotifyApi) => {
                 tempo,
                 key,
                 mode,
+                currentChart,
               };
 
               return await searchYouTube(topSong.title, topSong.artist).then(

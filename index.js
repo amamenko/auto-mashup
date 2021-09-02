@@ -5,9 +5,9 @@ const getTrack = require("./functions/getTrack");
 const { listCharts } = require("billboard-top-100");
 const fs = require("fs");
 const path = require("path");
-const getBeatPositions = require("./functions/getBeatPositions");
-const sendDataToContentful = require("./functions/sendDataToContentful");
+const contentful = require("contentful");
 require("dotenv").config();
+
 const port = process.env.PORT || 4000;
 
 const spotifyCredentials = {
@@ -17,7 +17,22 @@ const spotifyCredentials = {
 
 const spotifyApi = new SpotifyWebApi(spotifyCredentials);
 
-sendDataToContentful();
+// const client = contentful.createClient({
+//   space: process.env.CONTENTFUL_SPACE_ID,
+//   accessToken: process.env.CONTENTFUL_ACCESS_TOKEN,
+// });
+
+// const songQuery = `
+//   query {
+//     songCollection {
+//       items {
+//         title
+//       }
+//     }
+//   }
+// `;
+
+// client.getEntries(songQuery).then((res) => console.log(res.items[0]));
 
 // listCharts((err, charts) => {
 //   if (err) {
@@ -50,12 +65,19 @@ sendDataToContentful();
 //       }
 //     });
 
-//     console.log({ filteredCharts, length: filteredCharts.length });
+//     const usedCharts = filteredCharts.map((item) => {
+//       return {
+//         name: item.name,
+//         url: item.url.split("/charts/")[1],
+//       };
+//     });
+
+//     console.log(usedCharts);
 //   }
 // });
 
 // if (spotifyApi.getAccessToken()) {
-//   getTrack(spotifyApi);
+//   getTrack("hot-100", spotifyApi);
 // } else {
 //   // Retrieve an access token
 //   spotifyApi
@@ -75,7 +97,7 @@ sendDataToContentful();
 //         );
 //       }
 //     )
-//     .then(() => getTrack(spotifyApi));
+//     .then(() => getTrack("hot-100", spotifyApi));
 // }
 
 app.listen(port, () => {

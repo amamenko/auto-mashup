@@ -14,6 +14,7 @@
     "axios": "^0.21.1",
     "billboard-top-100": "^2.5.9",
     "child-process": "^1.0.2",
+    "contentful": "^8.5.0",
     "contentful-management": "^7.34.0",
     "dotenv": "^10.0.0",
     "essentia.js": "^0.1.3",

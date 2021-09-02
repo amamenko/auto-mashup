@@ -99,14 +99,14 @@ const getAudioStems = async (
                     if (matchDuration > 360) {
                       MP3Cutter.cut({
                         src: "output/YouTubeAudio/accompaniment.mp3",
-                        target: "output/YouTubeAudio/accompaniment_cut.mp3",
+                        target: "output/YouTubeAudio/accompaniment_trimmed.mp3",
                         start: 0,
                         // Keep total track time at 6 minutes maximum to keep file at ~6 MB
                         end: 360,
                         callback: () =>
                           MP3Cutter.cut({
                             src: "output/YouTubeAudio/vocals.mp3",
-                            target: "output/YouTubeAudio/vocals_cut.mp3",
+                            target: "output/YouTubeAudio/vocals_trimmed.mp3",
                             start: 0,
                             // Keep total track time at 6 minutes maximum to keep file at ~6 MB
                             end: 360,
@@ -115,7 +115,8 @@ const getAudioStems = async (
                                 trackDataJSON,
                                 360,
                                 matchArr,
-                                roundedBeatPositions
+                                roundedBeatPositions,
+                                "trimmed"
                               ),
                           }),
                       });
