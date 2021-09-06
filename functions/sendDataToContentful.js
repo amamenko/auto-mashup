@@ -143,6 +143,7 @@ const sendDataToContentful = (
                     entry.publish();
                     fs.rmdirSync("../output", { recursive: true });
                     console.log("Successfully created new entry!");
+                    return;
                   })
                   .catch((err) => {
                     console.log(`Received error during entry creation: ${err}`);

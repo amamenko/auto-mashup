@@ -96,13 +96,18 @@ const searchYouTube = async (trackTitle, trackArtist) => {
     };
 
     return await loopOverVideos().then((arr) => {
-      const allResultLengths = arr.map((item) => item.arrLength);
+      if (Array.isArray(arr) && arr.length > 0) {
+        console.log(arr);
+        const allResultLengths = arr.map((item) => item.arrLength);
 
-      const bestMatch = arr.find(
-        (item) => item.arrLength === Math.max(...allResultLengths)
-      );
+        const bestMatch = arr.find(
+          (item) => item.arrLength === Math.max(...allResultLengths)
+        );
 
-      return bestMatch;
+        return bestMatch;
+      } else {
+        return;
+      }
     });
   } else {
     console.log("No videos found!");
