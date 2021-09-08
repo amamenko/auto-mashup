@@ -30,29 +30,53 @@ const getTrack = (currentChart, spotifyApi) => {
             if (res.items[0]) {
               if (res.items[0].fields) {
                 const charts = res.items[0].fields.charts;
+
+                const containsCurrentChart = charts.find(
+                  (item) => item.chart === currentChart
+                );
+
                 const newChart = { chart: currentChart, rank: songRank };
-                charts.push(newChart);
 
-                const managementClient = contentfulManagement.createClient({
-                  accessToken: process.env.CONTENTFUL_ACCESS_TOKEN,
-                });
-
-                managementClient
-                  .getSpace(process.env.CONTENTFUL_SPACE_ID)
-                  .then((space) => {
-                    space.getEnvironment("master").then((environment) => {
-                      environment
-                        .getEntry(res.items[0].sys.id)
-                        .then((entry) => {
-                          entry.fields.charts = charts;
-                          entry.update().then(() => {
-                            console.log("Entry update was successful!");
-                          });
-                        });
-                    });
-
-                    return;
+                const updateContentfulCharts = () => {
+                  const managementClient = contentfulManagement.createClient({
+                    accessToken: process.env.CONTENTFUL_ACCESS_TOKEN,
                   });
+
+                  managementClient
+                    .getSpace(process.env.CONTENTFUL_SPACE_ID)
+                    .then((space) => {
+                      space.getEnvironment("master").then((environment) => {
+                        environment
+                          .getEntry(res.items[0].sys.id)
+                          .then((entry) => {
+                            entry.fields.charts = charts;
+                            entry.update().then(() => {
+                              console.log("Entry update was successful!");
+                            });
+                          });
+                      });
+
+                      return;
+                    });
+                };
+
+                if (containsCurrentChart) {
+                  if (containsCurrentChart.rank !== songRank) {
+                    const currentIndex = charts.findIndex(
+                      (item) => item.chart === currentChart
+                    );
+
+                    if (currentIndex >= 0) {
+                      charts[currentIndex] = newChart;
+
+                      updateContentfulCharts();
+                    }
+                  }
+                } else {
+                  charts.push(newChart);
+
+                  updateContentfulCharts();
+                }
               }
             } else {
               const splitRegex =
