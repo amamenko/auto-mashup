@@ -12,7 +12,10 @@ const getTrack = (currentChart, spotifyApi) => {
     } else {
       const topSong = chart.songs[0];
       const songRank = chart.songs[0].rank;
-      const songCover = chart.songs[0].cover;
+      let songCover = chart.songs[0].cover;
+
+      // Replace image dimensions to grab larger-sized image URL
+      songCover = songCover.replace(/(\d+)x(\d+)/, "155x155");
 
       const client = contentful.createClient({
         space: process.env.CONTENTFUL_SPACE_ID,
@@ -137,38 +140,42 @@ const getTrack = (currentChart, spotifyApi) => {
                         currentChart,
                       };
 
-                      console.log(trackDataJSON);
-
                       if (trackDetails.time_signature === 4) {
                         return await searchYouTube(
                           topSong.title,
                           topSong.artist
                         ).then((match) => {
-                          if (match.arr.length >= 4) {
-                            const matchID = match.id;
-                            const matchDuration = match.duration;
-                            const matchArr = match.arr.map((item) => {
-                              if (item.end) {
-                                return {
-                                  sectionName: item.sectionName,
-                                  start: item.start,
-                                  end: item.end,
-                                };
+                          if (match) {
+                            if (match.arr) {
+                              if (match.arr.length >= 4) {
+                                const matchID = match.id;
+                                const matchDuration = match.duration;
+                                const matchArr = match.arr.map((item) => {
+                                  if (item.end) {
+                                    return {
+                                      sectionName: item.sectionName,
+                                      start: item.start,
+                                      end: item.end,
+                                    };
+                                  } else {
+                                    return {
+                                      sectionName: item.sectionName,
+                                      start: item.start,
+                                    };
+                                  }
+                                });
+                                getAudioStems(
+                                  matchID,
+                                  matchDuration,
+                                  matchArr,
+                                  trackDataJSON
+                                );
                               } else {
-                                return {
-                                  sectionName: item.sectionName,
-                                  start: item.start,
-                                };
+                                return;
                               }
-                            });
-                            getAudioStems(
-                              matchID,
-                              matchDuration,
-                              matchArr,
-                              trackDataJSON
-                            );
+                            }
                           } else {
-                            return;
+                            console.log("No match found");
                           }
                         });
                       } else {

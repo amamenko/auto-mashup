@@ -45,9 +45,8 @@ const sendDataToContentful = (
             },
           })
           .then((asset) => asset.processForAllLocales())
+          .then((asset) => asset.publish())
           .then(async (accompanimentAsset) => {
-            accompanimentAsset.publish();
-
             // Next add the vocal track as an asset in Contentful
             return environment
               .createAssetFromFiles({
@@ -74,9 +73,8 @@ const sendDataToContentful = (
                 },
               })
               .then((vocalsAsset) => vocalsAsset.processForAllLocales())
+              .then((vocalsAsset) => vocalsAsset.publish())
               .then(async (vocalsAsset) => {
-                vocalsAsset.publish();
-
                 return environment
                   .createEntry("song", {
                     fields: {
@@ -116,56 +114,52 @@ const sendDataToContentful = (
                         "en-US": matchArr,
                       },
                       accompaniment: {
-                        "en-US": [
-                          {
-                            sys: {
-                              id: accompanimentAsset.sys.id,
-                              linkType: "Asset",
-                              type: "Link",
-                            },
+                        "en-US": {
+                          sys: {
+                            id: accompanimentAsset.sys.id,
+                            linkType: "Asset",
+                            type: "Link",
                           },
-                        ],
+                        },
                       },
                       vocals: {
-                        "en-AU": [
-                          {
-                            sys: {
-                              id: vocalsAsset.sys.id,
-                              linkType: "Asset",
-                              type: "Link",
-                            },
+                        "en-US": {
+                          sys: {
+                            id: vocalsAsset.sys.id,
+                            linkType: "Asset",
+                            type: "Link",
                           },
-                        ],
+                        },
                       },
                     },
                   })
                   .then((entry) => {
                     entry.publish();
-                    fs.rmdirSync("../output", { recursive: true });
+                    fs.rm("../output", { recursive: true, force: true });
                     console.log("Successfully created new entry!");
                     return;
                   })
                   .catch((err) => {
                     console.log(`Received error during entry creation: ${err}`);
-                    fs.rmdirSync("../output", { recursive: true });
+                    fs.rm("../output", { recursive: true, force: true });
                     return err;
                   });
               })
               .catch((err) => {
                 console.log(`Received error during entry creation: ${err}`);
-                fs.rmdirSync("../output", { recursive: true });
+                fs.rm("../output", { recursive: true, force: true });
                 return err;
               });
           })
           .catch((err) => {
             console.log(`Received error during entry creation: ${err}`);
-            fs.rmdirSync("../output", { recursive: true });
+            fs.rm("../output", { recursive: true, force: true });
             return err;
           });
       })
       .catch((err) => {
         console.log(`Received error during entry creation: ${err}`);
-        fs.rmdirSync("../output", { recursive: true });
+        fs.rm("../output", { recursive: true, force: true });
         return err;
       });
   });

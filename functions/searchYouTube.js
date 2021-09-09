@@ -1,5 +1,6 @@
 const getSubtitleJSON = require("./getSubtitleJSON");
 const searchVideo = require("./usetube/usetubeSearchVideo");
+const getVideoSubtitles = require("./usetube/usetubeGetVideoSubtitles");
 
 const searchYouTube = async (trackTitle, trackArtist) => {
   const videos = await searchVideo(`${trackTitle} ${trackArtist} lyrics`).then(
@@ -21,45 +22,75 @@ const searchYouTube = async (trackTitle, trackArtist) => {
   const filterRegex =
     /(live)|(instrumental)|(tik[\s]*tok)|(karaoke)|(reaction video)|(minecraft)|(\(reaction\))|(- reaction)|(kidz bop)|(\| verified)|(parody)|(pronunciation)|(\(cover\))/gim;
 
-  const mustContainRegex = /(video)|(audio)|(lyrics)/gi;
+  const mustContainRegex =
+    /(video)|(audio)|(lyrics)|(mv)|(music video)|(music)/gi;
 
   if (videos) {
-    const filteredVids = videos.filter(
+    const potentialVidArr = [];
+
+    // Narrow down potential videos by filtering out auto-generated subtitles and irrelevant subtitles
+    for (let i = 0; i < videos.length; i++) {
+      await getVideoSubtitles(videos[i].id)
+        .then((subtitles) => {
+          if (subtitles) {
+            const filteredArr = subtitles.filter((item) => {
+              if (item.segs && item.segs.every((value) => !value.acAsrConf)) {
+                return true;
+              }
+            });
+
+            const justLyrics = filteredArr
+              .map((item) => item.segs[0].utf8)
+              .filter(
+                (item) =>
+                  item !== "\n" && item !== "[Music]" && item !== "[Applause]"
+              );
+
+            if (justLyrics.length > 0) {
+              potentialVidArr.push(videos[i]);
+            }
+          }
+        })
+        .catch((err) => {
+          console.log(err.message);
+          return;
+        });
+    }
+
+    const filteredVids = potentialVidArr.filter(
       (video) =>
         !filterRegex.test(video.original_title) &&
         mustContainRegex.test(video.original_title) &&
         video.original_title.toLowerCase().includes(trackTitle.toLowerCase())
     );
 
-    const firstThree = filteredVids.slice(0, 3);
-
-    console.log({ firstThree });
+    const firstFour = filteredVids.slice(0, 4);
 
     const loopOverVideos = async () => {
       const allResultsArr = [];
 
       const promiseArray = [];
 
-      for (let i = 0; i < firstThree.length; i++) {
+      for (let i = 0; i < firstFour.length; i++) {
         const delayedTimeoutPromise = async (delay) => {
           return new Promise((resolve, reject) => {
             setTimeout(async () => {
               console.log(
-                `Getting subtitles for video ${i + 1} of ${
-                  firstThree.length
-                }: ${firstThree[i].original_title}`
+                `Getting subtitles for video ${i + 1} of ${firstFour.length}: ${
+                  firstFour[i].original_title
+                }`
               );
 
               return await getSubtitleJSON(
-                firstThree[i].id,
+                firstFour[i].id,
                 trackTitle,
                 trackArtist
               )
                 .then((arr) => {
                   if (arr) {
                     const result = {
-                      id: firstThree[i].id,
-                      duration: firstThree[i].duration,
+                      id: firstFour[i].id,
+                      duration: firstFour[i].duration,
                       arr,
                       arrLength: arr.length,
                     };
@@ -68,7 +99,7 @@ const searchYouTube = async (trackTitle, trackArtist) => {
                     resolve(result);
                     return result;
                   } else {
-                    reject;
+                    reject();
                     return;
                   }
                 })

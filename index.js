@@ -5,6 +5,7 @@ const getTrack = require("./functions/getTrack");
 const { listCharts } = require("billboard-top-100");
 const fs = require("fs");
 const path = require("path");
+// const contentful = require("contentful");
 require("dotenv").config();
 
 const port = process.env.PORT || 4000;
@@ -58,29 +59,52 @@ const spotifyApi = new SpotifyWebApi(spotifyCredentials);
 //   }
 // });
 
-if (spotifyApi.getAccessToken()) {
-  getTrack("hot-100", spotifyApi);
-} else {
-  // Retrieve an access token
-  spotifyApi
-    .clientCredentialsGrant()
-    .then(
-      (data) => {
-        console.log("The access token expires in " + data.body["expires_in"]);
-        console.log("The access token is " + data.body["access_token"]);
+// const client = contentful.createClient({
+//   space: process.env.CONTENTFUL_SPACE_ID,
+//   accessToken: process.env.CONTENTFUL_ACCESS_TOKEN,
+// });
 
-        // Save the access token so that it's used in future calls
-        spotifyApi.setAccessToken(data.body["access_token"]);
-      },
-      (err) => {
-        console.log(
-          "Something went wrong when retrieving an access token",
-          err.message
-        );
-      }
-    )
-    .then(() => getTrack("hot-100", spotifyApi));
-}
+// client
+//   .getEntries({
+//     select: "fields.charts",
+//     content_type: "song",
+//   })
+//   .then((res) => {
+//     if (res.items) {
+//       res.items.forEach((item) => {
+//         if (item.fields) {
+//           console.log({
+//             charts: item.fields.charts,
+//           });
+//         }
+//       });
+//     }
+//   })
+//   .catch((err) => console.log(err));
+
+// if (spotifyApi.getAccessToken()) {
+//   getTrack("hot-100", spotifyApi);
+// } else {
+//   // Retrieve an access token
+//   spotifyApi
+//     .clientCredentialsGrant()
+//     .then(
+//       (data) => {
+//         console.log("The access token expires in " + data.body["expires_in"]);
+//         console.log("The access token is " + data.body["access_token"]);
+
+//         // Save the access token so that it's used in future calls
+//         spotifyApi.setAccessToken(data.body["access_token"]);
+//       },
+//       (err) => {
+//         console.log(
+//           "Something went wrong when retrieving an access token",
+//           err.message
+//         );
+//       }
+//     )
+//     .then(() => getTrack("hot-100", spotifyApi));
+// }
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}...`);

@@ -88,7 +88,7 @@ const getAudioStems = async (
 
                     const beats = await essentia.BeatTrackerMultiFeature(
                       inputSignalVector,
-                      tempo
+                      trackDataJSON ? trackDataJSON.tempo : null
                     );
 
                     const beatPositions = essentia.vectorToArray(beats.ticks);
