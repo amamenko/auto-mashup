@@ -5,7 +5,7 @@ const filterOutArr = require("./arrays/filterOutArr");
 const contentful = require("contentful");
 const contentfulManagement = require("contentful-management");
 
-const getTrack = (currentChart, spotifyApi) => {
+const getTrack = (currentChartName, currentChart, spotifyApi) => {
   getChart(currentChart, async (err, chart) => {
     if (err) {
       console.log(err);
@@ -74,6 +74,8 @@ const getTrack = (currentChart, spotifyApi) => {
 
                       updateContentfulCharts();
                     }
+                  } else {
+                    return;
                   }
                 } else {
                   charts.push(newChart);
@@ -138,6 +140,7 @@ const getTrack = (currentChart, spotifyApi) => {
                         key,
                         mode,
                         currentChart,
+                        currentChartName,
                       };
 
                       if (trackDetails.time_signature === 4) {

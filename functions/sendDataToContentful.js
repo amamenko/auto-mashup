@@ -12,8 +12,17 @@ const sendDataToContentful = (
     accessToken: process.env.CONTENT_MANAGEMENT_TOKEN,
   });
 
-  const { title, artist, rank, cover, tempo, key, mode, currentChart } =
-    trackDataJSON;
+  const {
+    title,
+    artist,
+    rank,
+    cover,
+    tempo,
+    key,
+    mode,
+    currentChart,
+    currentChartName,
+  } = trackDataJSON;
 
   client.getSpace(process.env.CONTENTFUL_SPACE_ID).then((space) => {
     space
@@ -87,7 +96,8 @@ const sendDataToContentful = (
                       charts: {
                         "en-US": [
                           {
-                            chart: currentChart,
+                            chartName: currentChartName,
+                            chartURL: currentChart,
                             rank: rank,
                           },
                         ],
