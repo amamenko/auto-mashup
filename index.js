@@ -64,11 +64,6 @@ listCharts((err, charts) => {
 
           if (chart) {
             if (chart.songs) {
-              console.log({
-                url: usedCharts[i].url,
-                songs: chart.songs.length,
-              });
-
               getChart(
                 usedCharts[i].url,
                 chart.previousWeek.date,
@@ -77,7 +72,18 @@ listCharts((err, charts) => {
                     console.log(prevErr);
                   }
 
-                  const prevSongs = prevChart.songs;
+                  if (prevChart) {
+                    const prevSongs = prevChart.songs;
+
+                    console.log(prevSongs);
+                  }
+
+                  // getTrack(
+                  //   usedCharts[i].name,
+                  //   usedCharts[i].url,
+                  //   prevSongs,
+                  //   spotifyApi
+                  // );
                 }
               );
             }
@@ -112,7 +118,7 @@ listCharts((err, charts) => {
 //   .catch((err) => console.log(err));
 
 // if (spotifyApi.getAccessToken()) {
-//   getTrack("The Hot 100", "hot-100", spotifyApi);
+//   getTrack("The Hot 100", "hot-100", null, spotifyApi);
 // } else {
 //   // Retrieve an access token
 //   spotifyApi
@@ -132,7 +138,7 @@ listCharts((err, charts) => {
 //         );
 //       }
 //     )
-//     .then(() => getTrack("The Hot 100", "hot-100", spotifyApi));
+//     .then(() => getTrack("The Hot 100", "hot-100", null, spotifyApi));
 // }
 
 app.listen(port, () => {

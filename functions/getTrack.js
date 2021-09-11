@@ -5,7 +5,7 @@ const filterOutArr = require("./arrays/filterOutArr");
 const contentful = require("contentful");
 const contentfulManagement = require("contentful-management");
 
-const getTrack = (currentChartName, currentChart, spotifyApi) => {
+const getTrack = (currentChartName, currentChart, prevSongs, spotifyApi) => {
   getChart(currentChart, async (err, chart) => {
     if (err) {
       console.log(err);
@@ -13,6 +13,46 @@ const getTrack = (currentChartName, currentChart, spotifyApi) => {
       const topSong = chart.songs[0];
       const songRank = chart.songs[0].rank;
       let songCover = chart.songs[0].cover;
+
+      if (prevSongs) {
+        const prevSongSameRank = prevSongs.find(
+          (item) => item.rank === songRank
+        );
+
+        if (prevSongSameRank) {
+          // If the previous week's track was different (same chart, same rank)
+          if (
+            topSong.title !== prevSongSameRank.title ||
+            topSong.artist !== prevSongSameRank.artist
+          ) {
+            client
+              .getEntries({
+                "fields.title": prevSongSameRank.title,
+                "fields.artist": prevSongSameRank.artist,
+                content_type: "song",
+              })
+              .then(async (res) => {
+                if (res.items) {
+                  if (res.items[0]) {
+                    if (res.items[0].fields) {
+                      const charts = res.items[0].fields.charts;
+
+                      const containsCurrentChart = charts.find(
+                        (item) => item.chart === currentChart
+                      );
+
+                      if (containsCurrentChart) {
+                        // TODO: Add logic to remove outdated chart information and
+                        // song entries entirely from Contentful if they are not on
+                        // any Billboard charts currently.
+                      }
+                    }
+                  }
+                }
+              });
+          }
+        }
+      }
 
       // Replace image dimensions to grab larger-sized image URL
       songCover = songCover.replace(/(\d+)x(\d+)/, "155x155");
@@ -35,10 +75,14 @@ const getTrack = (currentChartName, currentChart, spotifyApi) => {
                 const charts = res.items[0].fields.charts;
 
                 const containsCurrentChart = charts.find(
-                  (item) => item.chart === currentChart
+                  (item) => item.chartName === currentChartName
                 );
 
-                const newChart = { chart: currentChart, rank: songRank };
+                const newChart = {
+                  chartName: currentChartName,
+                  chartURL: currentChart,
+                  rank: songRank,
+                };
 
                 const updateContentfulCharts = () => {
                   const managementClient = contentfulManagement.createClient({
@@ -66,7 +110,7 @@ const getTrack = (currentChartName, currentChart, spotifyApi) => {
                 if (containsCurrentChart) {
                   if (containsCurrentChart.rank !== songRank) {
                     const currentIndex = charts.findIndex(
-                      (item) => item.chart === currentChart
+                      (item) => item.chartName === currentChartName
                     );
 
                     if (currentIndex >= 0) {
