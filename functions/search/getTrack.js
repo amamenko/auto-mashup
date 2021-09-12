@@ -1,9 +1,10 @@
 const { getChart } = require("billboard-top-100");
-const getAudioStems = require("./getAudioStems");
-const searchYouTube = require("./searchYouTube");
-const filterOutArr = require("./arrays/filterOutArr");
 const contentful = require("contentful");
 const contentfulManagement = require("contentful-management");
+const filterOutArr = require("../arrays/filterOutArr");
+const getAudioStems = require("../analysis/getAudioStems");
+const searchYouTube = require("./searchYouTube");
+const updatePreviousEntries = require("../contentful/updatePreviousEntries");
 
 const getTrack = (currentChartName, currentChart, prevSongs, spotifyApi) => {
   getChart(currentChart, async (err, chart) => {
@@ -14,61 +15,12 @@ const getTrack = (currentChartName, currentChart, prevSongs, spotifyApi) => {
       const songRank = chart.songs[0].rank;
       let songCover = chart.songs[0].cover;
 
-      if (prevSongs) {
-        const prevSongSameRank = prevSongs.find(
-          (item) => item.rank === songRank
-        );
-
-        if (prevSongSameRank) {
-          // If the previous week's track was different (same chart, same rank)
-          if (
-            topSong.title !== prevSongSameRank.title ||
-            topSong.artist !== prevSongSameRank.artist
-          ) {
-            client
-              .getEntries({
-                "fields.title": prevSongSameRank.title,
-                "fields.artist": prevSongSameRank.artist,
-                content_type: "song",
-              })
-              .then(async (res) => {
-                if (res.items) {
-                  if (res.items[0]) {
-                    if (res.items[0].fields) {
-                      const charts = res.items[0].fields.charts;
-
-                      const containsCurrentChart = charts.find(
-                        (item) => item.chart === currentChart
-                      );
-
-                      const indexCurrentChart = charts.findIndex(
-                        (item) => item.chart === currentChart
-                      );
-
-                      if (containsCurrentChart) {
-                        if (indexCurrentChart >= 0) {
-                          charts.splice(indexCurrentChart, 1);
-
-                          // If entry appears on more charts
-                          // -> leave entry, just update charts it appears on
-                          if (charts.length > 0) {
-                          } else {
-                            // If entry does NOT appear in any other charts
-                            // -> delete entry
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              });
-          }
-        }
-      }
+      updatePreviousEntries(prevSongs);
 
       // Replace image dimensions to grab larger-sized image URL
       songCover = songCover.replace(/(\d+)x(\d+)/, "155x155");
 
+      // Access to Contentful Delivery API
       const client = contentful.createClient({
         space: process.env.CONTENTFUL_SPACE_ID,
         accessToken: process.env.CONTENTFUL_ACCESS_TOKEN,
@@ -97,6 +49,7 @@ const getTrack = (currentChartName, currentChart, prevSongs, spotifyApi) => {
                 };
 
                 const updateContentfulCharts = () => {
+                  // Access to Contentful Management API
                   const managementClient = contentfulManagement.createClient({
                     accessToken: process.env.CONTENTFUL_ACCESS_TOKEN,
                   });

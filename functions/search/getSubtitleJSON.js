@@ -1,10 +1,10 @@
 const ytdl = require("ytdl-core");
-const getTrackTimes = require("./getTrackTimes");
 const removeAccents = require("remove-accents");
-const languageCodeArr = require("./arrays/languageCodeArr");
-const filterOutArr = require("./arrays/filterOutArr");
 const subsrt = require("subsrt");
 const axios = require("axios");
+const languageCodeArr = require("../arrays/languageCodeArr");
+const filterOutArr = require("../arrays/filterOutArr");
+const getTrackTimes = require("../timestamps/getTrackTimes");
 
 const getSubtitleJSON = async (videoID, title, artist) => {
   const reqOptions = {

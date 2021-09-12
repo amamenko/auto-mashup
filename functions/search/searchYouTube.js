@@ -1,6 +1,6 @@
 const getSubtitleJSON = require("./getSubtitleJSON");
-const searchVideo = require("./usetube/usetubeSearchVideo");
-const getVideoSubtitles = require("./usetube/usetubeGetVideoSubtitles");
+const searchVideo = require("../usetube/usetubeSearchVideo");
+const getVideoSubtitles = require("../usetube/usetubeGetVideoSubtitles");
 
 const searchYouTube = async (trackTitle, trackArtist) => {
   const videos = await searchVideo(`${trackTitle} ${trackArtist} lyrics`).then(
