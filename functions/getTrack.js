@@ -41,10 +41,22 @@ const getTrack = (currentChartName, currentChart, prevSongs, spotifyApi) => {
                         (item) => item.chart === currentChart
                       );
 
+                      const indexCurrentChart = charts.findIndex(
+                        (item) => item.chart === currentChart
+                      );
+
                       if (containsCurrentChart) {
-                        // TODO: Add logic to remove outdated chart information and
-                        // song entries entirely from Contentful if they are not on
-                        // any Billboard charts currently.
+                        if (indexCurrentChart >= 0) {
+                          charts.splice(indexCurrentChart, 1);
+
+                          // If entry appears on more charts
+                          // -> leave entry, just update charts it appears on
+                          if (charts.length > 0) {
+                          } else {
+                            // If entry does NOT appear in any other charts
+                            // -> delete entry
+                          }
+                        }
                       }
                     }
                   }
