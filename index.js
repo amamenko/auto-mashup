@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const SpotifyWebApi = require("spotify-web-api-node");
-const contentful = require("contentful");
+const loopCharts = require("./functions/search/loopCharts");
 require("dotenv").config();
 
 const port = process.env.PORT || 4000;
@@ -13,25 +13,7 @@ const spotifyCredentials = {
 
 const spotifyApi = new SpotifyWebApi(spotifyCredentials);
 
-// const client = contentful.createClient({
-//   space: process.env.CONTENTFUL_SPACE_ID,
-//   accessToken: process.env.CONTENTFUL_ACCESS_TOKEN,
-// });
-
-// client
-//   .getEntries({
-//     content_type: "song",
-//   })
-//   .then((res) => {
-//     if (res.items) {
-//       res.items.forEach((item) => {
-//         if (item.fields) {
-//           console.log(item);
-//         }
-//       });
-//     }
-//   })
-//   .catch((err) => console.log(err));
+loopCharts();
 
 // if (spotifyApi.getAccessToken()) {
 //   getTrack("The Hot 100", "hot-100", null, spotifyApi);

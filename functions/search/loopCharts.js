@@ -1,5 +1,14 @@
 const getTrack = require("./getTrack");
 const { listCharts, getChart } = require("billboard-top-100");
+const SpotifyWebApi = require("spotify-web-api-node");
+const { format, startOfWeek, subDays } = require("date-fns");
+
+const spotifyCredentials = {
+  clientId: process.env.SPOTIFY_CLIENT_ID,
+  clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
+};
+
+const spotifyApi = new SpotifyWebApi(spotifyCredentials);
 
 const loopCharts = () => {
   listCharts((err, charts) => {
@@ -8,7 +17,7 @@ const loopCharts = () => {
     } else {
       const filteredCharts = charts.filter((chart) => {
         const filterRegex =
-          /(artists*)|(albums*)|(soundtracks*)|(billboard 200)|(social 50)|(jazz)|(gospel)|(christian)|(japan)|(k-pop)|(france)|(germany)|(spain)|(switzerland)|(italy)|(australia)|(argentina)|(tropical)|(regional)|(recurrents)|(bubbling)|(adult)|(excl\.)|(breaker)|(sound)|(triller)|(rhythmic)|(digital)|(lyricfind)|(streaming)/gim;
+          /(artists*)|(albums*)|(soundtracks*)|(billboard 200)|(social 50)|(jazz)|(gospel)|(christian)|(japan)|(k-pop)|(france)|(germany)|(spain)|(switzerland)|(italy)|(australia)|(argentina)|(tropical)|(regional)|(recurrents)|(bubbling)|(adult)|(excl\.)|(breaker)|(sound)|(triller)|(rhythmic)|(digital)|(lyricfind)|(streaming)|(dance club songs)|(pop airplay)|(canadian)/gim;
         const onlyAllowedRegex =
           /(hot dance\/electronic songs)|(dance club songs)|(the official u.k. singles chart)|(mexico airplay)|(billboard canadian hot 100)|(hot latin songs)|(holiday 100)|(lyricfind global)|(greatest of all time alternative songs)|(hot alternative songs)|(hot rap songs)|(hot country songs)|(greatest of all time hot country songs)|(hot r&b\/hip-hop songs)|(hot r&b songs)|(greatest of all time hot r&b\/hip-hop songs)|(rock streaming songs)|(hot hard rock songs)|(greatest of all time mainstream rock songs)/gim;
         const name = chart.name.toLowerCase();
@@ -40,44 +49,94 @@ const loopCharts = () => {
         };
       });
 
-      for (let i = 0; i < usedCharts.length; i++) {
-        setTimeout(() => {
-          getChart(usedCharts[i].url, (err, chart) => {
-            if (err) {
-              console.log(err);
-            }
+      console.log({
+        usedCharts,
+        length: usedCharts.length,
+      });
 
-            if (chart) {
-              if (chart.songs) {
-                getChart(
-                  usedCharts[i].url,
-                  chart.previousWeek.date,
-                  (prevErr, prevChart) => {
-                    if (prevErr) {
-                      console.log(prevErr);
-                    }
+      // for (let i = 0; i < usedCharts.length; i++) {
+      //   setTimeout(() => {
+      //     getChart(usedCharts[i].url, (err, chart) => {
+      //       if (err) {
+      //         console.log(err);
+      //       }
 
-                    if (prevChart) {
-                      const prevSongs = prevChart.songs;
+      //       if (chart) {
+      //         if (chart.songs) {
+      //           const lastSaturday = format(
+      //             subDays(
+      //               startOfWeek(new Date(), {
+      //                 weekStartsOn: 6,
+      //               }),
+      //               7
+      //             ),
+      //             "yyyy-MM-dd"
+      //           );
 
-                      console.log(prevSongs);
+      //           getChart(
+      //             usedCharts[i].url,
+      //             lastSaturday,
+      //             (prevErr, prevChart) => {
+      //               if (prevErr) {
+      //                 console.log(prevErr);
+      //               }
 
-                      for (let j = 0; j < chart.songs; j++) {
-                        // getTrack(
-                        //   usedCharts[i].name,
-                        //   usedCharts[i].url,
-                        //   prevSongs,
-                        //   spotifyApi
-                        // );
-                      }
-                    }
-                  }
-                );
-              }
-            }
-          });
-        }, i * 5000);
-      }
+      //               if (prevChart) {
+      //                 const currentSongs = chart.songs;
+      //                 const prevSongs = prevChart.songs;
+
+      //                 const resolveTrack = async (j) => {
+      //                   await getTrack(
+      //                     usedCharts[i].name,
+      //                     usedCharts[i].url,
+      //                     currentSongs,
+      //                     prevSongs,
+      //                     spotifyApi,
+      //                     j
+      //                   ).then(() =>
+      //                     console.log(
+      //                       `Resolved track ${chart.songs[j].title} by ${chart.songs[j].artist}`
+      //                     )
+      //                   );
+      //                 };
+
+      //                 for (let j = 0; j < chart.songs; j++) {
+      //                   if (spotifyApi.getAccessToken()) {
+      //                     resolveTrack(j);
+      //                   } else {
+      //                     // Retrieve an access token
+      //                     spotifyApi
+      //                       .clientCredentialsGrant()
+      //                       .then(
+      //                         (data) => {
+      //                           console.log(
+      //                             "Retrieved new access token: " +
+      //                               data.body["access_token"]
+      //                           );
+
+      //                           // Save the access token so that it's used in future calls
+      //                           spotifyApi.setAccessToken(
+      //                             data.body["access_token"]
+      //                           );
+      //                         },
+      //                         (err) => {
+      //                           console.log(
+      //                             "Something went wrong when retrieving an access token",
+      //                             err.message
+      //                           );
+      //                         }
+      //                       )
+      //                       .then(() => resolveTrack(j));
+      //                   }
+      //                 }
+      //               }
+      //             }
+      //           );
+      //         }
+      //       }
+      //     });
+      //   }, i * 5000);
+      // }
     }
   });
 };
