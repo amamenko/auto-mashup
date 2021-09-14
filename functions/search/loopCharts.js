@@ -2,6 +2,10 @@ const getTrack = require("./getTrack");
 const { listCharts, getChart } = require("billboard-top-100");
 const SpotifyWebApi = require("spotify-web-api-node");
 const { format, startOfWeek, subDays } = require("date-fns");
+const contentful = require("contentful");
+const contentfulManagement = require("contentful-management");
+const isEqual = require("lodash.isequal");
+require("dotenv").config();
 
 const spotifyCredentials = {
   clientId: process.env.SPOTIFY_CLIENT_ID,
@@ -49,94 +53,227 @@ const loopCharts = () => {
         };
       });
 
-      console.log({
-        usedCharts,
-        length: usedCharts.length,
-      });
+      for (let i = 0; i < usedCharts.length; i++) {
+        setTimeout(() => {
+          getChart(usedCharts[i].url, (err, chart) => {
+            if (err) {
+              console.log(err);
+            }
 
-      // for (let i = 0; i < usedCharts.length; i++) {
-      //   setTimeout(() => {
-      //     getChart(usedCharts[i].url, (err, chart) => {
-      //       if (err) {
-      //         console.log(err);
-      //       }
+            if (chart) {
+              if (chart.songs) {
+                const lastSaturday = format(
+                  subDays(
+                    startOfWeek(new Date(), {
+                      weekStartsOn: 6,
+                    }),
+                    7
+                  ),
+                  "yyyy-MM-dd"
+                );
 
-      //       if (chart) {
-      //         if (chart.songs) {
-      //           const lastSaturday = format(
-      //             subDays(
-      //               startOfWeek(new Date(), {
-      //                 weekStartsOn: 6,
-      //               }),
-      //               7
-      //             ),
-      //             "yyyy-MM-dd"
-      //           );
+                getChart(
+                  usedCharts[i].url,
+                  lastSaturday,
+                  async (prevErr, prevChart) => {
+                    if (prevErr) {
+                      console.log(prevErr);
+                    }
 
-      //           getChart(
-      //             usedCharts[i].url,
-      //             lastSaturday,
-      //             (prevErr, prevChart) => {
-      //               if (prevErr) {
-      //                 console.log(prevErr);
-      //               }
+                    if (prevChart) {
+                      const mapApplicableFields = (list) => {
+                        return list.map((item) => {
+                          return {
+                            rank: item.rank,
+                            title: item.title,
+                            artist: item.artist,
+                            cover: item.cover,
+                          };
+                        });
+                      };
 
-      //               if (prevChart) {
-      //                 const currentSongs = chart.songs;
-      //                 const prevSongs = prevChart.songs;
+                      const latestCurrSongs = mapApplicableFields(chart.songs);
+                      const latestPrevSongs = mapApplicableFields(
+                        prevChart.songs
+                      );
 
-      //                 const resolveTrack = async (j) => {
-      //                   await getTrack(
-      //                     usedCharts[i].name,
-      //                     usedCharts[i].url,
-      //                     currentSongs,
-      //                     prevSongs,
-      //                     spotifyApi,
-      //                     j
-      //                   ).then(() =>
-      //                     console.log(
-      //                       `Resolved track ${chart.songs[j].title} by ${chart.songs[j].artist}`
-      //                     )
-      //                   );
-      //                 };
+                      // Access to Contentful Delivery API
+                      const client = contentful.createClient({
+                        space: process.env.CONTENTFUL_SPACE_ID,
+                        accessToken: process.env.CONTENTFUL_ACCESS_TOKEN,
+                      });
 
-      //                 for (let j = 0; j < chart.songs; j++) {
-      //                   if (spotifyApi.getAccessToken()) {
-      //                     resolveTrack(j);
-      //                   } else {
-      //                     // Retrieve an access token
-      //                     spotifyApi
-      //                       .clientCredentialsGrant()
-      //                       .then(
-      //                         (data) => {
-      //                           console.log(
-      //                             "Retrieved new access token: " +
-      //                               data.body["access_token"]
-      //                           );
+                      await client
+                        .getEntries({
+                          "fields.name": usedCharts[i].name,
+                          content_type: "chart",
+                        })
+                        .then(async (res) => {
+                          const managementClient =
+                            contentfulManagement.createClient({
+                              accessToken: process.env.CONTENT_MANAGEMENT_TOKEN,
+                            });
 
-      //                           // Save the access token so that it's used in future calls
-      //                           spotifyApi.setAccessToken(
-      //                             data.body["access_token"]
-      //                           );
-      //                         },
-      //                         (err) => {
-      //                           console.log(
-      //                             "Something went wrong when retrieving an access token",
-      //                             err.message
-      //                           );
-      //                         }
-      //                       )
-      //                       .then(() => resolveTrack(j));
-      //                   }
-      //                 }
-      //               }
-      //             }
-      //           );
-      //         }
-      //       }
-      //     });
-      //   }, i * 5000);
-      // }
+                          if (res.items) {
+                            if (res.items[0]) {
+                              if (res.items[0].fields) {
+                                // Update charts with latest song lists
+                                const previousSongs =
+                                  res.items[0].fields.previousSongs;
+                                const currentSongs =
+                                  res.items[0].fields.currentSongs;
+
+                                const prevEqual = isEqual(
+                                  previousSongs,
+                                  latestPrevSongs
+                                );
+                                const currentEqual = isEqual(
+                                  currentSongs,
+                                  latestCurrSongs
+                                );
+
+                                managementClient
+                                  .getSpace(process.env.CONTENTFUL_SPACE_ID)
+                                  .then((space) => {
+                                    space
+                                      .getEnvironment("master")
+                                      .then((environment) => {
+                                        environment
+                                          .getEntry(res.items[0].sys.id)
+                                          .then((entry) => {
+                                            if (entry) {
+                                              if (!currentEqual || !prevEqual) {
+                                                if (!currentEqual) {
+                                                  entry.fields.currentSongs =
+                                                    latestCurrSongs;
+                                                }
+
+                                                if (!prevEqual) {
+                                                  entry.fields.previousSongs =
+                                                    latestPrevSongs;
+                                                }
+
+                                                entry.update().then(() => {
+                                                  console.log(
+                                                    `Chart entry update was successful. ${
+                                                      !currentEqual
+                                                        ? "Updated current song list. "
+                                                        : ""
+                                                    }${
+                                                      !prevEqual
+                                                        ? "Updated previous song list."
+                                                        : ""
+                                                    }`
+                                                  );
+                                                });
+                                              } else {
+                                                console.log(
+                                                  `No changes this week for ${usedCharts[i].name} chart.`
+                                                );
+                                              }
+                                            }
+                                          });
+                                      });
+
+                                    return;
+                                  });
+                              }
+                            } else {
+                              // Create a new chart entry
+                              managementClient
+                                .getSpace(process.env.CONTENTFUL_SPACE_ID)
+                                .then((space) => {
+                                  space
+                                    .getEnvironment("master")
+                                    .then((environment) => {
+                                      environment
+                                        .createEntry("chart", {
+                                          fields: {
+                                            name: {
+                                              "en-US": usedCharts[i].name,
+                                            },
+                                            url: {
+                                              "en-US": usedCharts[i].url,
+                                            },
+                                            currentSongs: {
+                                              "en-US": latestCurrSongs,
+                                            },
+                                            previousSongs: {
+                                              "en-US": latestPrevSongs,
+                                            },
+                                          },
+                                        })
+                                        .then((entry) => {
+                                          entry.publish();
+                                          console.log(
+                                            `Successfully created new entry for ${usedCharts[i].name} chart.`
+                                          );
+                                          return;
+                                        })
+                                        .catch((err) => {
+                                          console.log(
+                                            `Received error during ${usedCharts[i].name} chart entry creation: ${err}`
+                                          );
+                                          return err;
+                                        });
+                                    });
+                                });
+                            }
+                          }
+                        });
+
+                      // const resolveTrack = async (j) => {
+                      //   await getTrack(
+                      //     usedCharts[i].name,
+                      //     usedCharts[i].url,
+                      //     currentSongs,
+                      //     latestPrevSongs,
+                      //     spotifyApi,
+                      //     j
+                      //   ).then(() =>
+                      //     console.log(
+                      //       `Resolved track ${chart.songs[j].title} by ${chart.songs[j].artist}`
+                      //     )
+                      //   );
+                      // };
+
+                      // for (let j = 0; j < chart.songs; j++) {
+                      //   if (spotifyApi.getAccessToken()) {
+                      //     resolveTrack(j);
+                      //   } else {
+                      //     // Retrieve an access token
+                      //     spotifyApi
+                      //       .clientCredentialsGrant()
+                      //       .then(
+                      //         (data) => {
+                      //           console.log(
+                      //             "Retrieved new access token: " +
+                      //               data.body["access_token"]
+                      //           );
+
+                      //           // Save the access token so that it's used in future calls
+                      //           spotifyApi.setAccessToken(
+                      //             data.body["access_token"]
+                      //           );
+                      //         },
+                      //         (err) => {
+                      //           console.log(
+                      //             "Something went wrong when retrieving an access token",
+                      //             err.message
+                      //           );
+                      //         }
+                      //       )
+                      //       .then(() => resolveTrack(j));
+                      //   }
+                      // }
+                    }
+                  }
+                );
+              }
+            }
+          });
+        }, i * 30000);
+      }
     }
   });
 };

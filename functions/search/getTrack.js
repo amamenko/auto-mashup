@@ -4,6 +4,7 @@ const filterOutArr = require("../arrays/filterOutArr");
 const getAudioStems = require("../analysis/getAudioStems");
 const searchYouTube = require("./searchYouTube");
 const updatePreviousEntries = require("../contentful/updatePreviousEntries");
+require("dotenv").config();
 
 const getTrack = async (
   currentChartName,
@@ -53,7 +54,7 @@ const getTrack = async (
             const updateContentfulCharts = () => {
               // Access to Contentful Management API
               const managementClient = contentfulManagement.createClient({
-                accessToken: process.env.CONTENTFUL_ACCESS_TOKEN,
+                accessToken: process.env.CONTENT_MANAGEMENT_TOKEN,
               });
 
               managementClient

@@ -42,7 +42,7 @@ const updatePreviousEntries = (prevSongs) => {
                       // Access to Contentful Management API
                       const managementClient =
                         contentfulManagement.createClient({
-                          accessToken: process.env.CONTENTFUL_ACCESS_TOKEN,
+                          accessToken: process.env.CONTENT_MANAGEMENT_TOKEN,
                         });
 
                       if (res.items[0].sys) {
