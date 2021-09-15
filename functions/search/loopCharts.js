@@ -127,6 +127,7 @@ const loopCharts = () => {
                                   previousSongs,
                                   latestPrevSongs
                                 );
+
                                 const currentEqual = isEqual(
                                   currentSongs,
                                   latestCurrSongs
@@ -144,27 +145,39 @@ const loopCharts = () => {
                                             if (entry) {
                                               if (!currentEqual || !prevEqual) {
                                                 if (!currentEqual) {
-                                                  entry.fields.currentSongs =
-                                                    latestCurrSongs;
+                                                  entry.fields.currentSongs = {
+                                                    "en-US": latestCurrSongs,
+                                                  };
                                                 }
 
                                                 if (!prevEqual) {
-                                                  entry.fields.previousSongs =
-                                                    latestPrevSongs;
+                                                  entry.fields.previousSongs = {
+                                                    "en-US": latestPrevSongs,
+                                                  };
                                                 }
 
                                                 entry.update().then(() => {
-                                                  console.log(
-                                                    `Chart entry update was successful. ${
-                                                      !currentEqual
-                                                        ? "Updated current song list. "
-                                                        : ""
-                                                    }${
-                                                      !prevEqual
-                                                        ? "Updated previous song list."
-                                                        : ""
-                                                    }`
-                                                  );
+                                                  environment
+                                                    .getEntry(
+                                                      res.items[0].sys.id
+                                                    )
+                                                    .then((updatedEntry) => {
+                                                      updatedEntry.publish();
+
+                                                      console.log(
+                                                        `Chart entry update for ${
+                                                          usedCharts[i].name
+                                                        } was successful and has been published. ${
+                                                          !currentEqual
+                                                            ? "Updated current song list. "
+                                                            : ""
+                                                        }${
+                                                          !prevEqual
+                                                            ? "Updated previous song list."
+                                                            : ""
+                                                        }`
+                                                      );
+                                                    });
                                                 });
                                               } else {
                                                 console.log(
@@ -272,7 +285,7 @@ const loopCharts = () => {
               }
             }
           });
-        }, i * 30000);
+        }, i * 1200000);
       }
     }
   });
