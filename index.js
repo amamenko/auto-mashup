@@ -13,7 +13,7 @@ const spotifyCredentials = {
 
 const spotifyApi = new SpotifyWebApi(spotifyCredentials);
 
-loopCharts();
+loopCharts("current");
 
 // if (spotifyApi.getAccessToken()) {
 //   getTrack("The Hot 100", "hot-100", null, spotifyApi);

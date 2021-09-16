@@ -13,7 +13,9 @@
   "dependencies": {
     "axios": "^0.21.1",
     "billboard-top-100": "^2.5.9",
+    "cheerio": "^1.0.0-rc.10",
     "child-process": "^1.0.2",
+    "cloudscraper": "^4.6.0",
     "contentful": "^8.5.0",
     "contentful-management": "^7.34.0",
     "date-fns": "^2.23.0",
@@ -24,6 +26,7 @@
     "fluent-ffmpeg": "^2.1.2",
     "genius-lyrics-api": "^3.0.6",
     "lodash.isequal": "^4.5.0",
+    "moment": "^2.29.1",
     "python-shell": "^3.0.0",
     "remove-accents": "^0.4.2",
     "spotify-web-api-node": "^5.0.2",
