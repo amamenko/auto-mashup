@@ -2,6 +2,8 @@ const express = require("express");
 const app = express();
 const SpotifyWebApi = require("spotify-web-api-node");
 const loopCharts = require("./functions/search/loopCharts");
+const cron = require("node-cron");
+const loopSongs = require("./functions/search/loopSongs");
 require("dotenv").config();
 
 const port = process.env.PORT || 4000;
@@ -13,31 +15,19 @@ const spotifyCredentials = {
 
 const spotifyApi = new SpotifyWebApi(spotifyCredentials);
 
-loopCharts("current");
+// Run on Thursdays at midnight (00:00)
+cron.schedule("0 0 * * 4", () => {
+  // Get state of current charts
+  loopCharts("current");
+});
 
-// if (spotifyApi.getAccessToken()) {
-//   getTrack("The Hot 100", "hot-100", null, spotifyApi);
-// } else {
-//   // Retrieve an access token
-//   spotifyApi
-//     .clientCredentialsGrant()
-//     .then(
-//       (data) => {
-//         console.log("The access token expires in " + data.body["expires_in"]);
-//         console.log("The access token is " + data.body["access_token"]);
+// Run on Thursdays at 00:30
+cron.schedule("30 0 * * 4", () => {
+  // Get state of previous week's charts
+  loopCharts("previous");
+});
 
-//         // Save the access token so that it's used in future calls
-//         spotifyApi.setAccessToken(data.body["access_token"]);
-//       },
-//       (err) => {
-//         console.log(
-//           "Something went wrong when retrieving an access token",
-//           err.message
-//         );
-//       }
-//     )
-//     .then(() => getTrack("The Hot 100", "hot-100", null, spotifyApi));
-// }
+loopSongs();
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}...`);

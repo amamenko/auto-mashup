@@ -1,18 +1,10 @@
 const getTrack = require("./getTrack");
 const { listCharts, getChart } = require("billboard-top-100");
-const SpotifyWebApi = require("spotify-web-api-node");
 const { format, startOfWeek, addDays } = require("date-fns");
 const contentful = require("contentful");
 const contentfulManagement = require("contentful-management");
 const isEqual = require("lodash.isequal");
 require("dotenv").config();
-
-const spotifyCredentials = {
-  clientId: process.env.SPOTIFY_CLIENT_ID,
-  clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
-};
-
-const spotifyApi = new SpotifyWebApi(spotifyCredentials);
 
 const loopCharts = (currentOrPrevious) => {
   listCharts((err, charts) => {
@@ -159,6 +151,10 @@ const loopCharts = (currentOrPrevious) => {
                                               "en-US": upcomingSaturday,
                                             };
 
+                                            entry.fields.loopedThisWeek = {
+                                              "en-US": false,
+                                            };
+
                                             entry.update().then(() => {
                                               environment
                                                 .getEntry(res.items[0].sys.id)
@@ -207,6 +203,9 @@ const loopCharts = (currentOrPrevious) => {
                                     date: {
                                       "en-US": upcomingSaturday,
                                     },
+                                    loopedThisWeek: {
+                                      "en-US": false,
+                                    },
                                   };
 
                                   const currentObj = {
@@ -250,51 +249,6 @@ const loopCharts = (currentOrPrevious) => {
                                 });
                             });
                         }
-
-                        // const resolveTrack = async (j) => {
-                        //   await getTrack(
-                        //     usedCharts[i].name,
-                        //     usedCharts[i].url,
-                        //     currentSongs,
-                        //     latestPrevSongs,
-                        //     spotifyApi,
-                        //     j
-                        //   ).then(() =>
-                        //     console.log(
-                        //       `Resolved track ${chart.songs[j].title} by ${chart.songs[j].artist}`
-                        //     )
-                        //   );
-                        // };
-
-                        // for (let j = 0; j < chart.songs; j++) {
-                        //   if (spotifyApi.getAccessToken()) {
-                        //     resolveTrack(j);
-                        //   } else {
-                        //     // Retrieve an access token
-                        //     spotifyApi
-                        //       .clientCredentialsGrant()
-                        //       .then(
-                        //         (data) => {
-                        //           console.log(
-                        //             "Retrieved new access token: " +
-                        //               data.body["access_token"]
-                        //           );
-
-                        //           // Save the access token so that it's used in future calls
-                        //           spotifyApi.setAccessToken(
-                        //             data.body["access_token"]
-                        //           );
-                        //         },
-                        //         (err) => {
-                        //           console.log(
-                        //             "Something went wrong when retrieving an access token",
-                        //             err.message
-                        //           );
-                        //         }
-                        //       )
-                        //       .then(() => resolveTrack(j));
-                        //   }
-                        // }
                       }
                     });
                 }
