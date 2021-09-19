@@ -1,19 +1,11 @@
 const express = require("express");
 const app = express();
-const SpotifyWebApi = require("spotify-web-api-node");
-const loopCharts = require("./functions/search/loopCharts");
 const cron = require("node-cron");
+const loopCharts = require("./functions/search/loopCharts");
 const loopSongs = require("./functions/search/loopSongs");
 require("dotenv").config();
 
 const port = process.env.PORT || 4000;
-
-const spotifyCredentials = {
-  clientId: process.env.SPOTIFY_CLIENT_ID,
-  clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
-};
-
-const spotifyApi = new SpotifyWebApi(spotifyCredentials);
 
 // Run on Thursdays at midnight (00:00)
 cron.schedule("0 0 * * 4", () => {

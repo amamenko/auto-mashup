@@ -1,5 +1,6 @@
 const contentful = require("contentful");
 const SpotifyWebApi = require("spotify-web-api-node");
+const getTrack = require("./getTrack");
 require("dotenv").config();
 
 const loopSongs = async () => {
@@ -33,35 +34,33 @@ const loopSongs = async () => {
               };
             });
 
-            return await client.getEntry(nameArr[0].id).then((entry) => {
-              const fields = entry.fields;
+            const loopIndividualChartSongs = async (i) => {
+              return client.getEntry(nameArr[i].id).then(async (entry) => {
+                const fields = entry.fields;
 
-              const resolveTrack = async (j) => {
-                await getTrack(
-                  fields.name,
-                  fields.url,
-                  fields.currentSongs,
-                  fields.previousSongs,
-                  spotifyApi,
-                  j
-                ).then(() => {
-                  if (
-                    fields.currentSongs[j].title &&
-                    fields.currentSongs[j].artist
-                  ) {
-                    console.log(
-                      `Resolved track ${fields.currentSongs[j].title} by ${fields.currentSongs[j].artist}`
-                    );
-                  }
-                });
-              };
+                const resolveTrack = async (index) => {
+                  return getTrack(
+                    fields.name,
+                    fields.url,
+                    fields.currentSongs,
+                    fields.previousSongs,
+                    spotifyApi,
+                    index
+                  ).then(() => {
+                    if (
+                      fields.currentSongs[index].title &&
+                      fields.currentSongs[index].artist
+                    ) {
+                      console.log(
+                        `Resolved track ${fields.currentSongs[index].title} by ${fields.currentSongs[index].artist}`
+                      );
+                    }
+                  });
+                };
 
-              for (let j = 0; j < fields.currentSongs; j++) {
-                if (spotifyApi.getAccessToken()) {
-                  resolveTrack(j);
-                } else {
+                const getCredentialsFirst = async (index) => {
                   // Retrieve an access token
-                  spotifyApi
+                  return spotifyApi
                     .clientCredentialsGrant()
                     .then(
                       (data) => {
@@ -80,10 +79,22 @@ const loopSongs = async () => {
                         );
                       }
                     )
-                    .then(() => resolveTrack(j));
+                    .then(async () => await resolveTrack(index));
+                };
+
+                for (let j = 0; j < fields.currentSongs.length; j++) {
+                  if (spotifyApi.getAccessToken()) {
+                    await resolveTrack(j);
+                  } else {
+                    await getCredentialsFirst(j);
+                  }
                 }
-              }
-            });
+              });
+            };
+
+            for (let i = 0; i < nameArr.length; i++) {
+              await loopIndividualChartSongs(i);
+            }
           }
         }
       }

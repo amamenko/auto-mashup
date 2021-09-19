@@ -1,7 +1,7 @@
 const contentful = require("contentful");
 const contentfulManagement = require("contentful-management");
 
-const updatePreviousEntries = (prevSongs) => {
+const updatePreviousEntries = (topSong, songRank, currentChart, prevSongs) => {
   if (prevSongs) {
     const prevSongSameRank = prevSongs.find((item) => item.rank === songRank);
 

@@ -18,7 +18,7 @@ const getTrack = async (
   const songRank = currentSongs[index].rank;
   let songCover = currentSongs[index].cover;
 
-  updatePreviousEntries(prevSongs);
+  updatePreviousEntries(topSong, songRank, currentChart, prevSongs);
 
   // Replace image dimensions to grab larger-sized image URL
   songCover = songCover.replace(/(\d+)x(\d+)/, "155x155");
@@ -198,7 +198,8 @@ const getTrack = async (
                   }
                 },
                 (err) => {
-                  done(err);
+                  console.log(err);
+                  return;
                 }
               );
             });
