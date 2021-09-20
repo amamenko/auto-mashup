@@ -62,7 +62,9 @@ const getTrack = async (
                 .then((space) => {
                   space.getEnvironment("master").then((environment) => {
                     environment.getEntry(res.items[0].sys.id).then((entry) => {
-                      entry.fields.charts = charts;
+                      entry.fields.charts = {
+                        "en-US": charts,
+                      };
                       entry.update().then(() => {
                         console.log("Entry update was successful!");
                       });

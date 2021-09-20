@@ -7,14 +7,14 @@ require("dotenv").config();
 
 const port = process.env.PORT || 4000;
 
-// Run on Thursdays at midnight (00:00)
-cron.schedule("0 0 * * 4", () => {
+// Run on Wednesdays at noon (12:00)
+cron.schedule("0 12 * * 3", () => {
   // Get state of current charts
   loopCharts("current");
 });
 
-// Run on Thursdays at 00:30
-cron.schedule("30 0 * * 4", () => {
+// Run on Wednesdays at 12:30
+cron.schedule("30 12 * * 3", () => {
   // Get state of previous week's charts
   loopCharts("previous");
 });

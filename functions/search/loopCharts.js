@@ -1,4 +1,3 @@
-const getTrack = require("./getTrack");
 const { listCharts, getChart } = require("billboard-top-100");
 const { format, startOfWeek, addDays } = require("date-fns");
 const contentful = require("contentful");

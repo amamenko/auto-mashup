@@ -130,7 +130,7 @@ const getAudioStems = async (
                     }
                   };
 
-                  getBeatPositions(beatSuccessCallback);
+                  return getBeatPositions(beatSuccessCallback);
                 }
               }
             );

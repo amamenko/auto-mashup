@@ -82,17 +82,24 @@ const loopSongs = async () => {
                     .then(async () => await resolveTrack(index));
                 };
 
+                const delayedGetTrack = async (callback) => {
+                  setTimeout(async () => {
+                    return await callback();
+                  }, 180000);
+                };
+
                 for (let j = 0; j < fields.currentSongs.length; j++) {
                   if (spotifyApi.getAccessToken()) {
-                    await resolveTrack(j);
+                    await delayedGetTrack(resolveTrack(j));
                   } else {
-                    await getCredentialsFirst(j);
+                    await delayedGetTrack(getCredentialsFirst(j));
                   }
                 }
               });
             };
 
             for (let i = 0; i < nameArr.length; i++) {
+              console.log(`Now looping over ${nameArr[i].name}`);
               await loopIndividualChartSongs(i);
             }
           }

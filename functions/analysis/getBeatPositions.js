@@ -8,7 +8,7 @@ const getBeatPositions = async (successCallback) => {
     path.resolve("output/YouTubeAudio", "accompaniment.mp3")
   );
 
-  await audioCtx.decodeAudioData(audioBuffer, successCallback, (e) =>
+  return await audioCtx.decodeAudioData(audioBuffer, successCallback, (e) =>
     console.log("Error with decoding audio data" + e.err)
   );
 };
