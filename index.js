@@ -7,19 +7,22 @@ require("dotenv").config();
 
 const port = process.env.PORT || 4000;
 
-// Run on Wednesdays at noon (12:00)
-cron.schedule("0 12 * * 3", () => {
+// Run on Wednesdays at 11:00 PM
+cron.schedule("0 23 * * 3", () => {
   // Get state of current charts
   loopCharts("current");
 });
 
-// Run on Wednesdays at 12:30
-cron.schedule("30 12 * * 3", () => {
+// Run on Wednesdays at 11:30 PM
+cron.schedule("30 23 * * 3", () => {
   // Get state of previous week's charts
   loopCharts("previous");
 });
 
-loopSongs();
+// Run every 30 minutes starting at midnight on Thursday until Saturday at 11:30 PM
+cron.schedule("0,30 0-23 * * 4-6", () => {
+  loopSongs();
+});
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}...`);

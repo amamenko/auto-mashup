@@ -154,6 +154,10 @@ const loopCharts = (currentOrPrevious) => {
                                               "en-US": false,
                                             };
 
+                                            entry.fields.loopInProgress = {
+                                              "en-US": false,
+                                            };
+
                                             entry.update().then(() => {
                                               environment
                                                 .getEntry(res.items[0].sys.id)
@@ -203,6 +207,9 @@ const loopCharts = (currentOrPrevious) => {
                                       "en-US": upcomingSaturday,
                                     },
                                     loopedThisWeek: {
+                                      "en-US": false,
+                                    },
+                                    loopInProgress: {
                                       "en-US": false,
                                     },
                                   };
