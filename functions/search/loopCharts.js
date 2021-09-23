@@ -2,7 +2,6 @@ const { listCharts, getChart } = require("billboard-top-100");
 const { format, startOfWeek, addDays } = require("date-fns");
 const contentful = require("contentful");
 const contentfulManagement = require("contentful-management");
-const isEqual = require("lodash.isequal");
 require("dotenv").config();
 
 const loopCharts = (currentOrPrevious) => {
@@ -43,7 +42,7 @@ const loopCharts = (currentOrPrevious) => {
           url: item.url.split("/charts/")[1],
         };
       });
-      // console.log(usedCharts);
+
       for (let i = 0; i < usedCharts.length; i++) {
         setTimeout(() => {
           const upcomingSaturday = format(
@@ -106,20 +105,6 @@ const loopCharts = (currentOrPrevious) => {
                       if (res.items) {
                         if (res.items[0]) {
                           if (res.items[0].fields) {
-                            // Update charts with latest song lists
-                            const previousSongs =
-                              res.items[0].fields.previousSongs;
-                            const currentSongs =
-                              res.items[0].fields.currentSongs;
-
-                            let sameChart;
-
-                            if (currentOrPrevious === "current") {
-                              sameChart = isEqual(currentSongs, queriedSongs);
-                            } else {
-                              sameChart = isEqual(previousSongs, queriedSongs);
-                            }
-
                             managementClient
                               .getSpace(process.env.CONTENTFUL_SPACE_ID)
                               .then((space) => {
@@ -130,57 +115,44 @@ const loopCharts = (currentOrPrevious) => {
                                       .getEntry(res.items[0].sys.id)
                                       .then((entry) => {
                                         if (entry) {
-                                          if (
-                                            !sameChart ||
-                                            !entry.fields.date
-                                          ) {
+                                          if (currentOrPrevious === "current") {
+                                            entry.fields.currentSongs = {
+                                              "en-US": queriedSongs,
+                                            };
+                                          } else {
+                                            entry.fields.previousSongs = {
+                                              "en-US": queriedSongs,
+                                            };
+                                          }
+
+                                          entry.fields.date = {
+                                            "en-US": upcomingSaturday,
+                                          };
+
+                                          entry.fields.loopedThisWeek = {
+                                            "en-US": false,
+                                          };
+
+                                          entry.fields.loopInProgress = {
+                                            "en-US": false,
+                                          };
+
+                                          // Only publish changes when both current and previous charts have been looped
+                                          entry.update().then(() => {
                                             if (
-                                              currentOrPrevious === "current"
+                                              currentOrPrevious !== "current"
                                             ) {
-                                              entry.fields.currentSongs = {
-                                                "en-US": queriedSongs,
-                                              };
-                                            } else {
-                                              entry.fields.previousSongs = {
-                                                "en-US": queriedSongs,
-                                              };
-                                            }
-
-                                            entry.fields.date = {
-                                              "en-US": upcomingSaturday,
-                                            };
-
-                                            entry.fields.loopedThisWeek = {
-                                              "en-US": false,
-                                            };
-
-                                            entry.fields.loopInProgress = {
-                                              "en-US": false,
-                                            };
-
-                                            entry.update().then(() => {
                                               environment
                                                 .getEntry(res.items[0].sys.id)
                                                 .then((updatedEntry) => {
                                                   updatedEntry.publish();
 
                                                   console.log(
-                                                    `Chart entry update for ${
-                                                      usedCharts[i].name
-                                                    } was successful and has been published. ${
-                                                      currentOrPrevious ===
-                                                      "current"
-                                                        ? "Updated current song list."
-                                                        : "Updated previous song list."
-                                                    }`
+                                                    `Chart entry update for ${usedCharts[i].name} was successful and has been published. Updated current and previous song lists.`
                                                   );
                                                 });
-                                            });
-                                          } else {
-                                            console.log(
-                                              `No changes this week for ${usedCharts[i].name} chart.`
-                                            );
-                                          }
+                                            }
+                                          });
                                         }
                                       });
                                   });

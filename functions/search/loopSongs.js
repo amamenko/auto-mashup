@@ -1,6 +1,6 @@
 const contentful = require("contentful");
-const contentfulManagement = require("contentful-management");
 const SpotifyWebApi = require("spotify-web-api-node");
+const updateChartLoopInProgress = require("../contentful/updateChartLoopInProgress");
 const getTrack = require("./getTrack");
 require("dotenv").config();
 
@@ -18,6 +18,7 @@ const loopSongs = async () => {
 
   const spotifyApi = new SpotifyWebApi(spotifyCredentials);
 
+  // Check if there are any loops in progress
   return await client
     .getEntries({
       "fields.loopedThisWeek": false,
@@ -50,114 +51,77 @@ const loopSongs = async () => {
                       const firstChart = nameArr[0];
 
                       if (firstChart) {
-                        const updateChartLoopInProgress = () => {
-                          // Access to Contentful Management API
-                          const managementClient =
-                            contentfulManagement.createClient({
-                              accessToken: process.env.CONTENT_MANAGEMENT_TOKEN,
-                            });
+                        await updateChartLoopInProgress(
+                          firstChart,
+                          "in progress"
+                        ).then(() => {
+                          client.getEntry(firstChart.id).then(async (entry) => {
+                            const fields = entry.fields;
 
-                          managementClient
-                            .getSpace(process.env.CONTENTFUL_SPACE_ID)
-                            .then((space) => {
-                              space
-                                .getEnvironment("master")
-                                .then((environment) => {
-                                  environment
-                                    .getEntry(firstChart.id)
-                                    .then((entry) => {
-                                      entry.fields.loopInProgress = {
-                                        "en-US": true,
-                                      };
-                                      entry.update().then(() => {
-                                        console.log(
-                                          `Entry update was successful! ${firstChart.name} chart loop marked as in progress.`
-                                        );
-                                      });
-                                    });
-                                });
+                            const resolveTrack = (index) => {
+                              return getTrack(
+                                fields.name,
+                                fields.url,
+                                fields.currentSongs,
+                                fields.previousSongs,
+                                spotifyApi,
+                                index
+                              );
+                            };
 
-                              return;
-                            });
-                        };
+                            const getCredentialsFirst = async (index) => {
+                              // Retrieve an access token
+                              return spotifyApi
+                                .clientCredentialsGrant()
+                                .then(
+                                  (data) => {
+                                    console.log(
+                                      "Retrieved new access token: " +
+                                        data.body["access_token"]
+                                    );
+
+                                    // Save the access token so that it's used in future calls
+                                    spotifyApi.setAccessToken(
+                                      data.body["access_token"]
+                                    );
+                                  },
+                                  (err) => {
+                                    console.log(
+                                      "Something went wrong when retrieving an access token",
+                                      err.message
+                                    );
+                                  }
+                                )
+                                .then(async () => await resolveTrack(index));
+                            };
+
+                            for (
+                              let i = 0;
+                              i < fields.currentSongs.length;
+                              i++
+                            ) {
+                              // Wait 5 minutes between individual song analysis
+                              setTimeout(() => {
+                                if (spotifyApi.getAccessToken()) {
+                                  resolveTrack(i);
+                                } else {
+                                  getCredentialsFirst(i);
+                                }
+
+                                // If last iteration
+                                if (i === fields.currentSongs.length - 1) {
+                                  setTimeout(() => {
+                                    updateChartLoopInProgress(
+                                      firstChart,
+                                      "done"
+                                    );
+                                  }, 240000);
+                                }
+                              }, i * 300000);
+                            }
+                          });
+                        });
                       }
-
-                      // const loopIndividualChartSongs = async (i) => {
-                      //   return client
-                      //     .getEntry(nameArr[i].id)
-                      //     .then(async (entry) => {
-                      //       const fields = entry.fields;
-
-                      //       const resolveTrack = async (index) => {
-                      //         return getTrack(
-                      //           fields.name,
-                      //           fields.url,
-                      //           fields.currentSongs,
-                      //           fields.previousSongs,
-                      //           spotifyApi,
-                      //           index
-                      //         ).then(() => {
-                      //           if (
-                      //             fields.currentSongs[index].title &&
-                      //             fields.currentSongs[index].artist
-                      //           ) {
-                      //             console.log(
-                      //               `Resolved track ${fields.currentSongs[index].title} by ${fields.currentSongs[index].artist}`
-                      //             );
-                      //           }
-                      //         });
-                      //       };
-
-                      //       const getCredentialsFirst = async (index) => {
-                      //         // Retrieve an access token
-                      //         return spotifyApi
-                      //           .clientCredentialsGrant()
-                      //           .then(
-                      //             (data) => {
-                      //               console.log(
-                      //                 "Retrieved new access token: " +
-                      //                   data.body["access_token"]
-                      //               );
-
-                      //               // Save the access token so that it's used in future calls
-                      //               spotifyApi.setAccessToken(
-                      //                 data.body["access_token"]
-                      //               );
-                      //             },
-                      //             (err) => {
-                      //               console.log(
-                      //                 "Something went wrong when retrieving an access token",
-                      //                 err.message
-                      //               );
-                      //             }
-                      //           )
-                      //           .then(async () => await resolveTrack(index));
-                      //       };
-
-                      //       const delayedGetTrack = async (callback) => {
-                      //         setTimeout(async () => {
-                      //           return await callback();
-                      //         }, 180000);
-                      //       };
-
-                      //       // for (
-                      //       //   let j = 0;
-                      //       //   j < fields.currentSongs.length;
-                      //       //   j++
-                      //       // ) {
-                      //       //   if (spotifyApi.getAccessToken()) {
-                      //       //     await delayedGetTrack(resolveTrack(j));
-                      //       //   } else {
-                      //       //     await delayedGetTrack(getCredentialsFirst(j));
-                      //       //   }
-                      //       // }
-                      //     });
-                      // };
-
-                      // for (let i = 0; i < nameArr.length; i++) {
-                      //   console.log(`Now looping over ${nameArr[i].name}`);
-                      //   await loopIndividualChartSongs(i);
-                      // }
                     }
                   }
                 }
