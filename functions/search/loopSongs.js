@@ -61,14 +61,6 @@ const loopSongs = async () => {
                             const fields = entry.fields;
 
                             const resolveTrack = (index) => {
-                              console.log({
-                                name: fields.name,
-                                url: fields.url,
-                                current: fields.currentSongs,
-                                former: fields.previousSongs,
-                                spotifyApi,
-                                index,
-                              });
                               return getTrack(
                                 fields.name,
                                 fields.url,
