@@ -4,7 +4,7 @@ const contentful = require("contentful");
 const contentfulManagement = require("contentful-management");
 require("dotenv").config();
 
-const loopCharts = (currentOrPrevious) => {
+const loopNewCharts = (currentOrPrevious) => {
   listCharts((err, charts) => {
     if (err) {
       console.log(err);
@@ -13,7 +13,7 @@ const loopCharts = (currentOrPrevious) => {
         const filterRegex =
           /(artists*)|(albums*)|(soundtracks*)|(billboard 200)|(social 50)|(jazz)|(gospel)|(christian)|(japan)|(k-pop)|(france)|(germany)|(spain)|(switzerland)|(italy)|(australia)|(argentina)|(tropical)|(regional)|(recurrents)|(bubbling)|(adult)|(excl\.)|(breaker)|(sound)|(triller)|(rhythmic)|(digital)|(lyricfind)|(streaming)|(dance club songs)|(pop airplay)|(canadian)|(summer)|(greatest)|(holiday)|(80)|(90)/gim;
         const onlyAllowedRegex =
-          /(hot dance\/electronic songs)|(dance club songs)|(the official u.k. singles chart)|(mexico airplay)|(billboard canadian hot 100)|(hot latin songs)|(holiday 100)|(lyricfind global)|(greatest of all time alternative songs)|(hot alternative songs)|(hot rap songs)|(hot country songs)|(greatest of all time hot country songs)|(hot r&b\/hip-hop songs)|(hot r&b songs)|(greatest of all time hot r&b\/hip-hop songs)|(rock streaming songs)|(hot hard rock songs)|(greatest of all time mainstream rock songs)/gim;
+          /(hot dance\/electronic songs)|(dance club songs)|(mexico airplay)|(billboard canadian hot 100)|(hot latin songs)|(holiday 100)|(lyricfind global)|(greatest of all time alternative songs)|(hot alternative songs)|(hot rap songs)|(hot country songs)|(greatest of all time hot country songs)|(hot r&b\/hip-hop songs)|(hot r&b songs)|(greatest of all time hot r&b\/hip-hop songs)|(rock streaming songs)|(hot hard rock songs)|(greatest of all time mainstream rock songs)/gim;
         const name = chart.name.toLowerCase();
 
         if (
@@ -129,6 +129,10 @@ const loopCharts = (currentOrPrevious) => {
                                             "en-US": upcomingSaturday,
                                           };
 
+                                          entry.fields.updatedThisWeek = {
+                                            "en-US": false,
+                                          };
+
                                           entry.fields.loopedThisWeek = {
                                             "en-US": false,
                                           };
@@ -151,6 +155,10 @@ const loopCharts = (currentOrPrevious) => {
                                                     `Chart entry update for ${usedCharts[i].name} was successful and has been published. Updated current and previous song lists.`
                                                   );
                                                 });
+                                            } else {
+                                              console.log(
+                                                `Contentful entry for ${usedCharts[i].name} chart's current song list has been changed.`
+                                              );
                                             }
                                           });
                                         }
@@ -177,6 +185,9 @@ const loopCharts = (currentOrPrevious) => {
                                     },
                                     date: {
                                       "en-US": upcomingSaturday,
+                                    },
+                                    updatedThisWeek: {
+                                      "en-US": false,
                                     },
                                     loopedThisWeek: {
                                       "en-US": false,
@@ -239,4 +250,4 @@ const loopCharts = (currentOrPrevious) => {
   });
 };
 
-module.exports = loopCharts;
+module.exports = loopNewCharts;

@@ -15,14 +15,24 @@ const updateChartLoopInProgress = async (chart, state) => {
           entry.fields.loopInProgress = {
             "en-US": state === "in progress" ? true : false,
           };
+
+          if (state === "done") {
+            entry.fields.updatedThisWeek = {
+              "en-US": false,
+            };
+          }
           entry.update().then(() => {
-            console.log(
-              `Entry update was successful! ${
-                chart.name
-              } chart loop marked as ${
-                state === "in progress" ? "in progress." : "done."
-              }`
-            );
+            environment.getEntry(chart.id).then((updatedEntry) => {
+              updatedEntry.publish();
+
+              console.log(
+                `Entry update was successful! ${
+                  chart.name
+                } chart loop marked as ${
+                  state === "in progress" ? "in progress." : "done."
+                }`
+              );
+            });
           });
         });
       });

@@ -11,13 +11,6 @@ const loopSongs = async () => {
     accessToken: process.env.CONTENTFUL_ACCESS_TOKEN,
   });
 
-  const spotifyCredentials = {
-    clientId: process.env.SPOTIFY_CLIENT_ID,
-    clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
-  };
-
-  const spotifyApi = new SpotifyWebApi(spotifyCredentials);
-
   // Check if there are any loops in progress
   return await client
     .getEntries({
@@ -56,9 +49,26 @@ const loopSongs = async () => {
                           "in progress"
                         ).then(() => {
                           client.getEntry(firstChart.id).then(async (entry) => {
+                            const spotifyCredentials = {
+                              clientId: process.env.SPOTIFY_CLIENT_ID,
+                              clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
+                            };
+
+                            const spotifyApi = new SpotifyWebApi(
+                              spotifyCredentials
+                            );
+
                             const fields = entry.fields;
 
                             const resolveTrack = (index) => {
+                              console.log({
+                                name: fields.name,
+                                url: fields.url,
+                                current: fields.currentSongs,
+                                former: fields.previousSongs,
+                                spotifyApi,
+                                index,
+                              });
                               return getTrack(
                                 fields.name,
                                 fields.url,

@@ -111,8 +111,20 @@ const getTrack = async (
             .searchTracks(`track:${topSong.title} artist:${filteredArtist[0]}`)
             .then(
               (data) => {
-                const firstResultID = data.body.tracks.items[0].id;
-                return firstResultID;
+                if (data) {
+                  if (data.body) {
+                    if (data.body.tracks) {
+                      if (data.body.tracks.items) {
+                        if (data.body.tracks.items[0]) {
+                          if (data.body.tracks.items[0].id) {
+                            const firstResultID = data.body.tracks.items[0].id;
+                            return firstResultID;
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
               },
               (err) => {
                 console.log("Something went wrong!", err);
