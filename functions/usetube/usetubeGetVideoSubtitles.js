@@ -1,4 +1,4 @@
-// Code taken from https://github.com/valerebron/usetube and changed to include only subtitled videos
+// Code taken from https://github.com/valerebron/usetube and https://github.com/FreddyJD/usetube-improved and changed to include only subtitled videos
 
 const getData = require("./helpers/getData");
 
@@ -10,6 +10,7 @@ const getVideoSubtitles = async (id) => {
     return data.data.events;
   } catch (e) {
     console.log("video subtitle error for " + id);
+    console.log(e);
   }
 };
 
