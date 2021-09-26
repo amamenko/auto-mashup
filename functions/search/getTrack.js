@@ -197,8 +197,12 @@ const getTrack = async (
                                 trackDataJSON
                               );
                             } else {
+                              console.log("No match found");
                               return;
                             }
+                          } else {
+                            console.log("No match found");
+                            return;
                           }
                         } else {
                           console.log("No match found");

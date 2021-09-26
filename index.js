@@ -18,6 +18,8 @@ cron.schedule("0,30 0-23 * * 4-6", () => {
   loopSongs();
 });
 
+// loopSongs();
+
 app.listen(port, () => {
   console.log(`Listening on port ${port}...`);
 });

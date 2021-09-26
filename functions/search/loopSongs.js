@@ -104,7 +104,11 @@ const loopSongs = async () => {
                             ) {
                               // Wait 5 minutes between individual song analysis
                               setTimeout(() => {
-                                if (spotifyApi.getAccessToken()) {
+                                // Every half hour, refresh Spotify token
+                                if (
+                                  spotifyApi.getAccessToken() &&
+                                  i % 6 !== 0
+                                ) {
                                   resolveTrack(i);
                                 } else {
                                   getCredentialsFirst(i);

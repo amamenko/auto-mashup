@@ -145,31 +145,39 @@ const sendDataToContentful = (
                   })
                   .then((entry) => {
                     entry.publish();
-                    fs.rm("../output", { recursive: true, force: true });
+                    fs.rmdir("../output", () =>
+                      console.log("Deleted output directory!")
+                    );
                     console.log("Successfully created new entry!");
                     return;
                   })
                   .catch((err) => {
                     console.log(`Received error during entry creation: ${err}`);
-                    fs.rm("../output", { recursive: true, force: true });
+                    fs.rmdir("../output", () =>
+                      console.log("Deleted output directory!")
+                    );
                     return err;
                   });
               })
               .catch((err) => {
                 console.log(`Received error during entry creation: ${err}`);
-                fs.rm("../output", { recursive: true, force: true });
+                fs.rmdir("../output", () =>
+                  console.log("Deleted output directory!")
+                );
                 return err;
               });
           })
           .catch((err) => {
             console.log(`Received error during entry creation: ${err}`);
-            fs.rm("../output", { recursive: true, force: true });
+            fs.rmdir("../output", () =>
+              console.log("Deleted output directory!")
+            );
             return err;
           });
       })
       .catch((err) => {
         console.log(`Received error during entry creation: ${err}`);
-        fs.rm("../output", { recursive: true, force: true });
+        fs.rmdir("../output", () => console.log("Deleted output directory!"));
         return err;
       });
   });

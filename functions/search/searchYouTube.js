@@ -1,6 +1,5 @@
 const getSubtitleJSON = require("./getSubtitleJSON");
 const searchVideo = require("../usetube/usetubeSearchVideo");
-const getVideoSubtitles = require("../usetube/usetubeGetVideoSubtitles");
 
 const searchYouTube = async (trackTitle, trackArtist) => {
   const videos = await searchVideo(`${trackTitle} ${trackArtist} lyrics`).then(
@@ -26,38 +25,7 @@ const searchYouTube = async (trackTitle, trackArtist) => {
     /(video)|(audio)|(lyrics)|(mv)|(music video)|(music)/gi;
 
   if (videos) {
-    const potentialVidArr = [];
-
-    // Narrow down potential videos by filtering out auto-generated subtitles and irrelevant subtitles
-    for (let i = 0; i < videos.length; i++) {
-      await getVideoSubtitles(videos[i].id)
-        .then((subtitles) => {
-          if (subtitles) {
-            const filteredArr = subtitles.filter((item) => {
-              if (item.segs && item.segs.every((value) => !value.acAsrConf)) {
-                return true;
-              }
-            });
-
-            const justLyrics = filteredArr
-              .map((item) => item.segs[0].utf8)
-              .filter(
-                (item) =>
-                  item !== "\n" && item !== "[Music]" && item !== "[Applause]"
-              );
-
-            if (justLyrics.length > 0) {
-              potentialVidArr.push(videos[i]);
-            }
-          }
-        })
-        .catch((err) => {
-          console.log(err.message);
-          return;
-        });
-    }
-
-    const filteredVids = potentialVidArr.filter(
+    const filteredVids = videos.filter(
       (video) =>
         !filterRegex.test(video.original_title) &&
         mustContainRegex.test(video.original_title) &&
@@ -115,29 +83,36 @@ const searchYouTube = async (trackTitle, trackArtist) => {
         promiseArray.push(delayedTimeoutPromise(i * 20000));
       }
 
-      return Promise.all(promiseArray)
+      // Waits for all Promise objects to resolve
+      // Bypasses Promise.all's behavior of rejecting immediately upon any of the input promises rejecting
+      // Instead resolves all Promise objects with errors to null in the resulting array
+      return Promise.all(promiseArray.map((p) => p.catch((error) => null)))
         .then((arr) => {
-          console.log("All promises resolved!");
+          console.log("All promises of Promise.all resolved!");
           return arr;
         })
         .catch((err) => {
-          console.log("Error in iterable promises");
+          console.log("Error in iterable promises of Promise.all");
           console.log(err);
         });
     };
 
     return await loopOverVideos().then((arr) => {
-      if (Array.isArray(arr) && arr.length > 0) {
-        console.log(arr);
-        const allResultLengths = arr.map((item) => item.arrLength);
+      if (arr) {
+        if (Array.isArray(arr) && arr.length > 0) {
+          const existenceArr = arr.filter((item) => item);
+          const allResultLengths = existenceArr.map((item) =>
+            item.arrLength ? item.arrLength : 0
+          );
 
-        const bestMatch = arr.find(
-          (item) => item.arrLength === Math.max(...allResultLengths)
-        );
+          const bestMatch = existenceArr.find(
+            (item) => item.arrLength === Math.max(...allResultLengths)
+          );
 
-        return bestMatch;
-      } else {
-        return;
+          return bestMatch;
+        } else {
+          return;
+        }
       }
     });
   } else {
