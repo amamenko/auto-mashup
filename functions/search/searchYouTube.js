@@ -19,7 +19,7 @@ const searchYouTube = async (trackTitle, trackArtist) => {
   );
 
   const filterRegex =
-    /(live)|(instrumental)|(tik[\s]*tok)|(karaoke)|(reaction video)|(minecraft)|(\(reaction\))|(- reaction)|(kidz bop)|(\| verified)|(parody)|(pronunciation)|(\(cover\))/gim;
+    /(live)|(instrumental)|(tik[\s]*tok)|(karaoke)|(reaction video)|(nightcore)|(minecraft)|(\(reaction\))|(- reaction)|(kidz bop)|(\| verified)|(parody)|(pronunciation)|(\(cover\))/gim;
 
   const mustContainRegex =
     /(video)|(audio)|(lyrics)|(mv)|(music video)|(music)/gi;
@@ -32,33 +32,33 @@ const searchYouTube = async (trackTitle, trackArtist) => {
         video.original_title.toLowerCase().includes(trackTitle.toLowerCase())
     );
 
-    const firstFour = filteredVids.slice(0, 4);
+    const firstFive = filteredVids.slice(0, 5);
 
     const loopOverVideos = async () => {
       const allResultsArr = [];
 
       const promiseArray = [];
 
-      for (let i = 0; i < firstFour.length; i++) {
+      for (let i = 0; i < firstFive.length; i++) {
         const delayedTimeoutPromise = async (delay) => {
           return new Promise((resolve, reject) => {
             setTimeout(async () => {
               console.log(
-                `Getting subtitles for video ${i + 1} of ${firstFour.length}: ${
-                  firstFour[i].original_title
+                `Getting subtitles for video ${i + 1} of ${firstFive.length}: ${
+                  firstFive[i].original_title
                 }`
               );
 
               return await getSubtitleJSON(
-                firstFour[i].id,
+                firstFive[i].id,
                 trackTitle,
                 trackArtist
               )
                 .then((arr) => {
                   if (arr) {
                     const result = {
-                      id: firstFour[i].id,
-                      duration: firstFour[i].duration,
+                      id: firstFive[i].id,
+                      duration: firstFive[i].duration,
                       arr,
                       arrLength: arr.length,
                     };

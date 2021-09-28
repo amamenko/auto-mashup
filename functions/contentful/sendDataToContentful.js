@@ -145,7 +145,7 @@ const sendDataToContentful = (
                   })
                   .then((entry) => {
                     entry.publish();
-                    fs.rmdir("../output", () =>
+                    fs.rmdir("../../output", () =>
                       console.log("Deleted output directory!")
                     );
                     console.log("Successfully created new entry!");
@@ -153,7 +153,7 @@ const sendDataToContentful = (
                   })
                   .catch((err) => {
                     console.log(`Received error during entry creation: ${err}`);
-                    fs.rmdir("../output", () =>
+                    fs.rmdir("../../output", () =>
                       console.log("Deleted output directory!")
                     );
                     return err;
@@ -161,7 +161,7 @@ const sendDataToContentful = (
               })
               .catch((err) => {
                 console.log(`Received error during entry creation: ${err}`);
-                fs.rmdir("../output", () =>
+                fs.rmdir("../../output", () =>
                   console.log("Deleted output directory!")
                 );
                 return err;
@@ -169,7 +169,7 @@ const sendDataToContentful = (
           })
           .catch((err) => {
             console.log(`Received error during entry creation: ${err}`);
-            fs.rmdir("../output", () =>
+            fs.rmdir("../../output", () =>
               console.log("Deleted output directory!")
             );
             return err;
@@ -177,7 +177,9 @@ const sendDataToContentful = (
       })
       .catch((err) => {
         console.log(`Received error during entry creation: ${err}`);
-        fs.rmdir("../output", () => console.log("Deleted output directory!"));
+        fs.rmdir("../../output", () =>
+          console.log("Deleted output directory!")
+        );
         return err;
       });
   });

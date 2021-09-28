@@ -94,7 +94,11 @@ const loopSongs = async () => {
                                     );
                                   }
                                 )
-                                .then(async () => await resolveTrack(index));
+                                .then(async () => await resolveTrack(index))
+                                .catch((error) => {
+                                  console.log(error);
+                                  return;
+                                });
                             };
 
                             for (

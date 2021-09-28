@@ -14,11 +14,13 @@ cron.schedule("0,*/2 23 * * 3", () => {
 });
 
 // Run every 30 minutes starting at midnight on Thursday until Saturday at 11:30 PM
-cron.schedule("0,30 0-23 * * 4-6", () => {
+// cron.schedule("0,30 0-23 * * 4-6", () => {
+//   loopSongs();
+// });
+
+cron.schedule("0,30 0-23 * * *", () => {
   loopSongs();
 });
-
-// loopSongs();
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}...`);

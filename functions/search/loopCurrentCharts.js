@@ -102,6 +102,14 @@ const loopCurrentCharts = async () => {
                                       "en-US": true,
                                     };
 
+                                    entry.fields.loopedThisWeek = {
+                                      "en-US": false,
+                                    };
+
+                                    entry.fields.loopInProgress = {
+                                      "en-US": false,
+                                    };
+
                                     entry.update().then(() => {
                                       environment
                                         .getEntry(res.items[0].sys.id)

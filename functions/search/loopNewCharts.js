@@ -130,7 +130,7 @@ const loopNewCharts = (currentOrPrevious) => {
                                           };
 
                                           entry.fields.updatedThisWeek = {
-                                            "en-US": false,
+                                            "en-US": true,
                                           };
 
                                           entry.fields.loopedThisWeek = {

@@ -20,6 +20,10 @@ const updateChartLoopInProgress = async (chart, state) => {
             entry.fields.updatedThisWeek = {
               "en-US": false,
             };
+
+            entry.fields.loopedThisWeek = {
+              "en-US": true,
+            };
           }
           entry.update().then(() => {
             environment.getEntry(chart.id).then((updatedEntry) => {
