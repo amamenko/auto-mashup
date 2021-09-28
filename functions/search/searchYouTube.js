@@ -19,7 +19,7 @@ const searchYouTube = async (trackTitle, trackArtist) => {
   );
 
   const filterRegex =
-    /(live)|(instrumental)|(tik[\s]*tok)|(karaoke)|(reaction video)|(nightcore)|(minecraft)|(\(reaction\))|(- reaction)|(kidz bop)|(\| verified)|(parody)|(pronunciation)|(\(cover\))/gim;
+    /(live)|(instrumental)|(tik[\s]*tok)|(karaoke)|(reaction video)|(nightcore)|(minecraft)|(\(reaction\))|(- reaction)|(kidz bop)|(\| verified)|(parody)|(pronunciation)|(cover)/gim;
 
   const mustContainRegex =
     /(video)|(audio)|(lyrics)|(mv)|(music video)|(music)/gi;
