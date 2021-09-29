@@ -88,45 +88,61 @@ const getAudioStems = async (
 
                     const beats = await essentia.BeatTrackerMultiFeature(
                       inputSignalVector,
-                      trackDataJSON ? trackDataJSON.tempo : null
+                      trackDataJSON
+                        ? trackDataJSON.tempo
+                          ? trackDataJSON.tempo
+                          : null
+                        : null
                     );
 
-                    const beatPositions = essentia.vectorToArray(beats.ticks);
-                    const roundedBeatPositions = [...beatPositions].map(
-                      (item) => Number(item.toFixed(4))
-                    );
+                    if (beats) {
+                      if (beats.ticks) {
+                        const beatPositions = essentia.vectorToArray(
+                          beats.ticks
+                        );
+                        const roundedBeatPositions = [...beatPositions].map(
+                          (item) => Number(item.toFixed(4))
+                        );
 
-                    if (matchDuration > 360) {
-                      MP3Cutter.cut({
-                        src: "output/YouTubeAudio/accompaniment.mp3",
-                        target: "output/YouTubeAudio/accompaniment_trimmed.mp3",
-                        start: 0,
-                        // Keep total track time at 6 minutes maximum to keep file at ~6 MB
-                        end: 360,
-                        callback: () =>
+                        if (matchDuration > 360) {
                           MP3Cutter.cut({
-                            src: "output/YouTubeAudio/vocals.mp3",
-                            target: "output/YouTubeAudio/vocals_trimmed.mp3",
+                            src: "output/YouTubeAudio/accompaniment.mp3",
+                            target:
+                              "output/YouTubeAudio/accompaniment_trimmed.mp3",
                             start: 0,
                             // Keep total track time at 6 minutes maximum to keep file at ~6 MB
                             end: 360,
                             callback: () =>
-                              sendDataToContentful(
-                                trackDataJSON,
-                                360,
-                                matchArr,
-                                roundedBeatPositions,
-                                "trimmed"
-                              ),
-                          }),
-                      });
+                              MP3Cutter.cut({
+                                src: "output/YouTubeAudio/vocals.mp3",
+                                target:
+                                  "output/YouTubeAudio/vocals_trimmed.mp3",
+                                start: 0,
+                                // Keep total track time at 6 minutes maximum to keep file at ~6 MB
+                                end: 360,
+                                callback: () =>
+                                  sendDataToContentful(
+                                    trackDataJSON,
+                                    360,
+                                    matchArr,
+                                    roundedBeatPositions,
+                                    "trimmed"
+                                  ),
+                              }),
+                          });
+                        } else {
+                          sendDataToContentful(
+                            trackDataJSON,
+                            matchDuration,
+                            matchArr,
+                            roundedBeatPositions
+                          );
+                        }
+                      } else {
+                        console.log("No beat ticks returned from analysis!");
+                      }
                     } else {
-                      sendDataToContentful(
-                        trackDataJSON,
-                        matchDuration,
-                        matchArr,
-                        roundedBeatPositions
-                      );
+                      console.log("No beats returned from analysis!");
                     }
                   };
 

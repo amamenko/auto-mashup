@@ -4,7 +4,7 @@ const getData = require("./helpers/getData");
 const formatVideo = require("./helpers/formatVideo");
 const findVal = require("./helpers/findVal");
 
-const searchVideo = async (terms, token, apikey) => {
+const searchVideo = async (terms, token, apikey, captionsOnly) => {
   try {
     let items = [];
     let videos = [];
@@ -15,7 +15,7 @@ const searchVideo = async (terms, token, apikey) => {
         "https://www.youtube.com/results?videoEmbeddable=true&search_query=" +
           encodeURIComponent(terms) +
           // Added this portion to include only videos with subtitles/closed captions
-          "&sp=EgIoAQ%253D%253D"
+          (captionsOnly ? "&sp=EgIoAQ%253D%253D" : "")
       );
       apikey = data.apikey;
       token = findVal(data, "token");

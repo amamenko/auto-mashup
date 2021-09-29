@@ -1,9 +1,14 @@
-const getSubtitleJSON = require("./getSubtitleJSON");
 const searchVideo = require("../usetube/usetubeSearchVideo");
+const filterVideoResults = require("./filterVideoResults");
 
 const searchYouTube = async (trackTitle, trackArtist) => {
-  const videos = await searchVideo(`${trackTitle} ${trackArtist} lyrics`).then(
-    async (results) => {
+  const searchForVideoFunction = async (searchTerm, captionOnly) => {
+    return await searchVideo(
+      searchTerm,
+      undefined,
+      undefined,
+      captionOnly
+    ).then(async (results) => {
       if (results) {
         if (results.videos) {
           if (results.videos.length > 0) {
@@ -12,111 +17,53 @@ const searchYouTube = async (trackTitle, trackArtist) => {
             return allResultsArr;
           } else {
             console.log("No results found!");
+            return;
           }
         }
       }
-    }
+    });
+  };
+
+  const videosWithLyrics = await searchForVideoFunction(
+    `${trackTitle} ${trackArtist} lyrics`,
+    true
   );
 
-  const filterRegex =
-    /(live)|(instrumental)|(tik[\s]*tok)|(karaoke)|(reaction video)|(nightcore)|(minecraft)|(\(reaction\))|(- reaction)|(kidz bop)|(\| verified)|(parody)|(pronunciation)|(cover)/gim;
-
-  const mustContainRegex =
-    /(video)|(audio)|(lyrics)|(mv)|(music video)|(music)/gi;
-
-  if (videos) {
-    const filteredVids = videos.filter(
-      (video) =>
-        !filterRegex.test(video.original_title) &&
-        mustContainRegex.test(video.original_title) &&
-        video.original_title.toLowerCase().includes(trackTitle.toLowerCase())
+  const backUpSearchVideos = async () => {
+    console.log(
+      `No applicable YouTube videos found for search term "${trackTitle} ${trackArtist} lyrics". Trying again without the "lyrics" phrase.`
     );
 
-    const firstFive = filteredVids.slice(0, 5);
+    // No useful closed-captioned videos, see if there are any useful auto-generated captions available
+    const regularVideos = await searchForVideoFunction(
+      `${trackTitle} ${trackArtist}`,
+      false
+    );
 
-    const loopOverVideos = async () => {
-      const allResultsArr = [];
+    if (regularVideos && regularVideos.length > 0) {
+      return await filterVideoResults(regularVideos, trackTitle, trackArtist);
+    } else {
+      console.log(
+        `No applicable YouTube videos found for search term "${trackTitle} ${trackArtist}" either.`
+      );
+      return;
+    }
+  };
 
-      const promiseArray = [];
+  if (videosWithLyrics && videosWithLyrics.length > 0) {
+    const filtered = await filterVideoResults(
+      videosWithLyrics,
+      trackTitle,
+      trackArtist
+    );
 
-      for (let i = 0; i < firstFive.length; i++) {
-        const delayedTimeoutPromise = async (delay) => {
-          return new Promise((resolve, reject) => {
-            setTimeout(async () => {
-              console.log(
-                `Getting subtitles for video ${i + 1} of ${firstFive.length}: ${
-                  firstFive[i].original_title
-                }`
-              );
-
-              return await getSubtitleJSON(
-                firstFive[i].id,
-                trackTitle,
-                trackArtist
-              )
-                .then((arr) => {
-                  if (arr) {
-                    const result = {
-                      id: firstFive[i].id,
-                      duration: firstFive[i].duration,
-                      arr,
-                      arrLength: arr.length,
-                    };
-                    allResultsArr.push(result);
-
-                    resolve(result);
-                    return result;
-                  } else {
-                    reject();
-                    return;
-                  }
-                })
-                .catch((err) => {
-                  console.log("Subtitle function resulted in an error!");
-                  console.log(err);
-                  return;
-                });
-            }, delay);
-          });
-        };
-
-        promiseArray.push(delayedTimeoutPromise(i * 20000));
-      }
-
-      // Waits for all Promise objects to resolve
-      // Bypasses Promise.all's behavior of rejecting immediately upon any of the input promises rejecting
-      // Instead resolves all Promise objects with errors to null in the resulting array
-      return Promise.all(promiseArray.map((p) => p.catch((error) => null)))
-        .then((arr) => {
-          console.log("All promises of Promise.all resolved!");
-          return arr;
-        })
-        .catch((err) => {
-          console.log("Error in iterable promises of Promise.all");
-          console.log(err);
-        });
-    };
-
-    return await loopOverVideos().then((arr) => {
-      if (arr) {
-        if (Array.isArray(arr) && arr.length > 0) {
-          const existenceArr = arr.filter((item) => item);
-          const allResultLengths = existenceArr.map((item) =>
-            item.arrLength ? item.arrLength : 0
-          );
-
-          const bestMatch = existenceArr.find(
-            (item) => item.arrLength === Math.max(...allResultLengths)
-          );
-
-          return bestMatch;
-        } else {
-          return;
-        }
-      }
-    });
+    if (filtered) {
+      return filtered;
+    } else {
+      return await backUpSearchVideos();
+    }
   } else {
-    console.log("No videos found!");
+    return await backUpSearchVideos();
   }
 };
 
