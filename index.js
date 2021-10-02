@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const cron = require("node-cron");
-const findMixable = require("./functions/mix/findMixable");
+const mixTracks = require("./functions/mix/mixTracks");
 const loopCurrentCharts = require("./functions/search/loopCurrentCharts");
 const loopSongs = require("./functions/search/loopSongs");
 // const { getChart } = require("billboard-top-100");
@@ -10,7 +10,7 @@ const loopSongs = require("./functions/search/loopSongs");
 // const getTrack = require("./functions/search/getTrack");
 require("dotenv").config();
 
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || 4001;
 
 // Run on Wednesdays starting at 11:00 PM and every second minute after until midnight
 cron.schedule("0,*/2 23 * * 3", () => {
@@ -22,6 +22,8 @@ cron.schedule("0,*/2 23 * * 3", () => {
 // cron.schedule("0,30 0-23 * * 4-6", () => {
 //   loopSongs();
 // });
+
+mixTracks();
 
 cron.schedule("0,30 0-23 * * *", () => {
   loopSongs();

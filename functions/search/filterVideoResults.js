@@ -4,7 +4,7 @@ const removeAccents = require("remove-accents");
 const filterVideoResults = async (videos, trackTitle, trackArtist) => {
   // Filter by terms and non-ASCII characters
   const filterRegex =
-    /(live)|(instrumental)|(tik[\s]*tok)|(karaoke)|(reaction video)|(nightcore)|(minecraft)|(\(reaction\))|(- reaction)|(kidz bop)|(\| verified)|(parody)|(pronunciation)|(cover)|([^\x00-\x7F]+)/gim;
+    /(live)|(instrumental)|(tik[\s]*tok)|(karaoke)|(reaction video)|(nightcore)|(minecraft)|(\(reaction\))|(- reaction)|(kidz bop)|(\| verified)|(parody)|(pronunciation)|(cover)|(meaning of)|([^\x00-\x7F]+)/gim;
 
   const mustContainRegex =
     /(video)|(audio)|(lyrics)|(mv)|(music video)|(music)/gim;

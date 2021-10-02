@@ -12,6 +12,7 @@ const findMixable = async () => {
       "fields.mode": "major",
       select: "fields.title,fields.artist,fields.tempo,fields.key,fields.mode",
       content_type: "song",
+      limit: 200,
     })
     .then((res) => {
       if (res) {
