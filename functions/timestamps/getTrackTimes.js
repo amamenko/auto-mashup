@@ -150,25 +150,21 @@ const getTrackTimes = async (
 
             return await getLyricTimestamps(options).then(async (lyricArr) => {
               if (lyricArr) {
-                if (lyricArr.length < 4) {
-                  if (urlArr[1]) {
-                    const newOptions = {
-                      ...options,
-                      title: urlArr[1].title.split(titleRegex)[0].trim(),
-                    };
+                if (urlArr[1]) {
+                  const newOptions = {
+                    ...options,
+                    title: urlArr[1].title.split(titleRegex)[0].trim(),
+                  };
 
-                    return await getLyricTimestamps(newOptions).then(
-                      (newLyricArr) => {
-                        if (newLyricArr.length > lyricArr.length) {
-                          return newLyricArr;
-                        } else {
-                          return lyricArr;
-                        }
+                  return await getLyricTimestamps(newOptions).then(
+                    (newLyricArr) => {
+                      if (newLyricArr.length > lyricArr.length) {
+                        return newLyricArr;
+                      } else {
+                        return lyricArr;
                       }
-                    );
-                  } else {
-                    return lyricArr;
-                  }
+                    }
+                  );
                 } else {
                   return lyricArr;
                 }

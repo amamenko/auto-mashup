@@ -4,7 +4,7 @@ const removeAccents = require("remove-accents");
 const filterVideoResults = async (videos, trackTitle, trackArtist) => {
   // Filter by terms and non-ASCII characters
   const filterRegex =
-    /(live)|(instrumental)|(tik[\s]*tok)|(karaoke)|(reaction video)|(nightcore)|(minecraft)|(\(reaction\))|(- reaction)|(kidz bop)|(\| verified)|(parody)|(pronunciation)|(cover)|(meaning of)|([^\x00-\x7F]+)/gim;
+    /(live)|(instrumental)|(tik[\s]*tok)|(karaoke)|(reaction video)|(nightcore)|(minecraft)|(\(reaction\))|(- reaction)|(kidz bop)|(\| verified)|(parody)|(pronunciation)|(meaning of)|(music box)|(learn english)|(explain)(ed|ation)|(translation)|(traducao)|([^\x00-\x7F]+)/gim;
 
   const mustContainRegex =
     /(video)|(audio)|(lyrics)|(mv)|(music video)|(music)/gim;
@@ -12,10 +12,11 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
   const filteredVids = videos.filter(
     (video) =>
       !filterRegex.test(removeAccents(video.original_title)) &&
+      !removeAccents(video.original_title).includes("cover") &&
       mustContainRegex.test(removeAccents(video.original_title)) &&
-      video.original_title
-        .toLowerCase()
-        .includes(removeAccents(video.original_title).toLowerCase()) &&
+      removeAccents(video.original_title.toLowerCase()).includes(
+        removeAccents(trackTitle).toLowerCase()
+      ) &&
       video.duration < 660
   );
 

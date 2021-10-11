@@ -21,8 +21,8 @@ const mixTracks = () => {
   // });
 
   ffmpeg()
-    .input("accompaniment")
-    .input("vox")
+    .input("accompaniment.mp3")
+    .input("vocals.mp3")
     .complexFilter([
       // Pitch up the vocals
       {

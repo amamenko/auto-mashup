@@ -50,7 +50,7 @@ const loopOverFinalLyrics = async (
           );
           const nextSectionLyrics = nextSectionArr.map((item) => item.lyrics);
 
-          let nextSectionMatch = "";
+          let nextSectionMatch = { rating: "" };
 
           if (youtubeLyricsArr[i + 1] && nextSectionLyrics.length > 0) {
             if (youtubeLyricsArr[i + 1].lyrics) {
