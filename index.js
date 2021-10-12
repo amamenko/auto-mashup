@@ -11,16 +11,16 @@ require("dotenv").config();
 
 const port = process.env.PORT || 4001;
 
-// // Run on Wednesdays starting at 11:00 PM and every second minute after until midnight
-// cron.schedule("0,*/2 23 * * 3", () => {
-//   // Get state of previous week's charts
-//   loopCurrentCharts();
-// });
+// Run on Tuesdays/Wednesdays starting at noon and then every two minutes
+cron.schedule("0,*/2 12-13 * * 2,3", () => {
+  // Get state of previous week's charts
+  loopCurrentCharts();
+});
 
-// Run every 30 minutes starting at midnight on Thursday until Saturday at 11:30 PM
-// cron.schedule("0,30 0-23 * * 4-6", () => {
-//   loopSongs();
-// });
+// Run every 30 minutes starting at midnight on Wednesday until Saturday at 11:30 PM
+cron.schedule("0,30 0-23 * * 3-6", () => {
+  loopSongs();
+});
 
 // mixTracks();
 
