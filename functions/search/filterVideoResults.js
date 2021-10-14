@@ -1,24 +1,37 @@
 const getSubtitleJSON = require("./getSubtitleJSON");
 const removeAccents = require("remove-accents");
+const { filterArray, mustContainArray } = require("../arrays/videoFilterArr");
+const getEachArtist = require("./getEachArtist");
 
 const filterVideoResults = async (videos, trackTitle, trackArtist) => {
-  // Filter by terms and non-ASCII characters
-  const filterRegex =
-    /(live)|(instrumental)|(tik[\s]*tok)|(karaoke)|(reaction video)|(nightcore)|(minecraft)|(\(reaction\))|(- reaction)|(kidz bop)|(\| verified)|(parody)|(pronunciation)|(meaning of)|(music box)|(learn english)|(explain)(ed|ation)|(translation)|(traducao)|([^\x00-\x7F]+)/gim;
+  const { artist1, artist2, artist3 } = getEachArtist(trackArtist);
+  const artistArr = [artist1, artist2, artist3]
+    .filter((item) => item)
+    .map((item) => item.toLowerCase());
 
-  const mustContainRegex =
-    /(video)|(audio)|(lyrics)|(mv)|(music video)|(music)/gim;
+  const withinParantheses = /\(([^)]+)\)/gim;
 
-  const filteredVids = videos.filter(
-    (video) =>
-      !filterRegex.test(removeAccents(video.original_title)) &&
-      !removeAccents(video.original_title).includes("cover") &&
-      mustContainRegex.test(removeAccents(video.original_title)) &&
-      removeAccents(video.original_title.toLowerCase()).includes(
-        removeAccents(trackTitle).toLowerCase()
+  const filteredVids = videos.filter((video) => {
+    const formattedVideoTitle = removeAccents(
+      video.original_title.toLowerCase()
+    );
+    const formattedTrackTitle = removeAccents(trackTitle).toLowerCase();
+    const trackTitleWithoutAlias = formattedTrackTitle
+      .replace(withinParantheses, "")
+      .trim();
+
+    return (
+      !filterArray.some((item) =>
+        item instanceof RegExp
+          ? item.test(formattedVideoTitle)
+          : formattedVideoTitle.includes(item)
       ) &&
+      mustContainArray.some((word) => formattedVideoTitle.includes(word)) &&
+      formattedVideoTitle.includes(trackTitleWithoutAlias) &&
+      artistArr.some((artist) => formattedVideoTitle.includes(artist)) &&
       video.duration < 660
-  );
+    );
+  });
 
   if (filteredVids.length > 0) {
     const firstFive = filteredVids.slice(0, 5);
@@ -40,6 +53,7 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
 
               return await getSubtitleJSON(
                 firstFive[i].id,
+                firstFive[i].duration,
                 trackTitle,
                 trackArtist
               )

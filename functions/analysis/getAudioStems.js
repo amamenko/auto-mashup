@@ -22,7 +22,7 @@ const getAudioStems = async (
     },
   };
 
-  const basicInfo = await ytdl.getBasicInfo(videoID, reqOptions);
+  const basicInfo = await ytdl.getBasicInfo(videoID);
 
   if (basicInfo) {
     if (basicInfo.videoDetails) {

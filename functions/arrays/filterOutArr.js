@@ -11,6 +11,7 @@ const filterOutArr = [
   "(",
   ")",
   ",",
+  ":",
 ];
 
 module.exports = filterOutArr;

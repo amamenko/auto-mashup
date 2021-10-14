@@ -5,6 +5,7 @@ const removeAccents = require("remove-accents");
 
 const getTrackTimes = async (
   youtubeCaptions,
+  videoDuration,
   trackTitle,
   artist,
   artist2,
@@ -176,7 +177,30 @@ const getTrackTimes = async (
     })
     .catch((err) => console.log(err));
 
-  return resultLyrics;
+  if (resultLyrics) {
+    if (resultLyrics.length > 0) {
+      // Check if track section time breakdown covers sufficient span of track
+      const lastSection = resultLyrics[resultLyrics.length - 1];
+      const lastTime = lastSection.start;
+      const timeArr = lastTime.split(":").map((item) => Number(item));
+
+      let totalSeconds = 0;
+
+      totalSeconds += timeArr[0] * 3600;
+      totalSeconds += timeArr[1] * 60;
+      totalSeconds += timeArr[2];
+
+      const minimum = videoDuration * 0.7;
+
+      if (totalSeconds >= minimum) {
+        return resultLyrics;
+      } else {
+        return;
+      }
+    }
+  }
+
+  return;
 };
 
 module.exports = getTrackTimes;

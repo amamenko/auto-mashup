@@ -1,0 +1,56 @@
+// Filter by terms and non-ASCII characters
+const foreignChar = /([^\x00-\x7F]+)/gim;
+
+const filterArray = [
+  "cover",
+  "live",
+  "slowed",
+  "s l o w e d",
+  "reverb",
+  "r e v e r b",
+  "instrumental",
+  "choreography",
+  "performance",
+  "mirrored",
+  "tik tok",
+  "tiktok",
+  "karaoke",
+  "reaction",
+  "explain",
+  "explanation",
+  "react",
+  "freestyle",
+  "mtv",
+  "vma",
+  "chipmunk",
+  "metal version",
+  "male version",
+  "acapella",
+  "nightcore",
+  "nightcrore",
+  "minecraft",
+  "kidz bop",
+  "kidzbop",
+  "verified",
+  "parody",
+  "pronunciation",
+  "meaning",
+  "music box",
+  "learn english",
+  "translation",
+  "traducao",
+  foreignChar,
+];
+
+const mustContainArray = [
+  "video",
+  "audio",
+  "lyrics",
+  "letra",
+  "official",
+  "mv",
+  "music video",
+  "music",
+];
+
+module.exports = { filterArray, mustContainArray };

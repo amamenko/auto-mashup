@@ -1,12 +1,11 @@
 const ytdl = require("ytdl-core");
-const removeAccents = require("remove-accents");
 const subsrt = require("subsrt");
 const axios = require("axios");
 const languageCodeArr = require("../arrays/languageCodeArr");
-const filterOutArr = require("../arrays/filterOutArr");
 const getTrackTimes = require("../timestamps/getTrackTimes");
+const getEachArtist = require("./getEachArtist");
 
-const getSubtitleJSON = async (videoID, title, artist) => {
+const getSubtitleJSON = async (videoID, videoDuration, title, artist) => {
   const reqOptions = {
     requestOptions: {
       headers: {
@@ -17,7 +16,7 @@ const getSubtitleJSON = async (videoID, title, artist) => {
 
   const format = "vtt";
 
-  return await ytdl.getInfo(videoID, reqOptions).then(async (info) => {
+  return await ytdl.getInfo(videoID).then(async (info) => {
     const tracks =
       info.player_response.captions.playerCaptionsTracklistRenderer
         .captionTracks;
@@ -91,23 +90,15 @@ const getSubtitleJSON = async (videoID, title, artist) => {
 
                 const sortedLyricsArr = lyricsArr.sort(compareTimes);
 
-                const splitRegex =
-                  /(\()|(\))|(, )|( with )|(featuring)|(ft\.)|(&)|x(?!( &)|( and )|( featuring)|( feat\.)|( ft\.)|$)|(feat\.)|( and )/gi;
-
-                const artistArr = artist
-                  .split(splitRegex)
-                  .filter(
-                    (item) =>
-                      item && !filterOutArr.includes(item.trim().toLowerCase())
-                  )
-                  .map((item) => item.trim());
+                const { artist1, artist2, artist3 } = getEachArtist(artist);
 
                 const times = await getTrackTimes(
                   sortedLyricsArr,
+                  videoDuration,
                   title,
-                  artistArr[0] ? removeAccents(artistArr[0]) : "",
-                  artistArr[1] ? removeAccents(artistArr[1]) : "",
-                  artistArr[2] ? removeAccents(artistArr[2]) : ""
+                  artist1,
+                  artist2,
+                  artist3
                 );
 
                 return times;
