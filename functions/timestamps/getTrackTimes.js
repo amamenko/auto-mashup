@@ -5,6 +5,7 @@ const removeAccents = require("remove-accents");
 
 const getTrackTimes = async (
   youtubeCaptions,
+  videoTitle,
   videoDuration,
   trackTitle,
   artist,
@@ -152,17 +153,36 @@ const getTrackTimes = async (
             return await getLyricTimestamps(options).then(async (lyricArr) => {
               if (lyricArr) {
                 if (urlArr[1]) {
+                  const secondTitle = urlArr[1].title
+                    .split(titleRegex)[0]
+                    .trim();
+
                   const newOptions = {
                     ...options,
-                    title: urlArr[1].title.split(titleRegex)[0].trim(),
+                    title: secondTitle,
                   };
+
+                  const formattedVideoTitle =
+                    removeAccents(videoTitle).toLowerCase();
+
+                  const firstTitleFormatted = removeAccents(
+                    urlArr[0].title.split(titleRegex)[0].trim()
+                  ).toLowerCase();
 
                   return await getLyricTimestamps(newOptions).then(
                     (newLyricArr) => {
-                      if (newLyricArr.length > lyricArr.length) {
-                        return newLyricArr;
+                      if (formattedVideoTitle.includes("remix")) {
+                        if (firstTitleFormatted.includes("remix")) {
+                          return lyricArr;
+                        } else {
+                          return newLyricArr;
+                        }
                       } else {
-                        return lyricArr;
+                        if (newLyricArr.length > lyricArr.length) {
+                          return newLyricArr;
+                        } else {
+                          return lyricArr;
+                        }
                       }
                     }
                   );
@@ -190,7 +210,7 @@ const getTrackTimes = async (
       totalSeconds += timeArr[1] * 60;
       totalSeconds += timeArr[2];
 
-      const minimum = videoDuration * 0.7;
+      const minimum = videoDuration * 0.65;
 
       if (totalSeconds >= minimum) {
         return resultLyrics;

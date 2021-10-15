@@ -53,14 +53,56 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
 
               return await getSubtitleJSON(
                 firstFive[i].id,
+                firstFive[i].original_title,
                 firstFive[i].duration,
                 trackTitle,
                 trackArtist
               )
                 .then((arr) => {
+                  const videoTitle = removeAccents(
+                    firstFive[i].original_title
+                  ).toLowerCase();
+                  let artistMatches = 0;
+
+                  for (const artist of artistArr) {
+                    if (videoTitle.includes(artist)) {
+                      artistMatches++;
+                    }
+                  }
+
                   if (arr) {
+                    let ditch = 0;
+
+                    for (const section of arr) {
+                      const getSeconds = (timestamp) => {
+                        const timeArr = timestamp
+                          .split(":")
+                          .map((item) => Number(item));
+
+                        let totalSeconds = 0;
+
+                        totalSeconds += timeArr[0] * 3600;
+                        totalSeconds += timeArr[1] * 60;
+                        totalSeconds += timeArr[2];
+
+                        return totalSeconds;
+                      };
+
+                      if (section.start && section.end) {
+                        const start = getSeconds(section.start);
+                        const end = getSeconds(section.end);
+
+                        if (end - start <= 3) {
+                          ditch++;
+                        }
+                      }
+                    }
+
                     const result = {
                       id: firstFive[i].id,
+                      videoTitle,
+                      artistMatches,
+                      ditchResult: ditch >= 2 ? true : false,
                       duration: firstFive[i].duration,
                       arr,
                       arrLength: arr.length,
@@ -104,13 +146,43 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
     return await loopOverVideos().then((arr) => {
       if (arr) {
         if (Array.isArray(arr) && arr.length > 0) {
-          const existenceArr = arr.filter((item) => item);
+          let existenceArr = arr.filter((item) => item);
+
+          let withRemix = 0;
+          let withoutRemix = 0;
+
+          for (const el of existenceArr) {
+            if (removeAccents(el.videoTitle).toLowerCase().includes("remix")) {
+              withRemix++;
+            } else {
+              withoutRemix++;
+            }
+          }
+
+          if (withRemix > withoutRemix) {
+            existenceArr = existenceArr.filter(
+              (item) => !item.videoTitle.includes("remix")
+            );
+          }
+
+          const allArtistMatches = existenceArr.map((item) =>
+            item.artistMatches ? item.artistMatches : 0
+          );
+
+          const highestArtistMatch = Math.max(...allArtistMatches);
+
+          existenceArr = existenceArr.filter(
+            (item) => item.artistMatches === highestArtistMatch
+          );
+
           const allResultLengths = existenceArr.map((item) =>
             item.arrLength ? item.arrLength : 0
           );
 
           const bestMatch = existenceArr.find(
-            (item) => item.arrLength === Math.max(...allResultLengths)
+            (item) =>
+              item.arrLength === Math.max(...allResultLengths) &&
+              !item.ditchResult
           );
 
           return bestMatch;

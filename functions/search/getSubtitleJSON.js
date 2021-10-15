@@ -5,7 +5,13 @@ const languageCodeArr = require("../arrays/languageCodeArr");
 const getTrackTimes = require("../timestamps/getTrackTimes");
 const getEachArtist = require("./getEachArtist");
 
-const getSubtitleJSON = async (videoID, videoDuration, title, artist) => {
+const getSubtitleJSON = async (
+  videoID,
+  videoTitle,
+  videoDuration,
+  title,
+  artist
+) => {
   const reqOptions = {
     requestOptions: {
       headers: {
@@ -94,6 +100,7 @@ const getSubtitleJSON = async (videoID, videoDuration, title, artist) => {
 
                 const times = await getTrackTimes(
                   sortedLyricsArr,
+                  videoTitle,
                   videoDuration,
                   title,
                   artist1,
