@@ -24,9 +24,9 @@ cron.schedule("0,*/2 12-13 * * 2,3", () => {
 });
 
 // Run every 30 minutes starting at midnight on Wednesday until Saturday at 11:30 PM
-// cron.schedule("0,30 0-23 * * 3-6", () => {
-//   loopSongs();
-// });
+cron.schedule("0,30 0-23 * * 3-6", () => {
+  loopSongs();
+});
 
 // mixTracks();
 

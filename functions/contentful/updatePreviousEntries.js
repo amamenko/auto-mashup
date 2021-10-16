@@ -57,10 +57,10 @@ const updatePreviousEntries = (topSong, songRank, currentChart, prevSongs) => {
                                   environment
                                     .getEntry(entryID)
                                     .then((entry) => {
+                                      charts.splice(indexCurrentChart, 1);
                                       // If entry appears on more charts
                                       // -> leave entry, just update charts it appears on
                                       if (charts.length > 0) {
-                                        charts.splice(indexCurrentChart, 1);
                                         entry.fields.charts = charts;
                                         entry.update().then(() => {
                                           environment
@@ -75,13 +75,63 @@ const updatePreviousEntries = (topSong, songRank, currentChart, prevSongs) => {
                                         });
                                       } else {
                                         // If entry does NOT appear in any other charts
-                                        // -> delete entry
-                                        entry
-                                          .delete()
-                                          .then(() =>
-                                            console.log("Entry deleted.")
-                                          )
-                                          .catch(console.error);
+                                        // -> delete entry assets and entry itself
+                                        const fields = res.items[0].fields;
+
+                                        if (fields) {
+                                          const accompaniment =
+                                            fields.accompaniment;
+                                          const vocals = fields.vocals;
+
+                                          const accompanimentID =
+                                            accompaniment.sys.id;
+                                          const vocalsID = vocals.sys.id;
+
+                                          // Delete accompaniment asset
+                                          if (accompanimentID) {
+                                            environment
+                                              .getAsset(accompanimentID)
+                                              .then((accompanimentAsset) => {
+                                                accompanimentAsset
+                                                  .delete()
+                                                  .then(() => {
+                                                    console.log(
+                                                      `Accompaniment asset for track "${fields.title}" by ${fields.artist} has been deleted.`
+                                                    );
+                                                    return;
+                                                  })
+                                                  .catch(console.error);
+                                              });
+                                          }
+
+                                          // Delete vocals asset
+                                          if (vocalsID) {
+                                            environment
+                                              .getAsset(vocalsID)
+                                              .then((vocalsAsset) => {
+                                                vocalsAsset
+                                                  .delete()
+                                                  .then(() => {
+                                                    console.log(
+                                                      `Vocals asset for track "${fields.title}" by ${fields.artist} has been deleted.`
+                                                    );
+                                                    return;
+                                                  })
+                                                  .catch(console.error);
+                                              });
+                                          }
+
+                                          // Delete entry itself
+                                          entry
+                                            .delete()
+                                            .then(() => {
+                                              console.log(
+                                                `Entry for track "${fields.title}" by ${fields.artist} has been deleted.`
+                                              );
+                                              return;
+                                            })
+                                            .catch(console.error);
+                                        }
                                       }
                                     });
                                 });
