@@ -183,7 +183,7 @@ const getTrack = async (
                         return await searchYouTube(
                           topSong.title,
                           topSong.artist
-                        ).then((match) => {
+                        ).then(async (match) => {
                           if (match) {
                             if (match.arr) {
                               if (match.arr.length >= 4) {
@@ -203,12 +203,16 @@ const getTrack = async (
                                     };
                                   }
                                 });
-                                getAudioStems(
+
+                                await getAudioStems(
                                   matchID,
                                   matchDuration,
                                   matchArr,
                                   trackDataJSON
-                                );
+                                ).catch((err) => {
+                                  console.log(err);
+                                  return;
+                                });
                               } else {
                                 console.log(
                                   `No match found for track "${topSong.title}" by ${topSong.artist}.`

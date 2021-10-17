@@ -14,14 +14,6 @@ const getAudioStems = async (
   matchArr,
   trackDataJSON
 ) => {
-  const reqOptions = {
-    requestOptions: {
-      headers: {
-        cookie: process.env.YOUTUBE_COOKIES,
-      },
-    },
-  };
-
   const basicInfo = await ytdl.getBasicInfo(videoID);
 
   if (basicInfo) {
@@ -34,7 +26,10 @@ const getAudioStems = async (
   // Download audio from YouTube
   let stream = ytdl(videoID, {
     quality: "highestaudio",
-    ...reqOptions,
+  });
+
+  stream.on("data", (chunk) => {
+    console.log(`Received ${chunk.length} bytes of data.`);
   });
 
   const filePath = "YouTubeAudio.wav";
@@ -44,6 +39,13 @@ const getAudioStems = async (
   ffmpeg(stream)
     .audioBitrate(128)
     .save(filePath)
+    .on("error", (err, stdout, stderr) => {
+      console.log(
+        "FFMPEG received an error when attempting to download video audio. Cannot process video. Terminating process. Output: " +
+          err.message
+      );
+      return;
+    })
     .on("progress", (p) => {
       console.log(`${p.targetSize}kb downloaded`);
     })

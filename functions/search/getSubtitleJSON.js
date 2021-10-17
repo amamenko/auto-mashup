@@ -12,14 +12,6 @@ const getSubtitleJSON = async (
   title,
   artist
 ) => {
-  const reqOptions = {
-    requestOptions: {
-      headers: {
-        cookie: process.env.YOUTUBE_COOKIES,
-      },
-    },
-  };
-
   const format = "vtt";
 
   return await ytdl.getInfo(videoID).then(async (info) => {

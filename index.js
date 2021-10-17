@@ -8,9 +8,10 @@ const loopSongs = require("./functions/search/loopSongs");
 const nodeCleanup = require("node-cleanup");
 const testSearch = require("./functions/search/testSearch");
 const resetAllChartStatuses = require("./functions/contentful/resetAllChartStatuses");
+const findMixable = require("./functions/mix/findMixable");
 require("dotenv").config();
 
-const port = process.env.PORT || 4001;
+const port = process.env.PORT || 4000;
 
 // Just in case, reset all chart statuses on Mondays at midnight
 cron.schedule("0 * * * 1", () => {
@@ -23,10 +24,12 @@ cron.schedule("0,*/2 12-13 * * 2,3", () => {
   loopCurrentCharts();
 });
 
-// Run every 30 minutes starting at midnight on Wednesday until Saturday at 11:30 PM
-cron.schedule("0,30 0-23 * * 3-6", () => {
+// Run every 30 minutes starting at midnight on Wednesday until Sunday at 11:30 PM
+cron.schedule("0,30 0-23 * * 3-7", () => {
   loopSongs();
 });
+
+findMixable();
 
 // mixTracks();
 

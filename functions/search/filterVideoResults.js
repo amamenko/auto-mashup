@@ -29,6 +29,7 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
       mustContainArray.some((word) => formattedVideoTitle.includes(word)) &&
       formattedVideoTitle.includes(trackTitleWithoutAlias) &&
       artistArr.some((artist) => formattedVideoTitle.includes(artist)) &&
+      video.duration > 60 &&
       video.duration < 660
     );
   });
