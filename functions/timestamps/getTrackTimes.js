@@ -2,6 +2,7 @@ const { searchSong } = require("genius-lyrics-api");
 const getLyricTimestamps = require("./getLyricTimestamps");
 const stringSimilarity = require("string-similarity");
 const removeAccents = require("remove-accents");
+const timeStampToSeconds = require("../utils/timeStampToSeconds");
 
 const getTrackTimes = async (
   youtubeCaptions,
@@ -202,13 +203,8 @@ const getTrackTimes = async (
       // Check if track section time breakdown covers sufficient span of track
       const lastSection = resultLyrics[resultLyrics.length - 1];
       const lastTime = lastSection.start;
-      const timeArr = lastTime.split(":").map((item) => Number(item));
 
-      let totalSeconds = 0;
-
-      totalSeconds += timeArr[0] * 3600;
-      totalSeconds += timeArr[1] * 60;
-      totalSeconds += timeArr[2];
+      const totalSeconds = timeStampToSeconds(lastTime);
 
       const minimum = videoDuration * 0.65;
 

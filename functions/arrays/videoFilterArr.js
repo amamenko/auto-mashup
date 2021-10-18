@@ -20,6 +20,8 @@ const filterArray = [
   "hour",
   "perform",
   "cmt",
+  "acoustic",
+  "behind the scenes",
   "audition",
   "reaction",
   "explain",

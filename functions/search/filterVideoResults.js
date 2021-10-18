@@ -2,6 +2,7 @@ const getSubtitleJSON = require("./getSubtitleJSON");
 const removeAccents = require("remove-accents");
 const { filterArray, mustContainArray } = require("../arrays/videoFilterArr");
 const getEachArtist = require("./getEachArtist");
+const timeStampToSeconds = require("../utils/timeStampToSeconds");
 
 const filterVideoResults = async (videos, trackTitle, trackArtist) => {
   const { artist1, artist2, artist3 } = getEachArtist(trackArtist);
@@ -75,23 +76,9 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                     let ditch = 0;
 
                     for (const section of arr) {
-                      const getSeconds = (timestamp) => {
-                        const timeArr = timestamp
-                          .split(":")
-                          .map((item) => Number(item));
-
-                        let totalSeconds = 0;
-
-                        totalSeconds += timeArr[0] * 3600;
-                        totalSeconds += timeArr[1] * 60;
-                        totalSeconds += timeArr[2];
-
-                        return totalSeconds;
-                      };
-
                       if (section.start && section.end) {
-                        const start = getSeconds(section.start);
-                        const end = getSeconds(section.end);
+                        const start = timeStampToSeconds(section.start);
+                        const end = timeStampToSeconds(section.end);
 
                         if (end - start <= 3) {
                           ditch++;
