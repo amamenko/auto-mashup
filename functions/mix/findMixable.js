@@ -75,7 +75,7 @@ const findMixable = async () => {
                           ...song1,
                           keyScaleFactor:
                             sign === 0
-                              ? 0
+                              ? 1
                               : sign > 0
                               ? 1 - (1 / 12) * difference
                               : 1 + (1 / 12) * difference,
@@ -86,7 +86,7 @@ const findMixable = async () => {
                           ...song2,
                           keyScaleFactor:
                             sign === 0
-                              ? 0
+                              ? 1
                               : sign > 0
                               ? 1 + (1 / 12) * difference
                               : 1 - (1 / 12) * difference,
