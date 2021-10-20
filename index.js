@@ -9,9 +9,10 @@ const nodeCleanup = require("node-cleanup");
 const testSearch = require("./functions/search/testSearch");
 const resetAllChartStatuses = require("./functions/contentful/resetAllChartStatuses");
 const findMixable = require("./functions/mix/findMixable");
+const ffmpeg = require("fluent-ffmpeg");
 require("dotenv").config();
 
-const port = process.env.PORT || 4001;
+const port = process.env.PORT || 4000;
 
 // Just in case, reset all chart statuses on Mondays at midnight
 cron.schedule("0 * * * 1", () => {
