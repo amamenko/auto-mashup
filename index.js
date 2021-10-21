@@ -15,22 +15,22 @@ require("dotenv").config();
 const port = process.env.PORT || 4000;
 
 // Just in case, reset all chart statuses on Mondays at midnight
-cron.schedule("0 * * * 1", () => {
-  resetAllChartStatuses();
-});
+// cron.schedule("0 * * * 1", () => {
+//   resetAllChartStatuses();
+// });
 
-// // Run on Tuesdays/Wednesdays starting at noon and then every two minutes until 1 o'clock
-cron.schedule("0,*/2 12-13 * * 2,3", () => {
-  // Get state of previous week's charts
-  loopCurrentCharts();
-});
+// // // Run on Tuesdays/Wednesdays starting at noon and then every two minutes until 1 o'clock
+// cron.schedule("0,*/2 12-13 * * 2,3", () => {
+//   // Get state of previous week's charts
+//   loopCurrentCharts();
+// });
 
-// // Run every 30 minutes starting at midnight on Wednesday until Sunday at 11:30 PM
-cron.schedule("0,30 0-23 * * 3-7", () => {
-  loopSongs();
-});
+// // // Run every 30 minutes starting at midnight on Wednesday until Sunday at 11:30 PM
+// cron.schedule("0,30 0-23 * * 3-7", () => {
+//   loopSongs();
+// });
 
-// findMixable();
+findMixable();
 
 // mixTracks();
 

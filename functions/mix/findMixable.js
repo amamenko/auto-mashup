@@ -1,6 +1,13 @@
 const contentful = require("contentful");
 const keysArr = require("./keysArr");
 const mixTracks = require("./mixTracks");
+const {
+  verseSections,
+  preChorusSections,
+  chorusSections,
+  postChorusSections,
+  bridgeSections,
+} = require("../arrays/songSectionsArr");
 
 const findMixable = async () => {
   const client = contentful.createClient({
@@ -70,30 +77,102 @@ const findMixable = async () => {
                     });
 
                     if (!matchExists) {
-                      matches.push({
-                        song1: {
-                          ...song1,
-                          keyScaleFactor:
-                            sign === 0
-                              ? 1
-                              : sign > 0
-                              ? 1 - (1 / 12) * difference
-                              : 1 + (1 / 12) * difference,
-                          tempoScaleFactor:
-                            song2.fields.tempo / song1.fields.tempo,
+                      const noIntroOrOutro = (item) =>
+                        item !== "intro" && item !== "outro";
+
+                      const song1Sections = song1.fields.sections
+                        .map((section) => section.sectionName.split(" ")[0])
+                        .filter(noIntroOrOutro);
+                      const song2Sections = song2.fields.sections
+                        .map((section) => section.sectionName.split(" ")[0])
+                        .filter(noIntroOrOutro);
+
+                      const bothSections = [
+                        {
+                          name: "song1",
+                          sections: song1Sections,
                         },
-                        song2: {
-                          ...song2,
-                          keyScaleFactor:
-                            sign === 0
-                              ? 1
-                              : sign > 0
-                              ? 1 + (1 / 12) * difference
-                              : 1 - (1 / 12) * difference,
-                          tempoScaleFactor:
-                            song1.fields.tempo / song2.fields.tempo,
+                        {
+                          name: "song2",
+                          sections: song2Sections,
                         },
-                      });
+                      ];
+
+                      const adequateMatchCheck = (
+                        currentSongSections,
+                        otherSongSections
+                      ) => {
+                        let noMatch = 0;
+
+                        for (let j = 0; j < currentSongSections.length; j++) {
+                          const current = currentSongSections[j];
+
+                          const checkInclusion = (section) => {
+                            if (section.includes(current)) {
+                              if (
+                                !section.some((item) =>
+                                  otherSongSections.includes(item)
+                                )
+                              ) {
+                                noMatch++;
+                              }
+                            }
+                          };
+
+                          checkInclusion(verseSections);
+                          checkInclusion(preChorusSections);
+                          checkInclusion(chorusSections);
+                          checkInclusion(postChorusSections);
+                          checkInclusion(bridgeSections);
+                        }
+
+                        return noMatch;
+                      };
+
+                      const matchArr = [];
+
+                      for (let i = 0; i < bothSections.length; i++) {
+                        const currentName = bothSections[i].name;
+
+                        const currentSection = bothSections[i];
+                        const otherSection = bothSections.find(
+                          (item) => item.name !== currentName
+                        );
+
+                        const noMatches = adequateMatchCheck(
+                          currentSection.sections,
+                          otherSection.sections
+                        );
+
+                        matchArr.push(noMatches);
+                      }
+
+                      if (!matchArr.some((item) => item > 2)) {
+                        matches.push({
+                          song1: {
+                            ...song1,
+                            keyScaleFactor:
+                              sign === 0
+                                ? 1
+                                : sign > 0
+                                ? 1 - (1 / 12) * difference
+                                : 1 + (1 / 12) * difference,
+                            tempoScaleFactor:
+                              song2.fields.tempo / song1.fields.tempo,
+                          },
+                          song2: {
+                            ...song2,
+                            keyScaleFactor:
+                              sign === 0
+                                ? 1
+                                : sign > 0
+                                ? 1 + (1 / 12) * difference
+                                : 1 - (1 / 12) * difference,
+                            tempoScaleFactor:
+                              song1.fields.tempo / song2.fields.tempo,
+                          },
+                        });
+                      }
                     }
                   }
                 }
@@ -123,6 +202,7 @@ const findMixable = async () => {
           });
 
           if (matchArr && matchArr.length > 0) {
+            // console.log(matchArr.length);
             mixTracks(matchArr[0].song1, matchArr[0].song2);
           }
         }

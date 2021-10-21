@@ -1,6 +1,16 @@
 const ffmpeg = require("fluent-ffmpeg");
 const timeStampToSeconds = require("../utils/timeStampToSeconds");
 const path = require("path");
+const {
+  introSections,
+  verseSections,
+  preChorusSections,
+  chorusSections,
+  postChorusSections,
+  bridgeSections,
+  outroSections,
+} = require("../arrays/songSectionsArr");
+const removeAccents = require("remove-accents");
 
 const mixTracks = (song1, song2) => {
   const start = Date.now();
@@ -8,6 +18,9 @@ const mixTracks = (song1, song2) => {
   const createComplexFilter = () => {
     const vocalsKeyScale = song2.keyScaleFactor;
     const vocalsTempoScale = song2.tempoScaleFactor;
+
+    // Apply BPM adjustment matching to original BPM of vocal track
+    song2.beats = song2.beats.map((beat) => (1 / vocalsTempoScale) * beat);
 
     const findClosestBeat = (seconds, song) => {
       const beats = song.beats;
@@ -41,14 +54,6 @@ const mixTracks = (song1, song2) => {
 
     for (const instrumentalSection of instrumentalSections) {
       for (const vocalSection of vocalSections) {
-        const introSections = ["intro"];
-        const verseSections = ["verse", "verso", "refrain", "refrán"];
-        const preChorusSections = ["pre-chorus", "pre-coro"];
-        const chorusSections = ["chorus", "coro"];
-        const postChorusSections = ["post-chorus", "post-coro"];
-        const bridgeSections = ["bridge", "puente"];
-        const outroSections = ["outro"];
-
         const generalVocalSection = vocalSection.sectionName.split(" ")[0];
         const vocalSectionNumber = vocalSection.sectionName.split(" ")[1];
         const generalInstrumentalSection =
@@ -115,16 +120,20 @@ const mixTracks = (song1, song2) => {
         endTime = startTime + maxDuration;
       }
 
-      const ffmpegSectionName = `${section.sectionName}`.replace(" ", ":");
+      const ffmpegSectionName = `${removeAccents(
+        instrumentalSection.sectionName
+      )}`.replace(" ", ":");
+
+      const relativeDelay = delay * 1000;
 
       return [
         {
           filter: `atrim=start=${section.start}:end=${endTime}`,
-          inputs: `vox:${i}`,
+          inputs: `vox:${i + 1}`,
           outputs: ffmpegSectionName,
         },
         {
-          filter: `adelay=${delay * 10000}`,
+          filter: `adelay=${relativeDelay}|${relativeDelay}`,
           inputs: ffmpegSectionName,
           outputs: `${ffmpegSectionName}_delayed`,
         },
@@ -134,11 +143,20 @@ const mixTracks = (song1, song2) => {
     const voxOutputNamesArr = trimmedSections.map((item) => item[1].outputs);
 
     const getRubberbandFilter = (num) => {
-      return {
-        filter: `rubberband=pitch=${vocalsKeyScale}:tempo=${vocalsTempoScale}:formant=preserved`,
-        inputs: `${num}:a`,
-        outputs: `vox:${num}`,
-      };
+      const audioInputNum = num + 1;
+
+      return [
+        {
+          filter: "volume=2.5",
+          inputs: `${audioInputNum}:a`,
+          outputs: `${audioInputNum}_louder:a`,
+        },
+        {
+          filter: `rubberband=pitch=${vocalsKeyScale}:tempo=${vocalsTempoScale}:formant=preserved`,
+          inputs: `${audioInputNum}_louder:a`,
+          outputs: `vox:${audioInputNum}`,
+        },
+      ];
     };
 
     const rubberbandFiltersArr = [...Array(song2.sections.length).keys()]
@@ -147,7 +165,7 @@ const mixTracks = (song1, song2) => {
 
     const complexFilter = [
       // Apply vocal pitching / tempo scaling adjustments
-      ...rubberbandFiltersArr,
+      ...rubberbandFiltersArr.flat(),
       // Apply section trimming and appropriate time delays to vox
       ...trimmedSections.flat(),
       // Mix instrumentals and pitched vocal sections together
@@ -158,6 +176,7 @@ const mixTracks = (song1, song2) => {
     ];
 
     console.log({ complexFilter });
+    console.log({ inputs: ["0:a", ...voxOutputNamesArr] });
     return complexFilter;
   };
 
@@ -176,14 +195,15 @@ const mixTracks = (song1, song2) => {
       ];
 
       audioFiles.forEach((fileName) => {
-        if (fileName !== accompanimentLink) {
-          command.input(fileName);
-        }
+        command.input(fileName);
       });
 
       command
         .complexFilter(createComplexFilter())
         .output("./output1.mp3")
+        .on("start", function (commandLine) {
+          console.log("Spawned Ffmpeg with command: " + commandLine);
+        })
         .on("error", (err, stdout, stderr) => {
           console.log(
             `FFMPEG received an error when attempting to mix the instrumentals of the track "${song1.title}" by ${song1.artist} with the vocals of the track "${song2.title}" by ${song2.artist}. Terminating process. Output: ` +
