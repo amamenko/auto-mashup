@@ -12,22 +12,25 @@ const {
 } = require("../arrays/songSectionsArr");
 const removeAccents = require("remove-accents");
 
-const mixTracks = (song1, song2) => {
+const mixTracks = (instrumentals, vox) => {
   const start = Date.now();
 
   const createComplexFilter = () => {
-    const vocalsKeyScale = song2.keyScaleFactor;
-    const vocalsTempoScale = song2.tempoScaleFactor;
+    const vocalsKeyScale = vox.keyScaleFactor;
+    const vocalsTempoScale = vox.tempoScaleFactor;
 
     // Apply BPM adjustment matching to original BPM of vocal track
-    song2.beats = song2.beats.map((beat) => (1 / vocalsTempoScale) * beat);
+    vox.beats = vox.beats.map((beat) => (1 / vocalsTempoScale) * beat);
 
     const findClosestBeat = (seconds, song) => {
       const beats = song.beats;
       const closest = beats.reduce((a, b) => {
         return Math.abs(b - seconds) < Math.abs(a - seconds) ? b : a;
       });
-      return closest;
+      const indexClosest = beats.findIndex((item) => item === closest);
+
+      // Round down one beat
+      return beats[indexClosest - 1];
     };
 
     function getClosestBeatArr(section, index, arr) {
@@ -48,8 +51,11 @@ const mixTracks = (song1, song2) => {
       };
     }
 
-    const instrumentalSections = song1.sections.map(getClosestBeatArr, song1);
-    const vocalSections = song2.sections.map(getClosestBeatArr, song2);
+    const instrumentalSections = instrumentals.sections.map(
+      getClosestBeatArr,
+      instrumentals
+    );
+    const vocalSections = vox.sections.map(getClosestBeatArr, vox);
     const matchedVocalSections = [];
 
     for (const instrumentalSection of instrumentalSections) {
@@ -111,8 +117,8 @@ const mixTracks = (song1, song2) => {
       let endTime = nextSection
         ? nextSection.start
           ? nextSection.start
-          : song2.duration
-        : song2.duration;
+          : vox.duration
+        : vox.duration;
 
       const defaultDuration = endTime - startTime;
 
@@ -132,22 +138,37 @@ const mixTracks = (song1, song2) => {
           inputs: `vox:${i + 1}`,
           outputs: ffmpegSectionName,
         },
+        // {
+        //   filter: "aloop=loop=2",
+        //   inputs: ffmpegSectionName + "_no_loop",
+        //   outputs: `loop${i + 1}`,
+        // },
+        // {
+        //   filter: `atrim=end=${maxDuration}`,
+        //   inputs: ffmpegSectionName,
+        //   outputs: `${ffmpegSectionName}${i + 1}`,
+        // },
+        {
+          filter: "loudnorm",
+          inputs: ffmpegSectionName,
+          outputs: `${i + 1}_normalized`,
+        },
         {
           filter: `adelay=${relativeDelay}|${relativeDelay}`,
-          inputs: ffmpegSectionName,
+          inputs: `${i + 1}_normalized`,
           outputs: `${ffmpegSectionName}_delayed`,
         },
       ];
     });
 
-    const voxOutputNamesArr = trimmedSections.map((item) => item[1].outputs);
+    const voxOutputNamesArr = trimmedSections.map((item) => item[2].outputs);
 
     const getRubberbandFilter = (num) => {
       const audioInputNum = num + 1;
 
       return [
         {
-          filter: "volume=2.5",
+          filter: "volume=2",
           inputs: `${audioInputNum}:a`,
           outputs: `${audioInputNum}_louder:a`,
         },
@@ -159,11 +180,17 @@ const mixTracks = (song1, song2) => {
       ];
     };
 
-    const rubberbandFiltersArr = [...Array(song2.sections.length).keys()]
+    const rubberbandFiltersArr = [...Array(vox.sections.length).keys()]
       .map(getRubberbandFilter)
       .slice(0, trimmedSections.length);
 
     const complexFilter = [
+      // Normalize instrumental audio
+      {
+        filter: "loudnorm",
+        inputs: "0:a",
+        outputs: "0:a:normalized",
+      },
       // Apply vocal pitching / tempo scaling adjustments
       ...rubberbandFiltersArr.flat(),
       // Apply section trimming and appropriate time delays to vox
@@ -171,18 +198,17 @@ const mixTracks = (song1, song2) => {
       // Mix instrumentals and pitched vocal sections together
       {
         filter: `amix=inputs=${1 + rubberbandFiltersArr.length}:duration=first`,
-        inputs: ["0:a", ...voxOutputNamesArr],
+        inputs: ["0:a:normalized", ...voxOutputNamesArr],
       },
     ];
 
     console.log({ complexFilter });
-    console.log({ inputs: ["0:a", ...voxOutputNamesArr] });
     return complexFilter;
   };
 
-  if (song1 && song2) {
-    const accompaniment = song1.accompaniment.fields.file.url;
-    const vocals = song2.vocals.fields.file.url;
+  if (instrumentals && vox) {
+    const accompaniment = instrumentals.accompaniment.fields.file.url;
+    const vocals = vox.vocals.fields.file.url;
 
     if (accompaniment && vocals) {
       const command = ffmpeg();
@@ -191,7 +217,7 @@ const mixTracks = (song1, song2) => {
 
       const audioFiles = [
         accompanimentLink,
-        ...Array(song2.sections.length).fill(vocalsLink),
+        ...Array(instrumentals.sections.length).fill(vocalsLink),
       ];
 
       audioFiles.forEach((fileName) => {
@@ -201,12 +227,9 @@ const mixTracks = (song1, song2) => {
       command
         .complexFilter(createComplexFilter())
         .output("./output1.mp3")
-        .on("start", function (commandLine) {
-          console.log("Spawned Ffmpeg with command: " + commandLine);
-        })
         .on("error", (err, stdout, stderr) => {
           console.log(
-            `FFMPEG received an error when attempting to mix the instrumentals of the track "${song1.title}" by ${song1.artist} with the vocals of the track "${song2.title}" by ${song2.artist}. Terminating process. Output: ` +
+            `FFMPEG received an error when attempting to mix the instrumentals of the track "${instrumentals.title}" by ${instrumentals.artist} with the vocals of the track "${vox.title}" by ${vox.artist}. Terminating process. Output: ` +
               err.message
           );
           return;
@@ -219,10 +242,10 @@ const mixTracks = (song1, song2) => {
             `\nDone in ${
               (Date.now() - start) / 1000
             }s\nSuccessfully mixed the instrumentals of the track "${
-              song1.title
-            }" by ${song1.artist} with the vocals of the track "${
-              song2.title
-            }" by ${song2.artist}.\nSaved to output1.mp3.`
+              instrumentals.title
+            }" by ${instrumentals.artist} with the vocals of the track "${
+              vox.title
+            }" by ${vox.artist}.\nSaved to output1.mp3.`
           );
         })
         .run();

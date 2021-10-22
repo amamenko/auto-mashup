@@ -62,14 +62,12 @@ const findMixable = async () => {
                   ) {
                     const matchExists = matches.find((el) => {
                       const ids = [];
+
                       for (const song in el) {
                         const obj = el[song];
                         ids.push(obj.sys.id);
                       }
-                      if (
-                        ids.includes(song1.sys.id) &&
-                        ids.includes(song2.sys.id)
-                      ) {
+                      if (ids[0] === song1.sys.id && ids[1] === song2.sys.id) {
                         return true;
                       } else {
                         return false;
@@ -128,7 +126,6 @@ const findMixable = async () => {
 
                         return noMatch;
                       };
-
                       const matchArr = [];
 
                       for (let i = 0; i < bothSections.length; i++) {
@@ -147,30 +144,41 @@ const findMixable = async () => {
                         matchArr.push(noMatches);
                       }
 
-                      if (!matchArr.some((item) => item > 2)) {
+                      const song1Obj = {
+                        ...song1,
+                        keyScaleFactor:
+                          sign === 0
+                            ? 1
+                            : sign > 0
+                            ? 1 - (1 / 12) * difference
+                            : 1 + (1 / 12) * difference,
+                        tempoScaleFactor:
+                          song2.fields.tempo / song1.fields.tempo,
+                      };
+
+                      const song2Obj = {
+                        ...song2,
+                        keyScaleFactor:
+                          sign === 0
+                            ? 1
+                            : sign > 0
+                            ? 1 + (1 / 12) * difference
+                            : 1 - (1 / 12) * difference,
+                        tempoScaleFactor:
+                          song1.fields.tempo / song2.fields.tempo,
+                      };
+
+                      if (matchArr[0] === 0) {
                         matches.push({
-                          song1: {
-                            ...song1,
-                            keyScaleFactor:
-                              sign === 0
-                                ? 1
-                                : sign > 0
-                                ? 1 - (1 / 12) * difference
-                                : 1 + (1 / 12) * difference,
-                            tempoScaleFactor:
-                              song2.fields.tempo / song1.fields.tempo,
-                          },
-                          song2: {
-                            ...song2,
-                            keyScaleFactor:
-                              sign === 0
-                                ? 1
-                                : sign > 0
-                                ? 1 + (1 / 12) * difference
-                                : 1 - (1 / 12) * difference,
-                            tempoScaleFactor:
-                              song1.fields.tempo / song2.fields.tempo,
-                          },
+                          accompaniment: song1Obj,
+                          vocals: song2Obj,
+                        });
+                      }
+
+                      if (matchArr[1] === 0) {
+                        matches.push({
+                          accompaniment: song2Obj,
+                          vocals: song1Obj,
                         });
                       }
                     }
@@ -186,24 +194,23 @@ const findMixable = async () => {
 
           const matchArr = matches.map((item) => {
             return {
-              song1: {
-                ...item.song1.fields,
-                beats: makeBeatArr(item.song1.fields.beats),
-                keyScaleFactor: item.song1.keyScaleFactor,
-                tempoScaleFactor: item.song1.tempoScaleFactor,
+              accompaniment: {
+                ...item.accompaniment.fields,
+                beats: makeBeatArr(item.accompaniment.fields.beats),
+                keyScaleFactor: item.accompaniment.keyScaleFactor,
+                tempoScaleFactor: item.accompaniment.tempoScaleFactor,
               },
-              song2: {
-                ...item.song2.fields,
-                beats: makeBeatArr(item.song2.fields.beats),
-                keyScaleFactor: item.song2.keyScaleFactor,
-                tempoScaleFactor: item.song2.tempoScaleFactor,
+              vocals: {
+                ...item.vocals.fields,
+                beats: makeBeatArr(item.vocals.fields.beats),
+                keyScaleFactor: item.vocals.keyScaleFactor,
+                tempoScaleFactor: item.vocals.tempoScaleFactor,
               },
             };
           });
 
           if (matchArr && matchArr.length > 0) {
-            // console.log(matchArr.length);
-            mixTracks(matchArr[0].song1, matchArr[0].song2);
+            mixTracks(matchArr[0].accompaniment, matchArr[0].vocals);
           }
         }
       }

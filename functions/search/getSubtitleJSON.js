@@ -15,102 +15,114 @@ const getSubtitleJSON = async (
   const format = "vtt";
 
   return await ytdl.getInfo(videoID).then(async (info) => {
-    const tracks =
-      info.player_response.captions.playerCaptionsTracklistRenderer
-        .captionTracks;
+    const captions = info.player_response.captions;
 
-    if (tracks && tracks.length) {
-      console.log(
-        "Found captions for",
-        tracks.map((t) => t.name.simpleText).join(", ")
-      );
+    if (captions) {
+      const renderer = captions.playerCaptionsTracklistRenderer;
 
-      const track = tracks.find((t) => {
-        const matchedLang = languageCodeArr.find(
-          (lang) => t.languageCode === lang
-        );
-        return matchedLang;
-      });
+      if (renderer) {
+        const tracks = renderer.captionTracks;
 
-      if (track) {
-        console.log("Retrieving captions:", track.name.simpleText);
-        console.log("URL", track.baseUrl);
+        if (tracks && tracks.length) {
+          console.log(
+            "Found captions for",
+            tracks.map((t) => t.name.simpleText).join(", ")
+          );
 
-        const result = await axios
-          .get(`${track.baseUrl}&fmt=${format !== "xml" ? format : ""}`)
-          .then(async (res) => {
-            const vttSubtitles = res.data;
-
-            // Convert .vtt to .json
-            const newJSONFile = subsrt.convert(vttSubtitles, {
-              format: "json",
-            });
-
-            const parsedJSON = JSON.parse(newJSONFile);
-
-            if (parsedJSON) {
-              if (parsedJSON.length > 0) {
-                const subtitleData = parsedJSON[0].data;
-                const subtitleArr = subtitleData.split("\n\n");
-
-                const lyricsArr = [];
-
-                for (let i = 0; i < subtitleArr.length; i++) {
-                  const currentItem = subtitleArr[i];
-                  const currentSections = currentItem.split("\n");
-                  const timeSplit = currentSections[0].split(" --> ");
-                  const newLyrics = currentSections
-                    .slice(1)
-                    .join(" ")
-                    .toLowerCase()
-                    .replace(/(^|\s)♪($|\s)/gi, "");
-
-                  if (currentItem[0] === "0") {
-                    if (/\d|[A-z]/.test(newLyrics)) {
-                      lyricsArr.push({
-                        start: timeSplit[0],
-                        end: timeSplit[1],
-                        lyrics: newLyrics,
-                      });
-                    }
-                  }
-                }
-
-                const compareTimes = (a, b) => {
-                  if (a.start < b.start) {
-                    return -1;
-                  } else if (a.start > b.start) {
-                    return 1;
-                  } else {
-                    return 0;
-                  }
-                };
-
-                const sortedLyricsArr = lyricsArr.sort(compareTimes);
-
-                const { artist1, artist2, artist3 } = getEachArtist(artist);
-
-                const times = await getTrackTimes(
-                  sortedLyricsArr,
-                  videoTitle,
-                  videoDuration,
-                  title,
-                  artist1,
-                  artist2,
-                  artist3
-                );
-
-                return times;
-              }
-            }
+          const track = tracks.find((t) => {
+            const matchedLang = languageCodeArr.find(
+              (lang) => t.languageCode === lang
+            );
+            return matchedLang;
           });
 
-        return result;
+          if (track) {
+            console.log("Retrieving captions:", track.name.simpleText);
+            console.log("URL", track.baseUrl);
+
+            const result = await axios
+              .get(`${track.baseUrl}&fmt=${format !== "xml" ? format : ""}`)
+              .then(async (res) => {
+                const vttSubtitles = res.data;
+
+                // Convert .vtt to .json
+                const newJSONFile = subsrt.convert(vttSubtitles, {
+                  format: "json",
+                });
+
+                const parsedJSON = JSON.parse(newJSONFile);
+
+                if (parsedJSON) {
+                  if (parsedJSON.length > 0) {
+                    const subtitleData = parsedJSON[0].data;
+                    const subtitleArr = subtitleData.split("\n\n");
+
+                    const lyricsArr = [];
+
+                    for (let i = 0; i < subtitleArr.length; i++) {
+                      const currentItem = subtitleArr[i];
+                      const currentSections = currentItem.split("\n");
+                      const timeSplit = currentSections[0].split(" --> ");
+                      const newLyrics = currentSections
+                        .slice(1)
+                        .join(" ")
+                        .toLowerCase()
+                        .replace(/(^|\s)♪($|\s)/gi, "");
+
+                      if (currentItem[0] === "0") {
+                        if (/\d|[A-z]/.test(newLyrics)) {
+                          lyricsArr.push({
+                            start: timeSplit[0],
+                            end: timeSplit[1],
+                            lyrics: newLyrics,
+                          });
+                        }
+                      }
+                    }
+
+                    const compareTimes = (a, b) => {
+                      if (a.start < b.start) {
+                        return -1;
+                      } else if (a.start > b.start) {
+                        return 1;
+                      } else {
+                        return 0;
+                      }
+                    };
+
+                    const sortedLyricsArr = lyricsArr.sort(compareTimes);
+
+                    const { artist1, artist2, artist3 } = getEachArtist(artist);
+
+                    const times = await getTrackTimes(
+                      sortedLyricsArr,
+                      videoTitle,
+                      videoDuration,
+                      title,
+                      artist1,
+                      artist2,
+                      artist3
+                    );
+
+                    return times;
+                  }
+                }
+              });
+
+            return result;
+          } else {
+            console.log(
+              "Could not find captions in list:",
+              languageCodeArr.join(", ")
+            );
+            return;
+          }
+        } else {
+          console.log("No captions found for this video");
+          return;
+        }
       } else {
-        console.log(
-          "Could not find captions in list:",
-          languageCodeArr.join(", ")
-        );
+        console.log("No captions found for this video");
         return;
       }
     } else {
