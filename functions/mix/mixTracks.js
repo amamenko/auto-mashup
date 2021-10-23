@@ -93,12 +93,19 @@ const mixTracks = (instrumentals, vox) => {
           outroMatch ||
           vocalSection.sectionName === instrumentalSection.sectionName
         ) {
-          matchedVocalSections.push({
-            ...vocalSection,
-            instrumentalSection: {
-              ...instrumentalSection,
-            },
-          });
+          if (
+            !matchedVocalSections.some(
+              (item) =>
+                item.instrumentalSection.start === instrumentalSection.start
+            )
+          ) {
+            matchedVocalSections.push({
+              ...vocalSection,
+              instrumentalSection: {
+                ...instrumentalSection,
+              },
+            });
+          }
         }
       }
     }
@@ -138,19 +145,19 @@ const mixTracks = (instrumentals, vox) => {
           inputs: `vox:${i + 1}`,
           outputs: ffmpegSectionName,
         },
-        // {
-        //   filter: "aloop=loop=2",
-        //   inputs: ffmpegSectionName + "_no_loop",
-        //   outputs: `loop${i + 1}`,
-        // },
+        {
+          filter: "aloop=loop=1:size=32767:start=32767",
+          inputs: ffmpegSectionName,
+          outputs: `loop${i + 1}`,
+        },
         // {
         //   filter: `atrim=end=${maxDuration}`,
-        //   inputs: ffmpegSectionName,
+        //   inputs: `loop${i + 1}`,
         //   outputs: `${ffmpegSectionName}${i + 1}`,
         // },
         {
           filter: "loudnorm",
-          inputs: ffmpegSectionName,
+          inputs: `loop${i + 1}`,
           outputs: `${i + 1}_normalized`,
         },
         {
@@ -161,14 +168,14 @@ const mixTracks = (instrumentals, vox) => {
       ];
     });
 
-    const voxOutputNamesArr = trimmedSections.map((item) => item[2].outputs);
+    const voxOutputNamesArr = trimmedSections.map((item) => item[3].outputs);
 
     const getRubberbandFilter = (num) => {
       const audioInputNum = num + 1;
 
       return [
         {
-          filter: "volume=2",
+          filter: "volume=3.5",
           inputs: `${audioInputNum}:a`,
           outputs: `${audioInputNum}_louder:a`,
         },

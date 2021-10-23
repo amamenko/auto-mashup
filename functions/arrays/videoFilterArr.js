@@ -4,6 +4,7 @@ const foreignChar = /([^\x00-\x7F]+)/gim;
 const filterArray = [
   "cover",
   "live",
+  "demo",
   "slowed",
   "s l o w e d",
   "reverb",
@@ -12,6 +13,10 @@ const filterArray = [
   "choreography",
   "performance",
   "mirrored",
+  "unplugged",
+  "behind the music",
+  "sing along",
+  "dance video",
   "tik tok",
   "tiktok",
   "karaoke",
