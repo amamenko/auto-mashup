@@ -14,6 +14,7 @@ const loopSongs = async () => {
   // Check if there are any loops in progress
   return await client
     .getEntries({
+      "fields.updatedThisWeek": true,
       "fields.loopedThisWeek": false,
       "fields.loopInProgress": true,
       select: "fields.name",
@@ -26,6 +27,7 @@ const loopSongs = async () => {
           if (res.items.length === 0) {
             return await client
               .getEntries({
+                "fields.updatedThisWeek": true,
                 "fields.loopedThisWeek": false,
                 select: "fields.name",
                 content_type: "chart",
@@ -66,6 +68,7 @@ const loopSongs = async () => {
                                 fields.url,
                                 fields.currentSongs,
                                 fields.previousSongs,
+                                fields.goat,
                                 spotifyApi,
                                 index
                               );

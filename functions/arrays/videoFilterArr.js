@@ -9,6 +9,7 @@ const filterArray = [
   "s l o w e d",
   "reverb",
   "r e v e r b",
+  "pitch",
   "instrumental",
   "choreography",
   "performance",

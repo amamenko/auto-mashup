@@ -3,7 +3,7 @@ const contentfulManagement = require("contentful-management");
 const { getChart } = require("billboard-top-100");
 const { format, startOfWeek, addDays } = require("date-fns");
 
-const loopCurrentCharts = async () => {
+const loopCurrentCharts = async (goat) => {
   // Access to Contentful Delivery API
   const client = contentful.createClient({
     space: process.env.CONTENTFUL_SPACE_ID,
@@ -13,6 +13,7 @@ const loopCurrentCharts = async () => {
   await client
     .getEntries({
       "fields.updatedThisWeek": false,
+      "fields.goat": goat ? true : false,
       content_type: "chart",
     })
     .then(async (res) => {

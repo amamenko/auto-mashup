@@ -22,6 +22,7 @@ const sendDataToContentful = (
     mode,
     currentChart,
     currentChartName,
+    goat,
   } = trackDataJSON;
 
   client.getSpace(process.env.CONTENTFUL_SPACE_ID).then((space) => {
@@ -92,6 +93,9 @@ const sendDataToContentful = (
                       },
                       artist: {
                         "en-US": artist,
+                      },
+                      goat: {
+                        "en-US": goat,
                       },
                       charts: {
                         "en-US": [

@@ -11,6 +11,7 @@ const getTrack = async (
   currentChart,
   currentSongs,
   prevSongs,
+  goat,
   spotifyApi,
   index
 ) => {
@@ -62,6 +63,12 @@ const getTrack = async (
                 .then((space) => {
                   space.getEnvironment("master").then((environment) => {
                     environment.getEntry(res.items[0].sys.id).then((entry) => {
+                      if (goat) {
+                        entry.fields.goat = {
+                          "en-US": goat ? true : false,
+                        };
+                      }
+
                       entry.fields.charts = {
                         "en-US": charts,
                       };
@@ -177,6 +184,7 @@ const getTrack = async (
                         mode,
                         currentChart,
                         currentChartName,
+                        goat,
                       };
 
                       if (trackDetails.time_signature === 4) {
