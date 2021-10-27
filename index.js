@@ -9,9 +9,11 @@ const cleanUpLoopsOnExit = require("./functions/contentful/cleanUpLoopsOnExit");
 const testSearch = require("./functions/search/testSearch");
 const isFirstSundayOfMonth = require("./functions/utils/isFirstSundayOfMonth");
 const loopGoatCharts = require("./functions/search/loopGoatCharts");
+const axios = require("axios");
+const fs = require("fs");
 require("dotenv").config();
 
-const port = process.env.PORT || 4001;
+const port = process.env.PORT || 4000;
 
 // Run on Tuesdays/Wednesdays starting at noon and then every two minutes until 1 o'clock (for non-GOAT charts)
 cron.schedule("0,*/2 12-13 * * 2,3", () => {

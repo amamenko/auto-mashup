@@ -1,161 +1,153 @@
 const fs = require("fs");
-const ytdl = require("ytdl-core");
-const ffmpeg = require("fluent-ffmpeg");
 const { PythonShell } = require("python-shell");
 const getBeatPositions = require("./getBeatPositions");
 const esPkg = require("essentia.js");
 const essentia = new esPkg.Essentia(esPkg.EssentiaWASM);
 const MP3Cutter = require("../mp3Cutter/cutter");
 const sendDataToContentful = require("../contentful/sendDataToContentful");
+const axios = require("axios");
+const fs = require("fs");
 
 const getAudioStems = async (
   videoID,
+  matchTitle,
   matchDuration,
   matchArr,
   trackDataJSON
 ) => {
-  const basicInfo = await ytdl.getBasicInfo(videoID);
+  console.log(`Now downloading video: ${matchTitle}`);
 
-  if (basicInfo) {
-    if (basicInfo.videoDetails) {
-      const title = basicInfo.videoDetails.title;
-      console.log(`Now downloading video: ${title}`);
-    }
-  }
-
-  // Download audio from YouTube
-  let stream = ytdl(videoID, {
-    quality: "highestaudio",
-  });
-
-  stream.on("data", (chunk) => {
-    console.log(`Received ${chunk.length} bytes of data.`);
-  });
-
-  const filePath = "YouTubeAudio.wav";
+  const mp3Link = await axios
+    .get(`https://www.yt-download.org/api/button/mp3/${videoID}}`)
+    .then((res) => res.data)
+    .then((data) => data.split('<a href="')[1].split('" class="shadow-xl')[0]);
 
   const start = Date.now();
 
-  ffmpeg(stream)
-    .audioBitrate(128)
-    .save(filePath)
-    .on("error", (err, stdout, stderr) => {
-      console.log(
-        "FFMPEG received an error when attempting to download video audio. Cannot process video. Terminating process. Output: " +
-          err.message
-      );
-      return;
-    })
-    .on("progress", (p) => {
-      console.log(`${p.targetSize}kb downloaded`);
-    })
-    .on("end", () => {
-      console.log(
-        `\nDone in ${(Date.now() - start) / 1000}s\nSaved to ${filePath}.`
-      );
+  const filePath = "YouTubeAudio.mp3";
 
-      // Make sure Spleeter is installed
-      PythonShell.run(
-        "./python_scripts/install_package.py",
-        { args: ["spleeter"] },
-        (err) => {
-          if (err) {
-            throw err;
-          } else {
-            console.log("Splitting audio file.");
+  const writer = fs.createWriteStream(filePath);
 
-            // Split audio into stems and clean up
-            PythonShell.run(
-              "./python_scripts/spleeter_stems.py",
-              {
-                args: [filePath],
-              },
-              (err) => {
-                if (err) {
-                  throw err;
-                } else {
-                  console.log("Successfully split track into two stems");
-                  fs.unlinkSync(filePath);
-                  fs.rmSync("pretrained_models", { recursive: true });
-                  console.log(
-                    "Removed pretrained_models directory and local audio file"
+  const response = await axios({
+    url: mp3Link,
+    method: "GET",
+    responseType: "stream",
+  });
+
+  response.data.pipe(writer);
+
+  response.data.on("error", (err) => {
+    console.log(
+      "Received an error when attempting to download YouTube video audio. Terminating process. Output: " +
+        err
+    );
+    return;
+  });
+
+  response.data.on("end", () => {
+    console.log(
+      `\nDone in ${(Date.now() - start) / 1000}s\nSaved to ${filePath}.`
+    );
+
+    // Make sure Spleeter is installed
+    PythonShell.run(
+      "./python_scripts/install_package.py",
+      { args: ["spleeter"] },
+      (err) => {
+        if (err) {
+          throw err;
+        } else {
+          console.log("Splitting audio file.");
+
+          // Split audio into stems and clean up
+          PythonShell.run(
+            "./python_scripts/spleeter_stems.py",
+            {
+              args: [filePath],
+            },
+            (err) => {
+              if (err) {
+                throw err;
+              } else {
+                console.log("Successfully split track into two stems");
+                fs.unlinkSync(filePath);
+                fs.rmSync("pretrained_models", { recursive: true });
+                console.log(
+                  "Removed pretrained_models directory and local audio file"
+                );
+
+                // Get beat positions from accompaniment track
+                const beatSuccessCallback = async (buffer) => {
+                  // Convert the JS float32 typed array into std::vector<float>
+                  const inputSignalVector = await essentia.arrayToVector(
+                    buffer.getChannelData(0)
                   );
 
-                  // Get beat positions from accompaniment track
-                  const beatSuccessCallback = async (buffer) => {
-                    // Convert the JS float32 typed array into std::vector<float>
-                    const inputSignalVector = await essentia.arrayToVector(
-                      buffer.getChannelData(0)
-                    );
-
-                    const beats = await essentia.BeatTrackerMultiFeature(
-                      inputSignalVector,
-                      trackDataJSON
+                  const beats = await essentia.BeatTrackerMultiFeature(
+                    inputSignalVector,
+                    trackDataJSON
+                      ? trackDataJSON.tempo
                         ? trackDataJSON.tempo
-                          ? trackDataJSON.tempo
-                          : null
                         : null
-                    );
+                      : null
+                  );
 
-                    if (beats) {
-                      if (beats.ticks) {
-                        const beatPositions = essentia.vectorToArray(
-                          beats.ticks
-                        );
-                        const roundedBeatPositions = [...beatPositions].map(
-                          (item) => Number(item.toFixed(4))
-                        );
+                  if (beats) {
+                    if (beats.ticks) {
+                      const beatPositions = essentia.vectorToArray(beats.ticks);
+                      const roundedBeatPositions = [...beatPositions].map(
+                        (item) => Number(item.toFixed(4))
+                      );
 
-                        if (matchDuration > 360) {
-                          MP3Cutter.cut({
-                            src: "output/YouTubeAudio/accompaniment.mp3",
-                            target:
-                              "output/YouTubeAudio/accompaniment_trimmed.mp3",
-                            start: 0,
-                            // Keep total track time at 6 minutes maximum to keep file at ~6 MB
-                            end: 360,
-                            callback: () =>
-                              MP3Cutter.cut({
-                                src: "output/YouTubeAudio/vocals.mp3",
-                                target:
-                                  "output/YouTubeAudio/vocals_trimmed.mp3",
-                                start: 0,
-                                // Keep total track time at 6 minutes maximum to keep file at ~6 MB
-                                end: 360,
-                                callback: () =>
-                                  sendDataToContentful(
-                                    trackDataJSON,
-                                    360,
-                                    matchArr,
-                                    roundedBeatPositions,
-                                    "trimmed"
-                                  ),
-                              }),
-                          });
-                        } else {
-                          sendDataToContentful(
-                            trackDataJSON,
-                            matchDuration,
-                            matchArr,
-                            roundedBeatPositions
-                          );
-                        }
+                      if (matchDuration > 360) {
+                        MP3Cutter.cut({
+                          src: "output/YouTubeAudio/accompaniment.mp3",
+                          target:
+                            "output/YouTubeAudio/accompaniment_trimmed.mp3",
+                          start: 0,
+                          // Keep total track time at 6 minutes maximum to keep file at ~6 MB
+                          end: 360,
+                          callback: () =>
+                            MP3Cutter.cut({
+                              src: "output/YouTubeAudio/vocals.mp3",
+                              target: "output/YouTubeAudio/vocals_trimmed.mp3",
+                              start: 0,
+                              // Keep total track time at 6 minutes maximum to keep file at ~6 MB
+                              end: 360,
+                              callback: () =>
+                                sendDataToContentful(
+                                  trackDataJSON,
+                                  360,
+                                  matchArr,
+                                  roundedBeatPositions,
+                                  "trimmed"
+                                ),
+                            }),
+                        });
                       } else {
-                        console.log("No beat ticks returned from analysis!");
+                        sendDataToContentful(
+                          trackDataJSON,
+                          matchDuration,
+                          matchArr,
+                          roundedBeatPositions
+                        );
                       }
                     } else {
-                      console.log("No beats returned from analysis!");
+                      console.log("No beat ticks returned from analysis!");
                     }
-                  };
+                  } else {
+                    console.log("No beats returned from analysis!");
+                  }
+                };
 
-                  return getBeatPositions(beatSuccessCallback);
-                }
+                return getBeatPositions(beatSuccessCallback);
               }
-            );
-          }
+            }
+          );
         }
-      );
-    });
+      }
+    );
+  });
 };
 
 module.exports = getAudioStems;

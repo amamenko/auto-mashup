@@ -196,6 +196,7 @@ const getTrack = async (
                             if (match.arr) {
                               if (match.arr.length >= 4) {
                                 const matchID = match.id;
+                                const matchTitle = match.videoTitle;
                                 const matchDuration = match.duration;
                                 const matchArr = match.arr.map((item) => {
                                   if (item.end) {
@@ -214,6 +215,7 @@ const getTrack = async (
 
                                 await getAudioStems(
                                   matchID,
+                                  matchTitle,
                                   matchDuration,
                                   matchArr,
                                   trackDataJSON
