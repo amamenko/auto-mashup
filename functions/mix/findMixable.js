@@ -18,7 +18,7 @@ const findMixable = async () => {
   await client
     .getEntries({
       "fields.mode": "major",
-      "fields.goat": false,
+      "fields.goat": undefined,
       select:
         "fields.title,fields.artist,fields.tempo,fields.key,fields.duration,fields.sections,fields.beats,fields.accompaniment,fields.vocals",
       content_type: "song",
@@ -211,7 +211,7 @@ const findMixable = async () => {
           });
 
           if (matchArr && matchArr.length > 0) {
-            mixTracks(matchArr[0].accompaniment, matchArr[0].vocals);
+            mixTracks(matchArr[1].accompaniment, matchArr[1].vocals);
           }
         }
       }

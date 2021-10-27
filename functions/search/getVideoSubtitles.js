@@ -59,43 +59,59 @@ const getVideoSubtitles = async (video_id) => {
                                 subtitle_result.transcript.text.length > 0
                               ) {
                                 const textArr = subtitle_result.transcript.text;
-                                const formattedTextArr = textArr
-                                  .map((item) => {
-                                    return {
-                                      start: secondsToTimestamp(
-                                        Number(item["$"].start)
-                                      ),
-                                      end: secondsToTimestamp(
-                                        Number(item["$"].start) +
-                                          Number(item["$"].dur)
-                                      ),
-                                      lyrics: decode(
-                                        item._.toLowerCase()
-                                          .replace("\n", " ")
-                                          .replace(/(^|\s)♪($|\s)/gi, "")
-                                      ),
-                                    };
-                                  })
-                                  .filter(
-                                    (item) =>
-                                      !item.lyrics.includes("translat") &&
-                                      /\d|[A-z]/.test(item.lyrics)
-                                  );
 
-                                const compareTimes = (a, b) => {
-                                  if (a.start < b.start) {
-                                    return -1;
-                                  } else if (a.start > b.start) {
-                                    return 1;
-                                  } else {
-                                    return 0;
-                                  }
-                                };
+                                if (textArr) {
+                                  const formattedTextArr = textArr
+                                    .map((item) => {
+                                      return {
+                                        start: item["$"].start
+                                          ? secondsToTimestamp(
+                                              Number(item["$"].start)
+                                            )
+                                          : null,
+                                        end:
+                                          item["$"].start && item["$"].dur
+                                            ? secondsToTimestamp(
+                                                Number(item["$"].start) +
+                                                  Number(item["$"].dur)
+                                              )
+                                            : null,
+                                        lyrics: item._
+                                          ? decode(
+                                              item._.toLowerCase()
+                                                .replace("\n", " ")
+                                                .replace(/(^|\s)♪($|\s)/gi, "")
+                                            )
+                                          : item._,
+                                      };
+                                    })
+                                    .filter(
+                                      (item) =>
+                                        item.start &&
+                                        item.end &&
+                                        item.lyrics &&
+                                        !item.lyrics.includes("translat") &&
+                                        /\d|[A-z]/.test(item.lyrics)
+                                    );
 
-                                const sortedSubtitleArr =
-                                  formattedTextArr.sort(compareTimes);
+                                  const compareTimes = (a, b) => {
+                                    if (a.start < b.start) {
+                                      return -1;
+                                    } else if (a.start > b.start) {
+                                      return 1;
+                                    } else {
+                                      return 0;
+                                    }
+                                  };
 
-                                return sortedSubtitleArr;
+                                  const sortedSubtitleArr =
+                                    formattedTextArr.sort(compareTimes);
+
+                                  return sortedSubtitleArr;
+                                } else {
+                                  console.log("No usable subtitles found.");
+                                  return;
+                                }
                               } else {
                                 console.log("No usable subtitles found.");
                                 return;

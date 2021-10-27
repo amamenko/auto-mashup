@@ -1,12 +1,11 @@
 const fs = require("fs");
+const axios = require("axios");
 const { PythonShell } = require("python-shell");
 const getBeatPositions = require("./getBeatPositions");
 const esPkg = require("essentia.js");
 const essentia = new esPkg.Essentia(esPkg.EssentiaWASM);
 const MP3Cutter = require("../mp3Cutter/cutter");
 const sendDataToContentful = require("../contentful/sendDataToContentful");
-const axios = require("axios");
-const fs = require("fs");
 
 const getAudioStems = async (
   videoID,

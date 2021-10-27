@@ -146,36 +146,38 @@ const mixTracks = (instrumentals, vox) => {
           outputs: ffmpegSectionName,
         },
         {
-          filter: "aloop=loop=1:size=32767:start=32767",
+          filter: `aloop=loop=2:size=${
+            (endTime - section.start) * 44100
+          }:start=0`,
           inputs: ffmpegSectionName,
           outputs: `loop${i + 1}`,
         },
-        // {
-        //   filter: `atrim=end=${maxDuration}`,
-        //   inputs: `loop${i + 1}`,
-        //   outputs: `${ffmpegSectionName}${i + 1}`,
-        // },
+        {
+          filter: `atrim=duration=${maxDuration}`,
+          inputs: `loop${i + 1}`,
+          outputs: `${ffmpegSectionName}_trim`,
+        },
         {
           filter: "loudnorm",
-          inputs: `loop${i + 1}`,
-          outputs: `${i + 1}_normalized`,
+          inputs: `${ffmpegSectionName}_trim`,
+          outputs: `${ffmpegSectionName}_normalized`,
         },
         {
           filter: `adelay=${relativeDelay}|${relativeDelay}`,
-          inputs: `${i + 1}_normalized`,
+          inputs: `${ffmpegSectionName}_normalized`,
           outputs: `${ffmpegSectionName}_delayed`,
         },
       ];
     });
 
-    const voxOutputNamesArr = trimmedSections.map((item) => item[3].outputs);
+    const voxOutputNamesArr = trimmedSections.map((item) => item[4].outputs);
 
     const getRubberbandFilter = (num) => {
       const audioInputNum = num + 1;
 
       return [
         {
-          filter: "volume=3.5",
+          filter: "volume=4",
           inputs: `${audioInputNum}:a`,
           outputs: `${audioInputNum}_louder:a`,
         },
@@ -239,6 +241,8 @@ const mixTracks = (instrumentals, vox) => {
             `FFMPEG received an error when attempting to mix the instrumentals of the track "${instrumentals.title}" by ${instrumentals.artist} with the vocals of the track "${vox.title}" by ${vox.artist}. Terminating process. Output: ` +
               err.message
           );
+          console.log("FFMPEG output:\n" + stdout);
+          console.log("FFMPEG stderr:\n" + stderr);
           return;
         })
         .on("progress", (progress) => {
