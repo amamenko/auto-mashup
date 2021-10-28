@@ -3,6 +3,7 @@ const keysArr = require("./keysArr");
 const mixTracks = require("./mixTracks");
 const {
   verseSections,
+  refrainSections,
   preChorusSections,
   chorusSections,
   postChorusSections,
@@ -18,7 +19,7 @@ const findMixable = async () => {
   await client
     .getEntries({
       "fields.mode": "major",
-      "fields.goat": undefined,
+      "fields.goat": false,
       select:
         "fields.title,fields.artist,fields.tempo,fields.key,fields.duration,fields.sections,fields.beats,fields.accompaniment,fields.vocals",
       content_type: "song",
@@ -56,131 +57,140 @@ const findMixable = async () => {
                   const difference = Math.abs(song1KeyIndex - song2KeyIndex);
                   const sign = song1KeyIndex - song2KeyIndex;
 
-                  // If potential match is within +/- 5% of initial track
                   if (
-                    song1.fields.tempo * 1.05 >= song2.fields.tempo &&
-                    song1.fields.tempo * 0.95 <= song2.fields.tempo
+                    song1.fields.title.toLowerCase() !==
+                    song2.fields.title.toLowerCase()
                   ) {
-                    const matchExists = matches.find((el) => {
-                      const ids = [];
+                    // If potential match is within +/- 5% of initial track
+                    if (
+                      song1.fields.tempo * 1.05 >= song2.fields.tempo &&
+                      song1.fields.tempo * 0.95 <= song2.fields.tempo
+                    ) {
+                      const matchExists = matches.find((el) => {
+                        const ids = [];
 
-                      for (const song in el) {
-                        const obj = el[song];
-                        ids.push(obj.sys.id);
-                      }
-                      if (ids[0] === song1.sys.id && ids[1] === song2.sys.id) {
-                        return true;
-                      } else {
-                        return false;
-                      }
-                    });
+                        for (const song in el) {
+                          const obj = el[song];
+                          ids.push(obj.sys.id);
+                        }
+                        if (
+                          ids[0] === song1.sys.id &&
+                          ids[1] === song2.sys.id
+                        ) {
+                          return true;
+                        } else {
+                          return false;
+                        }
+                      });
 
-                    if (!matchExists) {
-                      const noIntroOrOutro = (item) =>
-                        item !== "intro" && item !== "outro";
+                      if (!matchExists) {
+                        const noIntroOrOutro = (item) =>
+                          item !== "intro" && item !== "outro";
 
-                      const song1Sections = song1.fields.sections
-                        .map((section) => section.sectionName.split(" ")[0])
-                        .filter(noIntroOrOutro);
-                      const song2Sections = song2.fields.sections
-                        .map((section) => section.sectionName.split(" ")[0])
-                        .filter(noIntroOrOutro);
+                        const song1Sections = song1.fields.sections
+                          .map((section) => section.sectionName.split(" ")[0])
+                          .filter(noIntroOrOutro);
+                        const song2Sections = song2.fields.sections
+                          .map((section) => section.sectionName.split(" ")[0])
+                          .filter(noIntroOrOutro);
 
-                      const bothSections = [
-                        {
-                          name: "song1",
-                          sections: song1Sections,
-                        },
-                        {
-                          name: "song2",
-                          sections: song2Sections,
-                        },
-                      ];
+                        const bothSections = [
+                          {
+                            name: "song1",
+                            sections: song1Sections,
+                          },
+                          {
+                            name: "song2",
+                            sections: song2Sections,
+                          },
+                        ];
 
-                      const adequateMatchCheck = (
-                        currentSongSections,
-                        otherSongSections
-                      ) => {
-                        let noMatch = 0;
+                        const adequateMatchCheck = (
+                          currentSongSections,
+                          otherSongSections
+                        ) => {
+                          let noMatch = 0;
 
-                        for (let j = 0; j < currentSongSections.length; j++) {
-                          const current = currentSongSections[j];
+                          for (let j = 0; j < currentSongSections.length; j++) {
+                            const current = currentSongSections[j];
 
-                          const checkInclusion = (section) => {
-                            if (section.includes(current)) {
-                              if (
-                                !section.some((item) =>
-                                  otherSongSections.includes(item)
-                                )
-                              ) {
-                                noMatch++;
+                            const checkInclusion = (section) => {
+                              if (section.includes(current)) {
+                                if (
+                                  !section.some((item) =>
+                                    otherSongSections.includes(item)
+                                  )
+                                ) {
+                                  noMatch++;
+                                }
                               }
-                            }
-                          };
+                            };
 
-                          checkInclusion(verseSections);
-                          checkInclusion(preChorusSections);
-                          checkInclusion(chorusSections);
-                          checkInclusion(postChorusSections);
-                          checkInclusion(bridgeSections);
+                            checkInclusion(verseSections);
+                            checkInclusion(refrainSections);
+                            checkInclusion(preChorusSections);
+                            checkInclusion(chorusSections);
+                            checkInclusion(postChorusSections);
+                            checkInclusion(bridgeSections);
+                          }
+
+                          return noMatch;
+                        };
+                        const matchArr = [];
+
+                        for (let i = 0; i < bothSections.length; i++) {
+                          const currentName = bothSections[i].name;
+
+                          const currentSection = bothSections[i];
+                          const otherSection = bothSections.find(
+                            (item) => item.name !== currentName
+                          );
+
+                          const noMatches = adequateMatchCheck(
+                            currentSection.sections,
+                            otherSection.sections
+                          );
+
+                          matchArr.push(noMatches);
                         }
 
-                        return noMatch;
-                      };
-                      const matchArr = [];
+                        const song1Obj = {
+                          ...song1,
+                          keyScaleFactor:
+                            sign === 0
+                              ? 1
+                              : sign > 0
+                              ? 1 - (1 / 12) * difference
+                              : 1 + (1 / 12) * difference,
+                          tempoScaleFactor:
+                            song2.fields.tempo / song1.fields.tempo,
+                        };
 
-                      for (let i = 0; i < bothSections.length; i++) {
-                        const currentName = bothSections[i].name;
+                        const song2Obj = {
+                          ...song2,
+                          keyScaleFactor:
+                            sign === 0
+                              ? 1
+                              : sign > 0
+                              ? 1 + (1 / 12) * difference
+                              : 1 - (1 / 12) * difference,
+                          tempoScaleFactor:
+                            song1.fields.tempo / song2.fields.tempo,
+                        };
 
-                        const currentSection = bothSections[i];
-                        const otherSection = bothSections.find(
-                          (item) => item.name !== currentName
-                        );
+                        if (matchArr[0] === 0) {
+                          matches.push({
+                            accompaniment: song1Obj,
+                            vocals: song2Obj,
+                          });
+                        }
 
-                        const noMatches = adequateMatchCheck(
-                          currentSection.sections,
-                          otherSection.sections
-                        );
-
-                        matchArr.push(noMatches);
-                      }
-
-                      const song1Obj = {
-                        ...song1,
-                        keyScaleFactor:
-                          sign === 0
-                            ? 1
-                            : sign > 0
-                            ? 1 - (1 / 12) * difference
-                            : 1 + (1 / 12) * difference,
-                        tempoScaleFactor:
-                          song2.fields.tempo / song1.fields.tempo,
-                      };
-
-                      const song2Obj = {
-                        ...song2,
-                        keyScaleFactor:
-                          sign === 0
-                            ? 1
-                            : sign > 0
-                            ? 1 + (1 / 12) * difference
-                            : 1 - (1 / 12) * difference,
-                        tempoScaleFactor:
-                          song1.fields.tempo / song2.fields.tempo,
-                      };
-
-                      if (matchArr[0] === 0) {
-                        matches.push({
-                          accompaniment: song1Obj,
-                          vocals: song2Obj,
-                        });
-                      }
-
-                      if (matchArr[1] === 0) {
-                        matches.push({
-                          accompaniment: song2Obj,
-                          vocals: song1Obj,
-                        });
+                        if (matchArr[1] === 0) {
+                          matches.push({
+                            accompaniment: song2Obj,
+                            vocals: song1Obj,
+                          });
+                        }
                       }
                     }
                   }
@@ -211,7 +221,7 @@ const findMixable = async () => {
           });
 
           if (matchArr && matchArr.length > 0) {
-            mixTracks(matchArr[1].accompaniment, matchArr[1].vocals);
+            mixTracks(matchArr[0].accompaniment, matchArr[0].vocals);
           }
         }
       }

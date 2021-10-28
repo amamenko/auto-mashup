@@ -3,7 +3,7 @@ const contentfulManagement = require("contentful-management");
 const { getChart } = require("billboard-top-100");
 const { format, startOfWeek, addDays } = require("date-fns");
 
-const loopCurrentCharts = async (goat) => {
+const loopCurrentCharts = async () => {
   // Access to Contentful Delivery API
   const client = contentful.createClient({
     space: process.env.CONTENTFUL_SPACE_ID,
@@ -13,7 +13,7 @@ const loopCurrentCharts = async (goat) => {
   await client
     .getEntries({
       "fields.updatedThisWeek": false,
-      "fields.goat": goat ? true : false,
+      "fields.goat": false,
       content_type: "chart",
     })
     .then(async (res) => {
@@ -70,6 +70,8 @@ const loopCurrentCharts = async (goat) => {
                       accessToken: process.env.CONTENT_MANAGEMENT_TOKEN,
                     });
 
+                    const mostRecentSaturday = fields.date;
+
                     managementClient
                       .getSpace(process.env.CONTENTFUL_SPACE_ID)
                       .then((space) => {
@@ -83,45 +85,49 @@ const loopCurrentCharts = async (goat) => {
                                     upcomingChart.songs &&
                                     previousChart.songs
                                   ) {
-                                    entry.fields.currentSongs = {
-                                      "en-US": mapApplicableFields(
-                                        upcomingChart.songs
-                                      ),
-                                    };
+                                    if (
+                                      mostRecentSaturday !== upcomingSaturday
+                                    ) {
+                                      entry.fields.currentSongs = {
+                                        "en-US": mapApplicableFields(
+                                          upcomingChart.songs
+                                        ),
+                                      };
 
-                                    entry.fields.previousSongs = {
-                                      "en-US": mapApplicableFields(
-                                        previousChart.songs
-                                      ),
-                                    };
+                                      entry.fields.previousSongs = {
+                                        "en-US": mapApplicableFields(
+                                          previousChart.songs
+                                        ),
+                                      };
 
-                                    entry.fields.date = {
-                                      "en-US": upcomingSaturday,
-                                    };
+                                      entry.fields.date = {
+                                        "en-US": upcomingSaturday,
+                                      };
 
-                                    entry.fields.updatedThisWeek = {
-                                      "en-US": true,
-                                    };
+                                      entry.fields.updatedThisWeek = {
+                                        "en-US": true,
+                                      };
 
-                                    entry.fields.loopedThisWeek = {
-                                      "en-US": false,
-                                    };
+                                      entry.fields.loopedThisWeek = {
+                                        "en-US": false,
+                                      };
 
-                                    entry.fields.loopInProgress = {
-                                      "en-US": false,
-                                    };
+                                      entry.fields.loopInProgress = {
+                                        "en-US": false,
+                                      };
 
-                                    entry.update().then(() => {
-                                      environment
-                                        .getEntry(res.items[0].sys.id)
-                                        .then((updatedEntry) => {
-                                          updatedEntry.publish();
+                                      entry.update().then(() => {
+                                        environment
+                                          .getEntry(res.items[0].sys.id)
+                                          .then((updatedEntry) => {
+                                            updatedEntry.publish();
 
-                                          console.log(
-                                            `Chart entry update for ${fields.name} was successful and has been published. Updated current and previous song lists.`
-                                          );
-                                        });
-                                    });
+                                            console.log(
+                                              `Chart entry update for ${fields.name} was successful and has been published. Updated current and previous song lists.`
+                                            );
+                                          });
+                                      });
+                                    }
                                   }
                                 }
                               }
