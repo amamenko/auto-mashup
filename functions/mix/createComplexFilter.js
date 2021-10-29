@@ -127,13 +127,13 @@ const createComplexFilter = (instrumentals, vox) => {
       }
     })
     .filter(
-      (item) => item.sectionName
-      //     &&
-      // item.start &&
-      // item.duration &&
-      // item.instrumentalSection.sectionName &&
-      // item.instrumentalSection.start &&
-      // item.instrumentalSection.duration
+      (item) =>
+        item.sectionName &&
+        item.start &&
+        item.duration &&
+        item.instrumentalSection.sectionName &&
+        item.instrumentalSection.start &&
+        item.instrumentalSection.duration
     );
 
   const trimmedSections = matchedVocalSections.map((section, i, arr) => {
@@ -204,14 +204,14 @@ const createComplexFilter = (instrumentals, vox) => {
     const audioInputNum = num + 1;
 
     return [
-      {
-        filter: "volume=4",
-        inputs: `${audioInputNum}:a`,
-        outputs: `${audioInputNum}_louder:a`,
-      },
+      // {
+      //   filter: "volume=1.5",
+      //   inputs: `${audioInputNum}:a`,
+      //   outputs: `${audioInputNum}_louder:a`,
+      // },
       {
         filter: `rubberband=pitch=${vocalsKeyScale}:tempo=${vocalsTempoScale}:formant=preserved`,
-        inputs: `${audioInputNum}_louder:a`,
+        inputs: `${audioInputNum}:a`,
         outputs: `vox:${audioInputNum}`,
       },
     ];
@@ -234,7 +234,7 @@ const createComplexFilter = (instrumentals, vox) => {
     ...trimmedSections.flat(),
     // Mix instrumentals and pitched vocal sections together
     {
-      filter: `amix=inputs=${1 + rubberbandFiltersArr.length}:duration=first`,
+      filter: `amix=inputs=${1 + matchedVocalSections.length}:duration=first`,
       inputs: ["0:a:normalized", ...voxOutputNamesArr],
     },
   ];

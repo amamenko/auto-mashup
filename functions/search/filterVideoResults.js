@@ -75,13 +75,29 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                   if (arr) {
                     let ditch = 0;
 
-                    for (const section of arr) {
+                    for (let j = 0; j < arr.length; j++) {
+                      const section = arr[j];
+                      const nextSection = arr[j + 1];
+
                       if (section.start && section.end) {
                         const start = timeStampToSeconds(section.start);
                         const end = timeStampToSeconds(section.end);
 
                         if (end - start <= 3) {
                           ditch++;
+                        }
+                      } else {
+                        if (nextSection) {
+                          const currentSectionStart = timeStampToSeconds(
+                            section.start
+                          );
+                          const nextSectionStart = timeStampToSeconds(
+                            nextSection.start
+                          );
+
+                          if (nextSectionStart - currentSectionStart >= 120) {
+                            ditch += 2;
+                          }
                         }
                       }
                     }

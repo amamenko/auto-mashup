@@ -1,6 +1,5 @@
 const contentful = require("contentful");
 const keysArr = require("./keysArr");
-const mixTracks = require("./mixTracks");
 const {
   verseSections,
   refrainSections,
@@ -9,6 +8,7 @@ const {
   postChorusSections,
   bridgeSections,
 } = require("../arrays/songSectionsArr");
+const normalizeInputsAndMix = require("./normalizeInputsAndMix");
 
 const findMixable = async () => {
   const client = contentful.createClient({
@@ -221,7 +221,10 @@ const findMixable = async () => {
           });
 
           if (matchArr && matchArr.length > 0) {
-            mixTracks(matchArr[0].accompaniment, matchArr[0].vocals);
+            normalizeInputsAndMix(
+              matchArr[0].accompaniment,
+              matchArr[0].vocals
+            );
           }
         }
       }

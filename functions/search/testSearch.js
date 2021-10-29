@@ -41,6 +41,7 @@ const testSearch = async (testChart, testIndex) => {
                   fields.url,
                   fields.currentSongs,
                   fields.previousSongs,
+                  fields.goat,
                   spotifyApi,
                   testIndex
                 );
