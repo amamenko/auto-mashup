@@ -34,6 +34,7 @@
     "remove-accents": "^0.4.2",
     "spotify-web-api-node": "^5.0.2",
     "string-similarity": "^4.0.4",
+    "usetube": "^2.1.4",
     "web-audio-api": "^0.2.2",
     "xml2js": "^0.4.23"
   }

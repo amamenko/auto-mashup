@@ -9,6 +9,7 @@ const {
   bridgeSections,
 } = require("../arrays/songSectionsArr");
 const normalizeInputsAndMix = require("./normalizeInputsAndMix");
+const timeStampToSeconds = require("../utils/timeStampToSeconds");
 
 const findMixable = async () => {
   const client = contentful.createClient({
@@ -178,14 +179,30 @@ const findMixable = async () => {
                             song1.fields.tempo / song2.fields.tempo,
                         };
 
-                        if (matchArr[0] === 0) {
+                        const song1SectionsTimes = song1.fields.sections.map(
+                          (section) => timeStampToSeconds(section.start)
+                        );
+                        const song2SectionsTimes = song2.fields.sections.map(
+                          (section) => timeStampToSeconds(section.start)
+                        );
+
+                        const hasDuplicates = (array) =>
+                          new Set(array).size !== array.length;
+
+                        if (
+                          matchArr[0] === 0 &&
+                          !hasDuplicates(song1SectionsTimes)
+                        ) {
                           matches.push({
                             accompaniment: song1Obj,
                             vocals: song2Obj,
                           });
                         }
 
-                        if (matchArr[1] === 0) {
+                        if (
+                          matchArr[1] === 0 &&
+                          !hasDuplicates(song2SectionsTimes)
+                        ) {
                           matches.push({
                             accompaniment: song2Obj,
                             vocals: song1Obj,

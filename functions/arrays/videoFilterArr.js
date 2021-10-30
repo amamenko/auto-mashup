@@ -1,8 +1,10 @@
 // Filter by terms and non-ASCII characters
 const foreignChar = /([^\x00-\x7F]+)/gim;
+const cleanMatch = /(?<!so)((^clean)|(clean$)|\W+clean\W+)(?!\W*bandit)/gim;
 
 const filterArray = [
   "cover",
+  "piano",
   "live",
   "demo",
   "slowed",
@@ -50,9 +52,14 @@ const filterArray = [
   "pronunciation",
   "meaning",
   "music box",
+  "the voice",
+  "extended",
   "learn english",
   "translation",
   "traducao",
+  "mashup",
+  "mash-up",
+  cleanMatch,
   foreignChar,
 ];
 

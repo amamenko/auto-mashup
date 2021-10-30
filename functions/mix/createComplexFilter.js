@@ -204,11 +204,12 @@ const createComplexFilter = (instrumentals, vox) => {
     const audioInputNum = num + 1;
 
     return [
-      // {
-      //   filter: "volume=1.5",
-      //   inputs: `${audioInputNum}:a`,
-      //   outputs: `${audioInputNum}_louder:a`,
-      // },
+      // Push the vocal volume up a little but
+      {
+        filter: "volume=1.25",
+        inputs: `${audioInputNum}:a`,
+        outputs: `${audioInputNum}_louder:a`,
+      },
       {
         filter: `rubberband=pitch=${vocalsKeyScale}:tempo=${vocalsTempoScale}:formant=preserved`,
         inputs: `${audioInputNum}:a`,

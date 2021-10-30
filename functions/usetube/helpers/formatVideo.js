@@ -89,12 +89,27 @@ const formatVideo = async (video, speedDate) => {
         publishedAt = await getVideoDate(id);
       }
 
+      let channel_name = "";
+
+      if (video.accessibility) {
+        if (video.accessibility.accessibilityData) {
+          if (video.accessibility.accessibilityData.label) {
+            const fullLabel = video.accessibility.accessibilityData.label;
+
+            channel_name = fullLabel
+              .split("Go to channel - ")[1]
+              .split(" - ")[0];
+          }
+        }
+      }
+
       return {
         id: id,
         original_title: video.original_title.trim(),
         title: video.title.trim(),
         artist: video.artist.trim(),
         duration: hour + minute + second,
+        channel_name,
         publishedAt: publishedAt,
       };
     } else if (video.didYouMeanRenderer || video.showingResultsForRenderer) {
@@ -107,6 +122,7 @@ const formatVideo = async (video, speedDate) => {
         title: video.correctedQuery?.runs[0].text || "",
         artist: "",
         duration: 0,
+        channel_name: "",
         publishedAt: new Date(Date.now()),
         views: 0,
       };

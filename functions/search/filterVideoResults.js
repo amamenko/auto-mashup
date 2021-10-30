@@ -3,6 +3,7 @@ const removeAccents = require("remove-accents");
 const { filterArray, mustContainArray } = require("../arrays/videoFilterArr");
 const getEachArtist = require("./getEachArtist");
 const timeStampToSeconds = require("../utils/timeStampToSeconds");
+const { searchChannel, getChannelDesc } = require("usetube");
 
 const filterVideoResults = async (videos, trackTitle, trackArtist) => {
   const { artist1, artist2, artist3 } = getEachArtist(trackArtist);
@@ -52,6 +53,61 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                   firstFive[i].original_title
                 }`
               );
+
+              if (firstFive[i].channel_name) {
+                const getChannelDescription = async () => {
+                  const description = await searchChannel(
+                    firstFive[i].channel_name
+                  )
+                    .then(async (channel_res) => {
+                      if (channel_res) {
+                        if (
+                          channel_res.channels &&
+                          channel_res.channels.length > 0
+                        ) {
+                          if (channel_res.channels[0].channel_id) {
+                            return await getChannelDesc(
+                              channel_res.channels[0].channel_id
+                            ).catch((err) => console.error(err));
+                          } else {
+                            return;
+                          }
+                        } else {
+                          return;
+                        }
+                      } else {
+                        return;
+                      }
+                    })
+                    .catch((err) => console.error(err));
+
+                  return description;
+                };
+
+                let channelDescription = getChannelDescription();
+
+                if (channelDescription) {
+                  const filterOutChannelDesc = [
+                    "cover",
+                    "karaoke",
+                    "acapella",
+                    "parody",
+                  ];
+
+                  channelDescription = channelDescription.toLowerCase();
+
+                  if (
+                    filterOutChannelDesc.some((item) =>
+                      channelDescription.includes(item)
+                    )
+                  ) {
+                    console.log(
+                      `The channel for this video (${firstFive[i].channel_name}) appears to be a cover channel. Moving on to next available video!`
+                    );
+                    return;
+                  }
+                }
+              }
 
               return await getSubtitleJSON(
                 firstFive[i].id,
