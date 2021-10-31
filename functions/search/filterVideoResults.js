@@ -84,9 +84,12 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                   return description;
                 };
 
-                let channelDescription = getChannelDescription();
+                let channelDescription = await getChannelDescription();
 
-                if (channelDescription) {
+                if (
+                  channelDescription &&
+                  typeof channelDescription === "string"
+                ) {
                   const filterOutChannelDesc = [
                     "cover",
                     "karaoke",
