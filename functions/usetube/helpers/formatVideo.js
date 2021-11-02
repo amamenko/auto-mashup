@@ -103,6 +103,29 @@ const formatVideo = async (video, speedDate) => {
         }
       }
 
+      let channel_id = "";
+
+      if (video.longBylineText) {
+        if (video.longBylineText.runs && video.longBylineText.length > 0) {
+          if (video.longBylineText.runs[0]) {
+            if (video.longBylineText.runs[0].navigationEndpoint) {
+              if (
+                video.longBylineText.runs[0].navigationEndpoint.browseEndpoint
+              ) {
+                if (
+                  video.longBylineText.runs[0].navigationEndpoint.browseEndpoint
+                    .browseId
+                ) {
+                  channel_id =
+                    video.longBylineText.runs[0].navigationEndpoint
+                      .browseEndpoint.browseId;
+                }
+              }
+            }
+          }
+        }
+      }
+
       return {
         id: id,
         original_title: video.original_title.trim(),
@@ -110,6 +133,7 @@ const formatVideo = async (video, speedDate) => {
         artist: video.artist.trim(),
         duration: hour + minute + second,
         channel_name,
+        channel_id,
         publishedAt: publishedAt,
       };
     } else if (video.didYouMeanRenderer || video.showingResultsForRenderer) {
@@ -123,6 +147,7 @@ const formatVideo = async (video, speedDate) => {
         artist: "",
         duration: 0,
         channel_name: "",
+        channel_id: "",
         publishedAt: new Date(Date.now()),
         views: 0,
       };

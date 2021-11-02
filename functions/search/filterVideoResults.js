@@ -56,30 +56,46 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
 
               if (firstFive[i].channel_name) {
                 const getChannelDescription = async () => {
-                  const description = await searchChannel(
-                    firstFive[i].channel_name
-                  )
-                    .then(async (channel_res) => {
-                      if (channel_res) {
-                        if (
-                          channel_res.channels &&
-                          channel_res.channels.length > 0
-                        ) {
-                          if (channel_res.channels[0].channel_id) {
-                            return await getChannelDesc(
-                              channel_res.channels[0].channel_id
-                            ).catch((err) => console.error(err));
+                  let description = "";
+
+                  if (firstFive[i].channel_id) {
+                    description = await getChannelDesc(
+                      exactMatch.channel_id
+                    ).catch((err) => console.error(err));
+                  } else if (firstFive[i].channel_name) {
+                    description = await searchChannel(firstFive[i].channel_name)
+                      .then(async (channel_res) => {
+                        if (channel_res) {
+                          if (
+                            channel_res.channels &&
+                            channel_res.channels.length > 0
+                          ) {
+                            const exactMatch = channel_res.channels.find(
+                              (item) => item.name === firstFive[i].channel_name
+                            );
+
+                            if (exactMatch) {
+                              if (exactMatch.channel_id) {
+                                return await getChannelDesc(
+                                  exactMatch.channel_id
+                                ).catch((err) => console.error(err));
+                              } else {
+                                return;
+                              }
+                            } else {
+                              return;
+                            }
                           } else {
                             return;
                           }
                         } else {
                           return;
                         }
-                      } else {
-                        return;
-                      }
-                    })
-                    .catch((err) => console.error(err));
+                      })
+                      .catch((err) => console.error(err));
+                  } else {
+                    return;
+                  }
 
                   return description;
                 };

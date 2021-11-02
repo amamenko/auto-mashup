@@ -70,10 +70,17 @@ const getAudioStems = async (
               } else {
                 console.log("Successfully split track into two stems");
                 fs.unlinkSync(filePath);
-                fs.rmSync("pretrained_models", { recursive: true });
-                console.log(
-                  "Removed pretrained_models directory and local audio file"
-                );
+
+                try {
+                  if (fs.existsSync("pretrained_models")) {
+                    fs.rmSync("pretrained_models", { recursive: true });
+                    console.log(
+                      "Removed pretrained_models directory and local audio file"
+                    );
+                  }
+                } catch (err) {
+                  console.error(err);
+                }
 
                 // Get beat positions from accompaniment track
                 const beatSuccessCallback = async (buffer) => {

@@ -15,34 +15,34 @@ require("dotenv").config();
 
 const port = process.env.PORT || 4001;
 
-const lyricsSplit = [""];
+// const lyricsSplit = [""];
 
-const bracketRegex = /\[|\]/gim;
-const sectionArr = lyricsSplit.filter(
-  (lyric) => lyric.includes("[") && lyric.includes("]")
-);
+// const bracketRegex = /\[|\]/gim;
+// const sectionArr = lyricsSplit.filter(
+//   (lyric) => lyric.includes("[") && lyric.includes("]")
+// );
 
-const getSection = (str) => {
-  return str.replace(bracketRegex, "").toLowerCase().split(" ")[0];
-};
+// const getSection = (str) => {
+//   return str.replace(bracketRegex, "").toLowerCase().split(" ")[0];
+// };
 
-const repeats = [];
+// const repeats = [];
 
-for (let j = 0; j < sectionArr.length; j++) {
-  const current = getSection(sectionArr[j]);
+// for (let j = 0; j < sectionArr.length; j++) {
+//   const current = getSection(sectionArr[j]);
 
-  const mostRecentMatch = repeats.find(
-    (item) => item.split(" ")[0] === current
-  );
+//   const mostRecentMatch = repeats.find(
+//     (item) => item.split(" ")[0] === current
+//   );
 
-  if (mostRecentMatch) {
-    repeats.push(current + " " + (Number(mostRecentMatch.split(" ")[1]) + 1));
-  } else {
-    repeats.push(current + " 1");
-  }
-}
+//   if (mostRecentMatch) {
+//     repeats.push(current + " " + (Number(mostRecentMatch.split(" ")[1]) + 1));
+//   } else {
+//     repeats.push(current + " 1");
+//   }
+// }
 
-console.log(repeats);
+// console.log(repeats);
 
 // for (let i = 0; i < lyricsSplit.length; i++) {
 //   if (lyricsSplit[i].includes("[") && lyricsSplit[i].includes("]")) {
