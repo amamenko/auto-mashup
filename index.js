@@ -13,63 +13,25 @@ const findMixable = require("./functions/mix/findMixable");
 const getSubtitleJSON = require("./functions/search/getSubtitleJSON");
 require("dotenv").config();
 
-const port = process.env.PORT || 4001;
-
-// const lyricsSplit = [""];
-
-// const bracketRegex = /\[|\]/gim;
-// const sectionArr = lyricsSplit.filter(
-//   (lyric) => lyric.includes("[") && lyric.includes("]")
-// );
-
-// const getSection = (str) => {
-//   return str.replace(bracketRegex, "").toLowerCase().split(" ")[0];
-// };
-
-// const repeats = [];
-
-// for (let j = 0; j < sectionArr.length; j++) {
-//   const current = getSection(sectionArr[j]);
-
-//   const mostRecentMatch = repeats.find(
-//     (item) => item.split(" ")[0] === current
-//   );
-
-//   if (mostRecentMatch) {
-//     repeats.push(current + " " + (Number(mostRecentMatch.split(" ")[1]) + 1));
-//   } else {
-//     repeats.push(current + " 1");
-//   }
-// }
-
-// console.log(repeats);
-
-// for (let i = 0; i < lyricsSplit.length; i++) {
-//   if (lyricsSplit[i].includes("[") && lyricsSplit[i].includes("]")) {
-//     if (sectionObj["sectionName"]) {
-//       geniusLyricsArr.push(sectionObj);
-//       sectionObj = {};
-//     }
-//   }
-// }
+const port = process.env.PORT || 4000;
 
 // Run on Tuesdays/Wednesdays starting at noon and then every two minutes until 1 o'clock (for non-GOAT charts)
-// cron.schedule("0,*/2 12-12 * * 2,3", () => {
-//   // Get state of previous week's charts
-//   loopCurrentCharts();
-// });
+cron.schedule("0,*/2 12-12 * * 2,3", () => {
+  // Get state of previous week's charts
+  loopCurrentCharts();
+});
 
 // Run every Sunday at midnight, check if it's the first Sunday of the month - if so, update GOAT charts
-// cron.schedule("0 0 * * 0", () => {
-//   if (isFirstSundayOfMonth()) {
-//     loopGoatCharts();
-//   }
-// });
+cron.schedule("0 0 * * 0", () => {
+  if (isFirstSundayOfMonth()) {
+    loopGoatCharts();
+  }
+});
 
 // Check for any updated songs every 30 minutes
-// cron.schedule("0,30 * * * *", () => {
-//   loopSongs();
-// });
+cron.schedule("0,30 * * * *", () => {
+  loopSongs();
+});
 
 // findMixable();
 

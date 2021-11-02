@@ -3,7 +3,6 @@ const getLyricTimestamps = require("./getLyricTimestamps");
 const stringSimilarity = require("string-similarity");
 const removeAccents = require("remove-accents");
 const timeStampToSeconds = require("../utils/timeStampToSeconds");
-const newLyricTimestamps = require("./newLyricTimestamps");
 
 const getTrackTimes = async (
   youtubeCaptions,
@@ -152,51 +151,47 @@ const getTrackTimes = async (
               options.title = newTitleArr[0].trim();
             }
 
-            return await newLyricTimestamps(options).then((lyricArr) => {
-              console.log(lyricArr);
+            return await getLyricTimestamps(options).then(async (lyricArr) => {
+              if (lyricArr) {
+                if (urlArr[1]) {
+                  const secondTitle = urlArr[1].title
+                    .split(titleRegex)[0]
+                    .trim();
+
+                  const newOptions = {
+                    ...options,
+                    title: secondTitle,
+                  };
+
+                  const formattedVideoTitle =
+                    removeAccents(videoTitle).toLowerCase();
+
+                  const firstTitleFormatted = removeAccents(
+                    urlArr[0].title.split(titleRegex)[0].trim()
+                  ).toLowerCase();
+
+                  return await getLyricTimestamps(newOptions).then(
+                    (newLyricArr) => {
+                      if (formattedVideoTitle.includes("remix")) {
+                        if (firstTitleFormatted.includes("remix")) {
+                          return lyricArr;
+                        } else {
+                          return newLyricArr;
+                        }
+                      } else {
+                        if (newLyricArr.length > lyricArr.length) {
+                          return newLyricArr;
+                        } else {
+                          return lyricArr;
+                        }
+                      }
+                    }
+                  );
+                } else {
+                  return lyricArr;
+                }
+              }
             });
-
-            // return await getLyricTimestamps(options).then(async (lyricArr) => {
-            //   if (lyricArr) {
-            //     if (urlArr[1]) {
-            //       const secondTitle = urlArr[1].title
-            //         .split(titleRegex)[0]
-            //         .trim();
-
-            //       const newOptions = {
-            //         ...options,
-            //         title: secondTitle,
-            //       };
-
-            //       const formattedVideoTitle =
-            //         removeAccents(videoTitle).toLowerCase();
-
-            //       const firstTitleFormatted = removeAccents(
-            //         urlArr[0].title.split(titleRegex)[0].trim()
-            //       ).toLowerCase();
-
-            //       return await getLyricTimestamps(newOptions).then(
-            //         (newLyricArr) => {
-            //           if (formattedVideoTitle.includes("remix")) {
-            //             if (firstTitleFormatted.includes("remix")) {
-            //               return lyricArr;
-            //             } else {
-            //               return newLyricArr;
-            //             }
-            //           } else {
-            //             if (newLyricArr.length > lyricArr.length) {
-            //               return newLyricArr;
-            //             } else {
-            //               return lyricArr;
-            //             }
-            //           }
-            //         }
-            //       );
-            //     } else {
-            //       return lyricArr;
-            //     }
-            //   }
-            // });
           }
         }
       }

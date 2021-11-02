@@ -1,198 +1,154 @@
 const { getLyrics } = require("genius-lyrics-api");
 const stringSimilarity = require("string-similarity");
-const loopOverFirstLyrics = require("./loopOverFirstLyrics");
+const timeStampToSeconds = require("../utils/timeStampToSeconds");
 
 const getLyricTimestamps = async (options) => {
   const returnedLyrics = await getLyrics(options)
     .then(async (lyrics) => {
       if (lyrics) {
-        const geniusLyricsArr = [];
         const lyricsSplit = lyrics.split(/[\r\n]+/gi);
-        const youtubeCaptions = options.youtubeCaptions;
-
-        let sectionObj = {};
-        let sectionName;
-        let sectionLine = -1;
+        const punctuationRegex = /[."',\/#?!♪$%\^&\*;:{}=\-_`~()]/gim;
+        const youtubeCaptions = options.youtubeCaptions
+          ? options.youtubeCaptions.map((item) => {
+              return {
+                lyrics: item.lyrics
+                  .replace(punctuationRegex, "")
+                  .replace("\n", " ")
+                  .replace(/(\[.*\])/gim, "")
+                  .trim(),
+                start: item.start,
+                end: item.end,
+              };
+            })
+          : "";
 
         if (youtubeCaptions) {
-          for (let i = 0; i < lyricsSplit.length; i++) {
-            if (lyricsSplit[i].includes("[") && lyricsSplit[i].includes("]")) {
-              if (sectionObj["sectionName"]) {
-                geniusLyricsArr.push(sectionObj);
-                sectionObj = {};
-              }
+          const bracketRegex = /\[|\]/gim;
+          const sectionArr = lyricsSplit.filter(
+            (lyric) => lyric.includes("[") && lyric.includes("]")
+          );
 
-              const allFullSectionNames = geniusLyricsArr.map(
-                (item) => item.sectionName
-              );
-              const allSectionNames = geniusLyricsArr.map(
-                (item) => item.sectionName.split(" ")[0]
-              );
+          const getSection = (str) => {
+            return str.replace(bracketRegex, "").toLowerCase().split(" ")[0];
+          };
 
-              sectionName = lyricsSplit[i]
-                .split(/\[([^\]]+)]/gi)[1]
-                .split(/[ [:]+/gi)[0]
-                .toLowerCase();
+          let geniusArr = [{ sectionName: "", lyrics: "" }];
 
-              if (allSectionNames.includes(sectionName)) {
-                const newNumberArr = [
-                  ...new Set(
-                    allFullSectionNames.filter(
-                      (item) => item.split(" ")[0] === sectionName
-                    )
-                  ),
-                ];
+          for (let i = 0; i < sectionArr.length; i++) {
+            const current = getSection(sectionArr[i]);
 
-                const newNumber = newNumberArr.length + 1;
+            const mostRecentMatch = geniusArr.find(
+              (item) => item.sectionName.split(" ")[0] === current
+            );
 
-                sectionName = sectionName + " " + newNumber;
-              } else {
-                sectionName = sectionName + " 1";
-              }
-
-              sectionLine = -1;
-              sectionObj["sectionName"] = sectionName;
+            if (mostRecentMatch) {
+              geniusArr.push({
+                sectionName:
+                  current +
+                  " " +
+                  (Number(mostRecentMatch.sectionName.split(" ")[1]) + 1),
+                lyrics: "",
+              });
             } else {
-              sectionLine++;
-              sectionObj[`line_` + sectionLine] = lyricsSplit[i];
-
-              if (i === lyricsSplit.length - 1) {
-                geniusLyricsArr.push(sectionObj);
-              }
+              geniusArr.push({ sectionName: current + " 1", lyrics: "" });
             }
           }
 
-          const newGeniusArr = [];
-          const newGeniusArrFinal = [];
+          geniusArr = geniusArr.map((item, index, arr) => {
+            const indexRepeat = arr
+              .map((el, j) => {
+                return {
+                  repeat: el.sectionName === item.sectionName,
+                  index: j,
+                };
+              })
+              .filter((el) => el.repeat);
 
-          for (let i = 0; i < geniusLyricsArr.length; i++) {
-            let sectionName = "";
+            if (indexRepeat.length > 1) {
+              const foundIndex = indexRepeat.findIndex(
+                (item) => item.index === index
+              );
 
-            for (const [key, value] of Object.entries(geniusLyricsArr[i])) {
-              if (key === "sectionName") {
-                sectionName = value;
+              if (foundIndex > 0) {
+                const splitArr = item.sectionName.split(" ");
+                return {
+                  sectionName:
+                    splitArr[0] + " " + (Number(splitArr[1]) + foundIndex),
+                  lyrics: "",
+                };
+              } else {
+                return item;
               }
+            } else {
+              return item;
+            }
+          });
 
-              const pushedSection = {
-                sectionName: sectionName,
-                lineNumber: Number(key.split("_")[1]),
-                lyrics: value,
-              };
+          geniusArr = geniusArr.filter((item) => item.sectionName);
 
-              if (key === "line_0" || key === "line_1" || key === "line_2") {
-                newGeniusArr.push(pushedSection);
-              }
+          let sectionNumber = 0;
 
-              if (
-                key === `line_${Object.keys(geniusLyricsArr[i]).length - 2}`
-              ) {
-                newGeniusArrFinal.push(pushedSection);
-              }
+          for (let i = 0; i < lyricsSplit.length; i++) {
+            const checkForSection = (el) =>
+              el.includes("[") && el.includes("]");
+
+            if (checkForSection(lyricsSplit[i])) {
+              const slicedLyrics = lyricsSplit.slice(i + 1);
+              const nextSectionIndex = slicedLyrics.findIndex((item) =>
+                checkForSection(item)
+              );
+
+              const sectionLyrics =
+                nextSectionIndex >= 0
+                  ? lyricsSplit.slice(i + 1, i + 1 + nextSectionIndex)
+                  : slicedLyrics;
+
+              geniusArr[sectionNumber].lyrics = sectionLyrics
+                .join(" ")
+                .toLowerCase()
+                .replace(punctuationRegex, "");
+              sectionNumber++;
             }
           }
 
           const matchArr = [];
-          const finalMatchArr = [];
 
-          const replacementRegex = /[^\w\s]/gi;
+          for (let i = 0; i < geniusArr.length; i++) {
+            const geniusLyrics = geniusArr[i].lyrics;
 
-          const onlyLyricsArr = newGeniusArr.map((item) =>
-            item.lyrics.toLowerCase().replace(replacementRegex, "")
-          );
+            for (let j = 0; j < youtubeCaptions.length; j++) {
+              const sameStart = matchArr.find(
+                (item) => item.start === youtubeCaptions[j].start
+              );
+              const lastSectionStart = matchArr[matchArr.length - 1]
+                ? timeStampToSeconds(matchArr[matchArr.length - 1].start)
+                : 0;
 
-          const onlyFinalLyricsArr = newGeniusArrFinal.map((item) =>
-            item.lyrics.toLowerCase().replace(replacementRegex, "")
-          );
+              if (!sameStart) {
+                if (
+                  !lastSectionStart ||
+                  lastSectionStart <
+                    timeStampToSeconds(youtubeCaptions[j].start)
+                ) {
+                  const youtubeLyrics = youtubeCaptions[j].lyrics;
+                  const numChars = youtubeLyrics.length;
+                  const geniusSection = geniusLyrics.slice(0, numChars + 1);
 
-          const youtubeLyricsArr = youtubeCaptions
-            .map((item) => {
-              return {
-                start: item.start,
-                end: item.end,
-                lyrics: item.lyrics,
-              };
-            })
-            .filter((item) => item.lyrics);
-
-          for (let i = 0; i < youtubeLyricsArr.length; i++) {
-            if (finalMatchArr.length === 0) {
-              const firstYouTubeLyrics = youtubeLyricsArr.slice(0, 20);
-
-              for (j = 0; j < firstYouTubeLyrics.length; j++) {
-                const matchArr = stringSimilarity.findBestMatch(
-                  firstYouTubeLyrics[j].lyrics,
-                  onlyFinalLyricsArr.slice(0, 3)
-                ).ratings;
-
-                const foundMatch = matchArr.find((el) => el.rating >= 0.55);
-
-                if (foundMatch) {
-                  const matchIndex = onlyFinalLyricsArr.findIndex(
-                    (item) => item === foundMatch.target
+                  const similarity = stringSimilarity.compareTwoStrings(
+                    youtubeLyrics,
+                    geniusSection
                   );
 
-                  if (matchIndex >= 0) {
-                    highestFinalIndex = matchIndex;
+                  if (similarity >= 0.86) {
+                    matchArr.push({
+                      sectionName: geniusArr[i].sectionName,
+                      start: youtubeCaptions[j].start,
+                      lyrics: youtubeLyrics,
+                    });
+                    break;
                   }
-
-                  const firstMatch = newGeniusArrFinal[matchIndex];
-
-                  finalMatchArr.push({
-                    sectionName: firstMatch.sectionName,
-                    start: firstYouTubeLyrics[j].start,
-                    end: firstYouTubeLyrics[j].end,
-                    lyrics: foundMatch.target,
-                  });
-
-                  break;
                 }
               }
-            }
-
-            if (matchArr.length === 0) {
-              const firstYouTubeLyrics = youtubeLyricsArr.slice(0, 20);
-
-              for (j = 0; j < firstYouTubeLyrics.length; j++) {
-                const match = stringSimilarity.findBestMatch(
-                  firstYouTubeLyrics[j].lyrics,
-                  onlyLyricsArr.slice(0, 5)
-                ).bestMatch;
-
-                const matchIndex = onlyLyricsArr.findIndex(
-                  (item) => item === match.target
-                );
-
-                if (matchIndex >= 0) {
-                  highestFinalIndex = matchIndex;
-                }
-
-                const firstMatch = newGeniusArr[matchIndex];
-
-                if (match.rating >= 0.55) {
-                  matchArr.push({
-                    sectionName: firstMatch.sectionName,
-                    start: firstYouTubeLyrics[j].start,
-                    end: finalMatchArr[0]
-                      ? finalMatchArr[0].end
-                        ? finalMatchArr[0].end
-                        : firstYouTubeLyrics[j].end
-                      : firstYouTubeLyrics[j].end,
-                    lyrics: match.target,
-                  });
-
-                  break;
-                }
-              }
-            } else {
-              loopOverFirstLyrics(
-                geniusLyricsArr,
-                newGeniusArr,
-                newGeniusArrFinal,
-                matchArr,
-                finalMatchArr,
-                youtubeLyricsArr,
-                i
-              );
             }
           }
 
