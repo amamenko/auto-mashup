@@ -123,12 +123,14 @@ const getLyricTimestamps = async (options) => {
               const lastSectionStart = matchArr[matchArr.length - 1]
                 ? timeStampToSeconds(matchArr[matchArr.length - 1].start)
                 : 0;
+              const currentSectionStart = timeStampToSeconds(
+                youtubeCaptions[j].start
+              );
 
               if (!sameStart) {
                 if (
                   !lastSectionStart ||
-                  lastSectionStart <
-                    timeStampToSeconds(youtubeCaptions[j].start)
+                  lastSectionStart + 5 < currentSectionStart
                 ) {
                   const youtubeLyrics = youtubeCaptions[j].lyrics;
                   const numChars = youtubeLyrics.length;

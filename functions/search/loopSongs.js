@@ -49,99 +49,118 @@ const loopSongs = async () => {
                         await updateChartLoopInProgress(
                           firstChart,
                           "in progress"
-                        ).then(() => {
-                          client.getEntry(firstChart.id).then(async (entry) => {
-                            const spotifyCredentials = {
-                              clientId: process.env.SPOTIFY_CLIENT_ID,
-                              clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
-                            };
+                        )
+                          .then(() => {
+                            client
+                              .getEntry(firstChart.id)
+                              .then(async (entry) => {
+                                const spotifyCredentials = {
+                                  clientId: process.env.SPOTIFY_CLIENT_ID,
+                                  clientSecret:
+                                    process.env.SPOTIFY_CLIENT_SECRET,
+                                };
 
-                            const spotifyApi = new SpotifyWebApi(
-                              spotifyCredentials
-                            );
+                                const spotifyApi = new SpotifyWebApi(
+                                  spotifyCredentials
+                                );
 
-                            const fields = entry.fields;
+                                const fields = entry.fields;
 
-                            const resolveTrack = (index) => {
-                              return getTrack(
-                                fields.name,
-                                fields.url,
-                                fields.currentSongs,
-                                fields.previousSongs,
-                                fields.goat,
-                                spotifyApi,
-                                index
-                              );
-                            };
+                                const resolveTrack = (index) => {
+                                  return getTrack(
+                                    fields.name,
+                                    fields.url,
+                                    fields.currentSongs,
+                                    fields.goat,
+                                    spotifyApi,
+                                    index
+                                  );
+                                };
 
-                            const getCredentialsFirst = async (index) => {
-                              // Retrieve an access token
-                              return spotifyApi
-                                .clientCredentialsGrant()
-                                .then(
-                                  (data) => {
-                                    console.log(
-                                      "Retrieved new access token: " +
-                                        data.body["access_token"]
-                                    );
+                                const getCredentialsFirst = async (index) => {
+                                  // Retrieve an access token
+                                  return spotifyApi
+                                    .clientCredentialsGrant()
+                                    .then(
+                                      (data) => {
+                                        console.log(
+                                          "Retrieved new access token: " +
+                                            data.body["access_token"]
+                                        );
 
-                                    // Save the access token so that it's used in future calls
-                                    spotifyApi.setAccessToken(
-                                      data.body["access_token"]
-                                    );
-                                  },
-                                  (err) => {
-                                    console.log(
-                                      "Something went wrong when retrieving an access token",
-                                      err.message
-                                    );
-                                  }
-                                )
-                                .then(async () => await resolveTrack(index))
-                                .catch((error) => {
-                                  console.log(error);
-                                  return;
-                                });
-                            };
+                                        // Save the access token so that it's used in future calls
+                                        spotifyApi.setAccessToken(
+                                          data.body["access_token"]
+                                        );
+                                      },
+                                      (err) => {
+                                        console.log(
+                                          "Something went wrong when retrieving an access token",
+                                          err.message
+                                        );
+                                      }
+                                    )
+                                    .then(async () => await resolveTrack(index))
+                                    .catch((error) => {
+                                      console.log(error);
+                                      return;
+                                    });
+                                };
 
-                            for (
-                              let i = 0;
-                              i < fields.currentSongs.length;
-                              i++
-                            ) {
-                              // Wait 5 minutes between individual song analysis
-                              setTimeout(() => {
-                                // Every half hour, refresh Spotify token
-                                if (
-                                  spotifyApi.getAccessToken() &&
-                                  i % 6 !== 0
+                                for (
+                                  let i = 0;
+                                  i < fields.currentSongs.length;
+                                  i++
                                 ) {
-                                  resolveTrack(i);
-                                } else {
-                                  getCredentialsFirst(i);
-                                }
-
-                                // If last iteration
-                                if (i === fields.currentSongs.length - 1) {
+                                  // Wait 5 minutes between individual song analysis
                                   setTimeout(() => {
-                                    updateChartLoopInProgress(
-                                      firstChart,
-                                      "done"
-                                    );
-                                  }, 240000);
+                                    // Every 25 minutes, refresh Spotify token
+                                    if (
+                                      spotifyApi.getAccessToken() &&
+                                      i % 5 !== 0
+                                    ) {
+                                      resolveTrack(i);
+                                    } else {
+                                      getCredentialsFirst(i);
+                                    }
+
+                                    // If last iteration
+                                    if (i === fields.currentSongs.length - 1) {
+                                      setTimeout(() => {
+                                        updateChartLoopInProgress(
+                                          firstChart,
+                                          "done"
+                                        );
+                                      }, 240000);
+                                    }
+                                  }, i * 300000);
                                 }
-                              }, i * 300000);
-                            }
+                              })
+                              .catch((err) => {
+                                console.error(err);
+                                cleanUpLoopsOnExit(exitCode, signal);
+                              });
+                          })
+                          .catch((err) => {
+                            console.error(err);
+                            cleanUpLoopsOnExit(exitCode, signal);
                           });
-                        });
                       }
                     }
                   }
                 }
+              })
+              .catch((err) => {
+                console.error(err);
+                cleanUpLoopsOnExit(exitCode, signal);
               });
           }
         }
       }
+    })
+    .catch((err) => {
+      console.error(err);
+      cleanUpLoopsOnExit(exitCode, signal);
     });
 };
 

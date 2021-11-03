@@ -10,7 +10,6 @@ const getTrack = async (
   currentChartName,
   currentChart,
   currentSongs,
-  prevSongs,
   goat,
   spotifyApi,
   index
@@ -19,7 +18,7 @@ const getTrack = async (
   const songRank = currentSongs[index].rank;
   let songCover = currentSongs[index].cover;
 
-  updatePreviousEntries(topSong, songRank, currentChart, prevSongs);
+  updatePreviousEntries(topSong, songRank, currentChart, goat);
 
   // Replace image dimensions to grab larger-sized image URL
   songCover = songCover.replace(/(\d+)x(\d+)/, "155x155");

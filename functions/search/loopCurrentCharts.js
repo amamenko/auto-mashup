@@ -2,6 +2,7 @@ const contentful = require("contentful");
 const contentfulManagement = require("contentful-management");
 const { getChart } = require("billboard-top-100");
 const { format, startOfWeek, addDays } = require("date-fns");
+const deepEqual = require("deep-equal");
 
 const loopCurrentCharts = async () => {
   // Access to Contentful Delivery API
@@ -32,13 +33,6 @@ const loopCurrentCharts = async () => {
               "yyyy-MM-dd"
             );
 
-            const lastSaturday = format(
-              startOfWeek(new Date(), {
-                weekStartsOn: 6,
-              }),
-              "yyyy-MM-dd"
-            );
-
             getChart(
               fields.url,
               upcomingSaturday,
@@ -47,24 +41,35 @@ const loopCurrentCharts = async () => {
                   console.log(err);
                 }
 
-                getChart(
-                  fields.url,
-                  lastSaturday,
-                  async (otherErr, previousChart) => {
-                    if (otherErr) {
-                      console.log(otherErr);
-                    }
-
-                    const mapApplicableFields = (list) => {
-                      return list.map((item) => {
-                        return {
-                          rank: item.rank,
-                          title: item.title,
-                          artist: item.artist,
-                          cover: item.cover,
-                        };
-                      });
+                const mapApplicableFields = (list) => {
+                  return list.map((item) => {
+                    return {
+                      rank: item.rank,
+                      title: item.title,
+                      artist: item.artist,
+                      cover: item.cover,
                     };
+                  });
+                };
+
+                if (upcomingChart) {
+                  if (upcomingChart.songs) {
+                    const queriedSongs = mapApplicableFields(
+                      upcomingChart.songs
+                    );
+
+                    const mapSameFormat = (item) => {
+                      return {
+                        rank: item.rank,
+                        title: item.title,
+                        artist: item.artist,
+                      };
+                    };
+
+                    const original = fields.currentSongs.map(mapSameFormat);
+                    const current = queriedSongs.map(mapSameFormat);
+
+                    const changed = !deepEqual(original, current);
 
                     const managementClient = contentfulManagement.createClient({
                       accessToken: process.env.CONTENT_MANAGEMENT_TOKEN,
@@ -80,67 +85,63 @@ const loopCurrentCharts = async () => {
                             .getEntry(res.items[0].sys.id)
                             .then((entry) => {
                               if (entry) {
-                                if (upcomingChart && previousChart) {
-                                  if (
-                                    upcomingChart.songs &&
-                                    previousChart.songs
-                                  ) {
-                                    if (
-                                      mostRecentSaturday !== upcomingSaturday
-                                    ) {
-                                      entry.fields.currentSongs = {
-                                        "en-US": mapApplicableFields(
-                                          upcomingChart.songs
-                                        ),
-                                      };
-
-                                      entry.fields.previousSongs = {
-                                        "en-US": mapApplicableFields(
-                                          previousChart.songs
-                                        ),
-                                      };
-
-                                      entry.fields.date = {
-                                        "en-US": upcomingSaturday,
-                                      };
-
-                                      entry.fields.updatedThisWeek = {
-                                        "en-US": true,
-                                      };
-
-                                      entry.fields.loopedThisWeek = {
-                                        "en-US": false,
-                                      };
-
-                                      entry.fields.loopInProgress = {
-                                        "en-US": false,
-                                      };
-
-                                      entry.update().then(() => {
-                                        environment
-                                          .getEntry(res.items[0].sys.id)
-                                          .then((updatedEntry) => {
-                                            updatedEntry.publish();
-
-                                            console.log(
-                                              `Chart entry update for ${fields.name} was successful and has been published. Updated current and previous song lists.`
-                                            );
-                                          });
-                                      });
-                                    }
+                                if (mostRecentSaturday !== upcomingSaturday) {
+                                  if (changed) {
+                                    entry.fields.currentSongs = {
+                                      "en-US": queriedSongs,
+                                    };
                                   }
+
+                                  entry.fields.date = {
+                                    "en-US": upcomingSaturday,
+                                  };
+
+                                  entry.fields.updatedThisWeek = {
+                                    "en-US": true,
+                                  };
+
+                                  entry.fields.loopedThisWeek = {
+                                    "en-US": false,
+                                  };
+
+                                  entry.fields.loopInProgress = {
+                                    "en-US": false,
+                                  };
+
+                                  entry
+                                    .update()
+                                    .then(() => {
+                                      environment
+                                        .getEntry(res.items[0].sys.id)
+                                        .then((updatedEntry) => {
+                                          updatedEntry.publish();
+
+                                          console.log(
+                                            `Chart entry update for ${fields.name} was successful and has been published. Updated current song list.`
+                                          );
+                                        });
+                                    })
+                                    .catch((e) => {
+                                      console.error(e);
+                                    });
                                 }
                               }
                             });
                         });
+                      })
+                      .catch((e) => {
+                        console.error(e);
                       });
                   }
-                );
+                }
               }
             );
           }
         }
       }
+    })
+    .catch((e) => {
+      console.error(e);
     });
 };
 

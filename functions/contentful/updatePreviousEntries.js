@@ -1,7 +1,48 @@
 const contentful = require("contentful");
 const contentfulManagement = require("contentful-management");
+require("dotenv").config();
 
-const updatePreviousEntries = (topSong, songRank, currentChart, prevSongs) => {
+const updatePreviousEntries = (topSong, songRank, currentChart, goat) => {
+  // Access to Contentful Delivery API
+  const client = contentful.createClient({
+    space: process.env.CONTENTFUL_SPACE_ID,
+    accessToken: process.env.CONTENTFUL_ACCESS_TOKEN,
+  });
+
+  await client
+    .getEntries({
+      "fields.goat": goat,
+      content_type: "song",
+      limit: 1000,
+    })
+    .then(async (res) => {
+      if (res.items) {
+        const matchedEntry = res.items.find((item) =>
+          item.fields.charts.find(
+            (chart) =>
+              chart.chartURL === currentChart && chart.rank === songRank
+          )
+        );
+        if (matchedEntry) {
+          if (matchedEntry.fields) {
+            const fields = matchedEntry.fields;
+
+            const foundChart = fields.charts.find(
+              (item) => item.chartURL === currentChart
+            );
+
+            if (foundChart) {
+              const oldRank = foundChart.rank;
+
+              // TODO: Write out logic to update match
+              if (oldRank !== songRank) {
+              }
+            }
+          }
+        }
+      }
+    });
+
   if (prevSongs) {
     const prevSongSameRank = prevSongs.find((item) => item.rank === songRank);
 

@@ -1,5 +1,6 @@
 const contentful = require("contentful-management");
 const fs = require("fs");
+const path = require("path");
 
 const sendDataToContentful = (
   trackDataJSON,
@@ -24,6 +25,14 @@ const sendDataToContentful = (
     currentChartName,
     goat,
   } = trackDataJSON;
+
+  const deleteOutputDir = () => {
+    fs.rmSync(path.resolve(__dirname, "../../output"), {
+      recursive: true,
+      force: true,
+    });
+    console.log("Deleted output directory!");
+  };
 
   client.getSpace(process.env.CONTENTFUL_SPACE_ID).then((space) => {
     space
@@ -149,41 +158,31 @@ const sendDataToContentful = (
                   })
                   .then((entry) => {
                     entry.publish();
-                    fs.rmdir("../../output", () =>
-                      console.log("Deleted output directory!")
-                    );
+                    deleteOutputDir();
                     console.log("Successfully created new entry!");
                     return;
                   })
                   .catch((err) => {
                     console.log(`Received error during entry creation: ${err}`);
-                    fs.rmdir("../../output", () =>
-                      console.log("Deleted output directory!")
-                    );
+                    deleteOutputDir();
                     return err;
                   });
               })
               .catch((err) => {
                 console.log(`Received error during entry creation: ${err}`);
-                fs.rmdir("../../output", () =>
-                  console.log("Deleted output directory!")
-                );
+                deleteOutputDir();
                 return err;
               });
           })
           .catch((err) => {
             console.log(`Received error during entry creation: ${err}`);
-            fs.rmdir("../../output", () =>
-              console.log("Deleted output directory!")
-            );
+            deleteOutputDir();
             return err;
           });
       })
       .catch((err) => {
         console.log(`Received error during entry creation: ${err}`);
-        fs.rmdir("../../output", () =>
-          console.log("Deleted output directory!")
-        );
+        deleteOutputDir();
         return err;
       });
   });

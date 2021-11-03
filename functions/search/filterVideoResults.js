@@ -54,6 +54,8 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                 }`
               );
 
+              const filterOutDesc = ["cover", "karaoke", "acapella", "parody"];
+
               if (firstFive[i].channel_name) {
                 const getChannelDescription = async () => {
                   let description = "";
@@ -106,17 +108,10 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                   channelDescription &&
                   typeof channelDescription === "string"
                 ) {
-                  const filterOutChannelDesc = [
-                    "cover",
-                    "karaoke",
-                    "acapella",
-                    "parody",
-                  ];
-
                   channelDescription = channelDescription.toLowerCase();
 
                   if (
-                    filterOutChannelDesc.some((item) =>
+                    filterOutDesc.some((item) =>
                       channelDescription.includes(item)
                     )
                   ) {
@@ -125,6 +120,37 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                     );
                     return;
                   }
+                }
+              }
+
+              const getVideoDescription = async () => {
+                return await getVideoDesc(firstFive[i].id)
+                  .then((res) => {
+                    if (res) {
+                      const fullDescription = res
+                        .map((item) => item.text)
+                        .join(" ");
+
+                      return fullDescription;
+                    } else {
+                      return;
+                    }
+                  })
+                  .catch((err) => console.error(err));
+              };
+
+              let videoDescription = await getVideoDescription();
+
+              if (videoDescription && typeof videoDescription === "string") {
+                videoDescription = videoDescription.toLowerCase();
+
+                if (
+                  filterOutDesc.some((item) => videoDescription.includes(item))
+                ) {
+                  console.log(
+                    `The description for this video (https://www.youtube.com/watch?v=${firstFive[i].id}) appears to indicate that it is a cover. Moving on to next available video!`
+                  );
+                  return;
                 }
               }
 

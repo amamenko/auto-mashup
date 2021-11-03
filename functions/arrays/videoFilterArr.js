@@ -29,6 +29,7 @@ const filterArray = [
   "perform",
   "cmt",
   "acoustic",
+  "amazingmusic",
   "behind the scenes",
   "audition",
   "reaction",
