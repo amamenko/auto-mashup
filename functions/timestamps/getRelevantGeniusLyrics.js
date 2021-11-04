@@ -1,5 +1,6 @@
 const getLyricTimestamps = require("./getLyricTimestamps");
 const stringSimilarity = require("string-similarity");
+const removeAccents = require("remove-accents");
 
 const getRelevantGeniusLyrics = async (
   resultArr,
@@ -100,8 +101,6 @@ const getRelevantGeniusLyrics = async (
         }
       }
     });
-
-  console.log({ urlArr });
 
   if (urlArr[0]) {
     const titleRegex = /(\s{1}by\s{1})(?!.*\1)/gi;

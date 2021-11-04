@@ -4,7 +4,7 @@ const getVideoDate = require("../usetubeGetVideoDate");
 const getDateFromText = require("./getDateFromText");
 const findVal = require("./findVal");
 
-const formatVideo = async (video, speedDate) => {
+const formatVideo = async (video, speedDate, description) => {
   try {
     if (
       video.compactVideoRenderer ||
@@ -131,6 +131,7 @@ const formatVideo = async (video, speedDate) => {
         original_title: video.original_title.trim(),
         title: video.title.trim(),
         artist: video.artist.trim(),
+        description: description ? description : "",
         duration: hour + minute + second,
         channel_name,
         channel_id,
@@ -145,6 +146,7 @@ const formatVideo = async (video, speedDate) => {
         original_title: "",
         title: video.correctedQuery?.runs[0].text || "",
         artist: "",
+        description: "",
         duration: 0,
         channel_name: "",
         channel_id: "",

@@ -32,6 +32,7 @@ const searchVideo = async (terms, token, apikey, captionsOnly) => {
       items = findVal(data.items, "contents");
       token = data.token;
     }
+
     for (let i = 0; i < items.length; i++) {
       let formated = await formatVideo(items[i], true);
       if (formated) {

@@ -62,15 +62,47 @@ const getTrack = async (
                 .then((space) => {
                   space.getEnvironment("master").then((environment) => {
                     environment.getEntry(res.items[0].sys.id).then((entry) => {
-                      if (goat) {
+                      const allChartNames = charts.map((item) =>
+                        item.chartName.toLowerCase()
+                      );
+
+                      const regNames = allChartNames.filter(
+                        (item) =>
+                          !item.includes("greatest") ||
+                          !item.includes("80s") ||
+                          !item.includes("90s")
+                      );
+
+                      const goatNames = allChartNames.filter(
+                        (item) =>
+                          item.includes("greatest") ||
+                          item.includes("80s") ||
+                          item.includes("90s")
+                      );
+
+                      const regExists = regNames.length > 0;
+                      const goatExists = goatNames.length > 0;
+
+                      if (goatExists) {
+                        if (regExists) {
+                          entry.fields.goat = {
+                            "en-US": "both",
+                          };
+                        } else {
+                          entry.fields.goat = {
+                            "en-US": "yes",
+                          };
+                        }
+                      } else {
                         entry.fields.goat = {
-                          "en-US": goat ? true : false,
+                          "en-US": "no",
                         };
                       }
 
                       entry.fields.charts = {
                         "en-US": charts,
                       };
+
                       entry.update().then(() => {
                         environment
                           .getEntry(res.items[0].sys.id)

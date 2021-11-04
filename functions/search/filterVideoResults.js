@@ -3,7 +3,8 @@ const removeAccents = require("remove-accents");
 const { filterArray, mustContainArray } = require("../arrays/videoFilterArr");
 const getEachArtist = require("./getEachArtist");
 const timeStampToSeconds = require("../utils/timeStampToSeconds");
-const { searchChannel, getChannelDesc } = require("usetube");
+const getChannelDescription = require("./getChannelDescription");
+const getVideoDescription = require("./getVideoDescription");
 
 const filterVideoResults = async (videos, trackTitle, trackArtist) => {
   const { artist1, artist2, artist3 } = getEachArtist(trackArtist);
@@ -57,52 +58,9 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
               const filterOutDesc = ["cover", "karaoke", "acapella", "parody"];
 
               if (firstFive[i].channel_name) {
-                const getChannelDescription = async () => {
-                  let description = "";
-
-                  if (firstFive[i].channel_id) {
-                    description = await getChannelDesc(
-                      exactMatch.channel_id
-                    ).catch((err) => console.error(err));
-                  } else if (firstFive[i].channel_name) {
-                    description = await searchChannel(firstFive[i].channel_name)
-                      .then(async (channel_res) => {
-                        if (channel_res) {
-                          if (
-                            channel_res.channels &&
-                            channel_res.channels.length > 0
-                          ) {
-                            const exactMatch = channel_res.channels.find(
-                              (item) => item.name === firstFive[i].channel_name
-                            );
-
-                            if (exactMatch) {
-                              if (exactMatch.channel_id) {
-                                return await getChannelDesc(
-                                  exactMatch.channel_id
-                                ).catch((err) => console.error(err));
-                              } else {
-                                return;
-                              }
-                            } else {
-                              return;
-                            }
-                          } else {
-                            return;
-                          }
-                        } else {
-                          return;
-                        }
-                      })
-                      .catch((err) => console.error(err));
-                  } else {
-                    return;
-                  }
-
-                  return description;
-                };
-
-                let channelDescription = await getChannelDescription();
+                let channelDescription = await getChannelDescription(
+                  firstFive[i]
+                ).catch((e) => console.error(e));
 
                 if (
                   channelDescription &&
@@ -123,23 +81,9 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                 }
               }
 
-              const getVideoDescription = async () => {
-                return await getVideoDesc(firstFive[i].id)
-                  .then((res) => {
-                    if (res) {
-                      const fullDescription = res
-                        .map((item) => item.text)
-                        .join(" ");
-
-                      return fullDescription;
-                    } else {
-                      return;
-                    }
-                  })
-                  .catch((err) => console.error(err));
-              };
-
-              let videoDescription = await getVideoDescription();
+              let videoDescription = await getVideoDescription(
+                firstFive[i].id
+              ).catch((e) => console.error(e));
 
               if (videoDescription && typeof videoDescription === "string") {
                 videoDescription = videoDescription.toLowerCase();

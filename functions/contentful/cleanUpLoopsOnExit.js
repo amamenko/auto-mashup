@@ -59,7 +59,7 @@ const cleanUpLoopsOnExit = async (signal) => {
                                 .then((updatedEntry) => {
                                   updatedEntry.publish().then(() => {
                                     console.log(
-                                      `Server killed. Songs loop for chart ${entry.fields.name} no longer in progress.`
+                                      `Server killed. Songs loop for chart ${updatedEntry.fields.name} no longer in progress.`
                                     );
                                     if (signal) {
                                       process.kill(process.pid, signal);

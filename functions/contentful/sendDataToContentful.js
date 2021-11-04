@@ -104,7 +104,7 @@ const sendDataToContentful = (
                         "en-US": artist,
                       },
                       goat: {
-                        "en-US": goat,
+                        "en-US": goat ? "yes" : "no",
                       },
                       charts: {
                         "en-US": [

@@ -22,7 +22,6 @@ const getSubtitleJSON = async (
       artist3
     );
 
-    console.log({ times });
     return times;
   });
 };
