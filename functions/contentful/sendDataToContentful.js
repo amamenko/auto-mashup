@@ -1,8 +1,9 @@
 const contentful = require("contentful-management");
 const fs = require("fs");
 const path = require("path");
+const checkFileExists = require("../utils/checkFileExists");
 
-const sendDataToContentful = (
+const sendDataToContentful = async (
   trackDataJSON,
   matchDuration,
   matchArr,
@@ -34,158 +35,175 @@ const sendDataToContentful = (
     console.log("Deleted output directory!");
   };
 
-  client.getSpace(process.env.CONTENTFUL_SPACE_ID).then((space) => {
-    space
-      .getEnvironment("master")
-      .then((environment) => {
-        // First add the accompaniment track as an asset in Contentful
-        environment
-          .createAssetFromFiles({
-            fields: {
-              title: {
-                "en-US": `${title} by ${artist} Accompaniment`,
-              },
-              description: {
-                "en-US": `This is the accompaniment mp3 track of the song "${title}" by ${artist}.`,
-              },
-              file: {
-                "en-US": {
-                  contentType: "audio/mp3",
-                  fileName: `${title} ${artist} accompaniment.mp3`
-                    .toLowerCase()
-                    .replace(/ /g, "_"),
-                  file: fs.readFileSync(
-                    trimmed === "trimmed"
-                      ? "output/YouTubeAudio/accompaniment_trimmed.mp3"
-                      : "output/YouTubeAudio/accompaniment.mp3"
-                  ),
+  const accompanimentFileExists =
+    (await checkFileExists("output/YouTubeAudio/accompaniment.mp3")) ||
+    (await checkFileExists("output/YouTubeAudio/accompaniment_trimmed.mp3"));
+
+  const vocalsFileExists =
+    (await checkFileExists("output/YouTubeAudio/vocals.mp3")) ||
+    (await checkFileExists("output/YouTubeAudio/vocals_trimmed.mp3"));
+
+  if (accompanimentFileExists && vocalsFileExists) {
+    client.getSpace(process.env.CONTENTFUL_SPACE_ID).then((space) => {
+      space
+        .getEnvironment("master")
+        .then((environment) => {
+          // First add the accompaniment track as an asset in Contentful
+          environment
+            .createAssetFromFiles({
+              fields: {
+                title: {
+                  "en-US": `${title} by ${artist} Accompaniment`,
+                },
+                description: {
+                  "en-US": `This is the accompaniment mp3 track of the song "${title}" by ${artist}.`,
+                },
+                file: {
+                  "en-US": {
+                    contentType: "audio/mp3",
+                    fileName: `${title} ${artist} accompaniment.mp3`
+                      .toLowerCase()
+                      .replace(/ /g, "_"),
+                    file: fs.readFileSync(
+                      trimmed === "trimmed"
+                        ? "output/YouTubeAudio/accompaniment_trimmed.mp3"
+                        : "output/YouTubeAudio/accompaniment.mp3"
+                    ),
+                  },
                 },
               },
-            },
-          })
-          .then((asset) => asset.processForAllLocales())
-          .then((asset) => asset.publish())
-          .then(async (accompanimentAsset) => {
-            // Next add the vocal track as an asset in Contentful
-            return environment
-              .createAssetFromFiles({
-                fields: {
-                  title: {
-                    "en-US": `${title} by ${artist} Vocals`,
-                  },
-                  description: {
-                    "en-US": `This is the vocal mp3 track of the song "${title}" by ${artist}.`,
-                  },
-                  file: {
-                    "en-US": {
-                      contentType: "audio/mp3",
-                      fileName: `${title} ${artist} vocals.mp3`
-                        .toLowerCase()
-                        .replace(/ /g, "_"),
-                      file: fs.readFileSync(
-                        trimmed === "trimmed"
-                          ? "output/YouTubeAudio/vocals_trimmed.mp3"
-                          : "output/YouTubeAudio/vocals.mp3"
-                      ),
+            })
+            .then((asset) => asset.processForAllLocales())
+            .then((asset) => asset.publish())
+            .then(async (accompanimentAsset) => {
+              // Next add the vocal track as an asset in Contentful
+              return environment
+                .createAssetFromFiles({
+                  fields: {
+                    title: {
+                      "en-US": `${title} by ${artist} Vocals`,
+                    },
+                    description: {
+                      "en-US": `This is the vocal mp3 track of the song "${title}" by ${artist}.`,
+                    },
+                    file: {
+                      "en-US": {
+                        contentType: "audio/mp3",
+                        fileName: `${title} ${artist} vocals.mp3`
+                          .toLowerCase()
+                          .replace(/ /g, "_"),
+                        file: fs.readFileSync(
+                          trimmed === "trimmed"
+                            ? "output/YouTubeAudio/vocals_trimmed.mp3"
+                            : "output/YouTubeAudio/vocals.mp3"
+                        ),
+                      },
                     },
                   },
-                },
-              })
-              .then((vocalsAsset) => vocalsAsset.processForAllLocales())
-              .then((vocalsAsset) => vocalsAsset.publish())
-              .then(async (vocalsAsset) => {
-                return environment
-                  .createEntry("song", {
-                    fields: {
-                      title: {
-                        "en-US": title,
-                      },
-                      artist: {
-                        "en-US": artist,
-                      },
-                      goat: {
-                        "en-US": goat ? "yes" : "no",
-                      },
-                      charts: {
-                        "en-US": [
-                          {
-                            chartName: currentChartName,
-                            chartURL: currentChart,
-                            rank: rank,
+                })
+                .then((vocalsAsset) => vocalsAsset.processForAllLocales())
+                .then((vocalsAsset) => vocalsAsset.publish())
+                .then(async (vocalsAsset) => {
+                  return environment
+                    .createEntry("song", {
+                      fields: {
+                        title: {
+                          "en-US": title,
+                        },
+                        artist: {
+                          "en-US": artist,
+                        },
+                        goat: {
+                          "en-US": goat ? "yes" : "no",
+                        },
+                        charts: {
+                          "en-US": [
+                            {
+                              chartName: currentChartName,
+                              chartURL: currentChart,
+                              rank: rank,
+                            },
+                          ],
+                        },
+                        cover: {
+                          "en-US": cover,
+                        },
+                        duration: {
+                          "en-US": matchDuration,
+                        },
+                        tempo: {
+                          "en-US": tempo,
+                        },
+                        key: {
+                          "en-US": key,
+                        },
+                        mode: {
+                          "en-US": mode,
+                        },
+                        beats: {
+                          "en-US": roundedBeatPositions.join(", "),
+                        },
+                        sections: {
+                          "en-US": matchArr,
+                        },
+                        accompaniment: {
+                          "en-US": {
+                            sys: {
+                              id: accompanimentAsset.sys.id,
+                              linkType: "Asset",
+                              type: "Link",
+                            },
                           },
-                        ],
-                      },
-                      cover: {
-                        "en-US": cover,
-                      },
-                      duration: {
-                        "en-US": matchDuration,
-                      },
-                      tempo: {
-                        "en-US": tempo,
-                      },
-                      key: {
-                        "en-US": key,
-                      },
-                      mode: {
-                        "en-US": mode,
-                      },
-                      beats: {
-                        "en-US": roundedBeatPositions.join(", "),
-                      },
-                      sections: {
-                        "en-US": matchArr,
-                      },
-                      accompaniment: {
-                        "en-US": {
-                          sys: {
-                            id: accompanimentAsset.sys.id,
-                            linkType: "Asset",
-                            type: "Link",
+                        },
+                        vocals: {
+                          "en-US": {
+                            sys: {
+                              id: vocalsAsset.sys.id,
+                              linkType: "Asset",
+                              type: "Link",
+                            },
                           },
                         },
                       },
-                      vocals: {
-                        "en-US": {
-                          sys: {
-                            id: vocalsAsset.sys.id,
-                            linkType: "Asset",
-                            type: "Link",
-                          },
-                        },
-                      },
-                    },
-                  })
-                  .then((entry) => {
-                    entry.publish();
-                    deleteOutputDir();
-                    console.log("Successfully created new entry!");
-                    return;
-                  })
-                  .catch((err) => {
-                    console.log(`Received error during entry creation: ${err}`);
-                    deleteOutputDir();
-                    return err;
-                  });
-              })
-              .catch((err) => {
-                console.log(`Received error during entry creation: ${err}`);
-                deleteOutputDir();
-                return err;
-              });
-          })
-          .catch((err) => {
-            console.log(`Received error during entry creation: ${err}`);
-            deleteOutputDir();
-            return err;
-          });
-      })
-      .catch((err) => {
-        console.log(`Received error during entry creation: ${err}`);
-        deleteOutputDir();
-        return err;
-      });
-  });
+                    })
+                    .then((entry) => {
+                      entry.publish();
+                      deleteOutputDir();
+                      console.log("Successfully created new entry!");
+                      return;
+                    })
+                    .catch((err) => {
+                      console.log(
+                        `Received error during entry creation: ${err}`
+                      );
+                      deleteOutputDir();
+                      return err;
+                    });
+                })
+                .catch((err) => {
+                  console.log(`Received error during entry creation: ${err}`);
+                  deleteOutputDir();
+                  return err;
+                });
+            })
+            .catch((err) => {
+              console.log(`Received error during entry creation: ${err}`);
+              deleteOutputDir();
+              return err;
+            });
+        })
+        .catch((err) => {
+          console.log(`Received error during entry creation: ${err}`);
+          deleteOutputDir();
+          return err;
+        });
+    });
+  } else {
+    console.log(
+      "Either vocals or accompaniment file does not exist! Moving on to next track."
+    );
+    return;
+  }
 };
 
 module.exports = sendDataToContentful;

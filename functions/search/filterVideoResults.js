@@ -76,6 +76,7 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                     console.log(
                       `The channel for this video (${firstFive[i].channel_name}) appears to be a cover channel. Moving on to next available video!`
                     );
+                    resolve();
                     return;
                   }
                 }
@@ -94,6 +95,7 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                   console.log(
                     `The description for this video (https://www.youtube.com/watch?v=${firstFive[i].id}) appears to indicate that it is a cover. Moving on to next available video!`
                   );
+                  resolve();
                   return;
                 }
               }

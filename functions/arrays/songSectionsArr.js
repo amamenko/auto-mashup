@@ -1,10 +1,16 @@
 const introSections = ["intro"];
 const verseSections = ["verse", "verso"];
-const refrainSections = ["refrain", "refrán"];
+const refrainSections = ["refrain", "refran"];
 const preChorusSections = ["pre-chorus", "pre-coro"];
 const chorusSections = ["chorus", "coro", "hook"];
 const postChorusSections = ["post-chorus", "post-coro"];
-const bridgeSections = ["bridge", "puente", "interlude", "interludio"];
+const bridgeSections = [
+  "bridge",
+  "puente",
+  "interlude",
+  "interludio",
+  "breakdown",
+];
 const outroSections = ["outro"];
 
 module.exports = {

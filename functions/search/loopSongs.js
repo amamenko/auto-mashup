@@ -2,6 +2,7 @@ const contentful = require("contentful");
 const SpotifyWebApi = require("spotify-web-api-node");
 const updateChartLoopInProgress = require("../contentful/updateChartLoopInProgress");
 const getTrack = require("./getTrack");
+const { isBefore, parseISO } = require("date-fns");
 require("dotenv").config();
 
 const loopSongs = async () => {
@@ -154,6 +155,28 @@ const loopSongs = async () => {
                 console.error(err);
                 cleanUpLoopsOnExit(exitCode, signal);
               });
+          } else {
+            // Check if current time is past the expected end time of previous chart loop
+            if (res.items[0]) {
+              const currentChartEntry = res.items[0];
+              const currentChart = {
+                name: currentChartEntry.fields.name,
+                id: currentChartEntry.sys.id,
+              };
+
+              const expectedEnd = currentChartEntry.fields.expectedLoopEnd;
+
+              if (expectedEnd) {
+                const currentDate = new Date();
+                const parsedEnd = parseISO(expectedEnd);
+
+                const isPastExpected = !isBefore(currentDate, parsedEnd);
+
+                if (isPastExpected) {
+                  updateChartLoopInProgress(currentChart, "done");
+                }
+              }
+            }
           }
         }
       }

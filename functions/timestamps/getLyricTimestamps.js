@@ -1,6 +1,7 @@
 const { getLyrics } = require("genius-lyrics-api");
 const stringSimilarity = require("string-similarity");
 const timeStampToSeconds = require("../utils/timeStampToSeconds");
+const removeAccents = require("remove-accents");
 
 const getLyricTimestamps = async (options) => {
   const returnedLyrics = await getLyrics(options)
@@ -29,7 +30,12 @@ const getLyricTimestamps = async (options) => {
           );
 
           const getSection = (str) => {
-            return str.replace(bracketRegex, "").toLowerCase().split(" ")[0];
+            return removeAccents(
+              str
+                .replace(bracketRegex, "")
+                .toLowerCase()
+                .split(/[:]|[\s]+/gim)[0]
+            );
           };
 
           let geniusArr = [{ sectionName: "", lyrics: "" }];

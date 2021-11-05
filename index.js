@@ -26,7 +26,7 @@ cron.schedule("0 0 * * 0", () => {
   }
 });
 
-// Check for any updated songs every 30 minutes
+// // Check for any updated songs every 30 minutes
 cron.schedule("0,30 * * * *", () => {
   loopSongs();
 });

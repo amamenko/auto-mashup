@@ -6,6 +6,7 @@ const esPkg = require("essentia.js");
 const essentia = new esPkg.Essentia(esPkg.EssentiaWASM);
 const MP3Cutter = require("../mp3Cutter/cutter");
 const sendDataToContentful = require("../contentful/sendDataToContentful");
+const checkFileExists = require("../utils/checkFileExists");
 
 const getAudioStems = async (
   videoID,
@@ -106,30 +107,46 @@ const getAudioStems = async (
                       );
 
                       if (matchDuration > 360) {
-                        MP3Cutter.cut({
-                          src: "output/YouTubeAudio/accompaniment.mp3",
-                          target:
-                            "output/YouTubeAudio/accompaniment_trimmed.mp3",
-                          start: 0,
-                          // Keep total track time at 6 minutes maximum to keep file at ~6 MB
-                          end: 360,
-                          callback: () =>
-                            MP3Cutter.cut({
-                              src: "output/YouTubeAudio/vocals.mp3",
-                              target: "output/YouTubeAudio/vocals_trimmed.mp3",
-                              start: 0,
-                              // Keep total track time at 6 minutes maximum to keep file at ~6 MB
-                              end: 360,
-                              callback: () =>
-                                sendDataToContentful(
-                                  trackDataJSON,
-                                  360,
-                                  matchArr,
-                                  roundedBeatPositions,
-                                  "trimmed"
-                                ),
-                            }),
-                        });
+                        const accompanimentFileExists = await checkFileExists(
+                          "output/YouTubeAudio/accompaniment.mp3"
+                        );
+
+                        const vocalsFileExists = await checkFileExists(
+                          "output/YouTubeAudio/vocals.mp3"
+                        );
+
+                        if (accompanimentFileExists && vocalsFileExists) {
+                          MP3Cutter.cut({
+                            src: "output/YouTubeAudio/accompaniment.mp3",
+                            target:
+                              "output/YouTubeAudio/accompaniment_trimmed.mp3",
+                            start: 0,
+                            // Keep total track time at 6 minutes maximum to keep file at ~6 MB
+                            end: 360,
+                            callback: () =>
+                              MP3Cutter.cut({
+                                src: "output/YouTubeAudio/vocals.mp3",
+                                target:
+                                  "output/YouTubeAudio/vocals_trimmed.mp3",
+                                start: 0,
+                                // Keep total track time at 6 minutes maximum to keep file at ~6 MB
+                                end: 360,
+                                callback: () =>
+                                  sendDataToContentful(
+                                    trackDataJSON,
+                                    360,
+                                    matchArr,
+                                    roundedBeatPositions,
+                                    "trimmed"
+                                  ),
+                              }),
+                          });
+                        } else {
+                          console.log(
+                            "Either vocals or accompaniment file does not exist! Moving on to next track."
+                          );
+                          return;
+                        }
                       } else {
                         sendDataToContentful(
                           trackDataJSON,

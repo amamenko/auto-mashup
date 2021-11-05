@@ -1,4 +1,5 @@
 const contentfulManagement = require("contentful-management");
+const { addMinutes } = require("date-fns");
 require("dotenv").config();
 
 const updateChartLoopInProgress = async (chart, state) => {
@@ -14,6 +15,17 @@ const updateChartLoopInProgress = async (chart, state) => {
         environment.getEntry(chart.id).then((entry) => {
           entry.fields.loopInProgress = {
             "en-US": state === "in progress" ? true : false,
+          };
+
+          // Loop expected to end in n number of songs times 5 minutes each
+          const expectedEndDate = addMinutes(
+            new Date(),
+            entry.fields.currentSongs["en-US"].length * 5
+          );
+
+          entry.fields.expectedLoopEnd = {
+            "en-US":
+              state === "in progress" ? expectedEndDate.toISOString() : "",
           };
 
           if (state === "done") {
