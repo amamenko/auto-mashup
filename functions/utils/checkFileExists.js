@@ -1,6 +1,6 @@
 const fs = require("fs");
 
-const checkFileExists = (file) => {
+const checkFileExists = async (file) => {
   return fs.promises
     .access(file, fs.constants.F_OK)
     .then(() => true)

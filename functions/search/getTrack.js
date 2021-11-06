@@ -4,6 +4,7 @@ const filterOutArr = require("../arrays/filterOutArr");
 const getAudioStems = require("../analysis/getAudioStems");
 const searchYouTube = require("./searchYouTube");
 const updatePreviousEntries = require("../contentful/updatePreviousEntries");
+const checkFileExists = require("../utils/checkFileExists");
 require("dotenv").config();
 
 const getTrack = async (
@@ -244,16 +245,30 @@ const getTrack = async (
                                   }
                                 });
 
-                                await getAudioStems(
-                                  matchID,
-                                  matchTitle,
-                                  matchDuration,
-                                  matchArr,
-                                  trackDataJSON
-                                ).catch((err) => {
-                                  console.log(err);
-                                  return;
-                                });
+                                const youtubeAudioFileExists =
+                                  await checkFileExists("YouTubeAudio.mp3");
+
+                                const runAudioAnalysis = async () => {
+                                  await getAudioStems(
+                                    matchID,
+                                    matchTitle,
+                                    matchDuration,
+                                    matchArr,
+                                    trackDataJSON
+                                  ).catch((err) => {
+                                    console.log(err);
+                                    return;
+                                  });
+                                };
+
+                                if (youtubeAudioFileExists) {
+                                  console.log(
+                                    `Whoops, a different song loop is still running! Delaying for one minute and then analyzing audio for track "${topSong.title}" by ${topSong.artist}.`
+                                  );
+                                  setTimeout(() => runAudioAnalysis(), 60000);
+                                } else {
+                                  runAudioAnalysis();
+                                }
                               } else {
                                 console.log(
                                   `No match found for track "${topSong.title}" by ${topSong.artist}.`

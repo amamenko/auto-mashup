@@ -27,12 +27,14 @@ const sendDataToContentful = async (
     goat,
   } = trackDataJSON;
 
-  const deleteOutputDir = () => {
-    fs.rmSync(path.resolve(__dirname, "../../output"), {
-      recursive: true,
-      force: true,
-    });
-    console.log("Deleted output directory!");
+  const deleteOutputDir = async () => {
+    if (await checkFileExists(path.resolve(__dirname, "../../output"))) {
+      fs.rmSync(path.resolve(__dirname, "../../output"), {
+        recursive: true,
+        force: true,
+      });
+      console.log("Deleted output directory!");
+    }
   };
 
   const accompanimentFileExists =

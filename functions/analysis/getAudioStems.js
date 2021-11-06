@@ -85,81 +85,90 @@ const getAudioStems = async (
 
                 // Get beat positions from accompaniment track
                 const beatSuccessCallback = async (buffer) => {
-                  // Convert the JS float32 typed array into std::vector<float>
-                  const inputSignalVector = await essentia.arrayToVector(
-                    buffer.getChannelData(0)
-                  );
+                  if (buffer) {
+                    // Convert the JS float32 typed array into std::vector<float>
+                    const inputSignalVector = await essentia.arrayToVector(
+                      buffer.getChannelData(0)
+                    );
 
-                  const beats = await essentia.BeatTrackerMultiFeature(
-                    inputSignalVector,
-                    trackDataJSON
-                      ? trackDataJSON.tempo
+                    const beats = await essentia.BeatTrackerMultiFeature(
+                      inputSignalVector,
+                      trackDataJSON
                         ? trackDataJSON.tempo
+                          ? trackDataJSON.tempo
+                          : null
                         : null
-                      : null
-                  );
+                    );
 
-                  if (beats) {
-                    if (beats.ticks) {
-                      const beatPositions = essentia.vectorToArray(beats.ticks);
-                      const roundedBeatPositions = [...beatPositions].map(
-                        (item) => Number(item.toFixed(4))
-                      );
-
-                      if (matchDuration > 360) {
-                        const accompanimentFileExists = await checkFileExists(
-                          "output/YouTubeAudio/accompaniment.mp3"
+                    if (beats) {
+                      if (beats.ticks) {
+                        const beatPositions = essentia.vectorToArray(
+                          beats.ticks
+                        );
+                        const roundedBeatPositions = [...beatPositions].map(
+                          (item) => Number(item.toFixed(4))
                         );
 
-                        const vocalsFileExists = await checkFileExists(
-                          "output/YouTubeAudio/vocals.mp3"
-                        );
-
-                        if (accompanimentFileExists && vocalsFileExists) {
-                          MP3Cutter.cut({
-                            src: "output/YouTubeAudio/accompaniment.mp3",
-                            target:
-                              "output/YouTubeAudio/accompaniment_trimmed.mp3",
-                            start: 0,
-                            // Keep total track time at 6 minutes maximum to keep file at ~6 MB
-                            end: 360,
-                            callback: () =>
-                              MP3Cutter.cut({
-                                src: "output/YouTubeAudio/vocals.mp3",
-                                target:
-                                  "output/YouTubeAudio/vocals_trimmed.mp3",
-                                start: 0,
-                                // Keep total track time at 6 minutes maximum to keep file at ~6 MB
-                                end: 360,
-                                callback: () =>
-                                  sendDataToContentful(
-                                    trackDataJSON,
-                                    360,
-                                    matchArr,
-                                    roundedBeatPositions,
-                                    "trimmed"
-                                  ),
-                              }),
-                          });
-                        } else {
-                          console.log(
-                            "Either vocals or accompaniment file does not exist! Moving on to next track."
+                        if (matchDuration > 360) {
+                          const accompanimentFileExists = await checkFileExists(
+                            "output/YouTubeAudio/accompaniment.mp3"
                           );
-                          return;
+
+                          const vocalsFileExists = await checkFileExists(
+                            "output/YouTubeAudio/vocals.mp3"
+                          );
+
+                          if (accompanimentFileExists && vocalsFileExists) {
+                            MP3Cutter.cut({
+                              src: "output/YouTubeAudio/accompaniment.mp3",
+                              target:
+                                "output/YouTubeAudio/accompaniment_trimmed.mp3",
+                              start: 0,
+                              // Keep total track time at 6 minutes maximum to keep file at ~6 MB
+                              end: 360,
+                              callback: () =>
+                                MP3Cutter.cut({
+                                  src: "output/YouTubeAudio/vocals.mp3",
+                                  target:
+                                    "output/YouTubeAudio/vocals_trimmed.mp3",
+                                  start: 0,
+                                  // Keep total track time at 6 minutes maximum to keep file at ~6 MB
+                                  end: 360,
+                                  callback: () =>
+                                    sendDataToContentful(
+                                      trackDataJSON,
+                                      360,
+                                      matchArr,
+                                      roundedBeatPositions,
+                                      "trimmed"
+                                    ),
+                                }),
+                            });
+                          } else {
+                            console.log(
+                              "Either vocals or accompaniment file does not exist! Moving on to next track."
+                            );
+                            return;
+                          }
+                        } else {
+                          sendDataToContentful(
+                            trackDataJSON,
+                            matchDuration,
+                            matchArr,
+                            roundedBeatPositions
+                          );
                         }
                       } else {
-                        sendDataToContentful(
-                          trackDataJSON,
-                          matchDuration,
-                          matchArr,
-                          roundedBeatPositions
-                        );
+                        console.log("No beat ticks returned from analysis!");
                       }
                     } else {
-                      console.log("No beat ticks returned from analysis!");
+                      console.log("No beats returned from analysis!");
                     }
                   } else {
-                    console.log("No beats returned from analysis!");
+                    console.log(
+                      "No useful buffer was provided to the Essentia beat matching function. Moving on to next track!"
+                    );
+                    return;
                   }
                 };
 
