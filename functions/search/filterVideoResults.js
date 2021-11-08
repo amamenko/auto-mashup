@@ -107,63 +107,72 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                 trackTitle,
                 trackArtist
               )
-                .then((arr) => {
-                  const videoTitle = removeAccents(
-                    firstFive[i].original_title
-                  ).toLowerCase();
-                  let artistMatches = 0;
+                .then((lyricsObj) => {
+                  if (lyricsObj) {
+                    const expectedArr = lyricsObj.expectedLyricArr;
+                    const arr = lyricsObj.lyricArr;
 
-                  for (const artist of artistArr) {
-                    if (videoTitle.includes(artist)) {
-                      artistMatches++;
-                    }
-                  }
+                    const videoTitle = removeAccents(
+                      firstFive[i].original_title
+                    ).toLowerCase();
+                    let artistMatches = 0;
 
-                  if (arr) {
-                    let ditch = 0;
-
-                    for (let j = 0; j < arr.length; j++) {
-                      const section = arr[j];
-                      const nextSection = arr[j + 1];
-
-                      if (section.start && section.end) {
-                        const start = timeStampToSeconds(section.start);
-                        const end = timeStampToSeconds(section.end);
-
-                        if (end - start <= 3) {
-                          ditch++;
-                        }
-                      } else {
-                        if (nextSection) {
-                          const currentSectionStart = timeStampToSeconds(
-                            section.start
-                          );
-                          const nextSectionStart = timeStampToSeconds(
-                            nextSection.start
-                          );
-
-                          if (nextSectionStart - currentSectionStart >= 120) {
-                            ditch += 2;
-                          }
-                        }
+                    for (const artist of artistArr) {
+                      if (videoTitle.includes(artist)) {
+                        artistMatches++;
                       }
                     }
 
-                    const result = {
-                      id: firstFive[i].id,
-                      videoTitle,
-                      artistMatches,
-                      ditchResult: ditch >= 2 ? true : false,
-                      duration: firstFive[i].duration,
-                      arr,
-                      arrLength: arr.length,
-                    };
-                    allResultsArr.push(result);
+                    if (arr) {
+                      let ditch = 0;
 
-                    resolve(result);
-                    return result;
+                      for (let j = 0; j < arr.length; j++) {
+                        const section = arr[j];
+                        const nextSection = arr[j + 1];
+
+                        if (section.start && section.end) {
+                          const start = timeStampToSeconds(section.start);
+                          const end = timeStampToSeconds(section.end);
+
+                          if (end - start <= 3) {
+                            ditch++;
+                          }
+                        } else {
+                          if (nextSection) {
+                            const currentSectionStart = timeStampToSeconds(
+                              section.start
+                            );
+                            const nextSectionStart = timeStampToSeconds(
+                              nextSection.start
+                            );
+
+                            if (nextSectionStart - currentSectionStart >= 120) {
+                              ditch += 2;
+                            }
+                          }
+                        }
+                      }
+
+                      const result = {
+                        id: firstFive[i].id,
+                        videoTitle,
+                        artistMatches,
+                        ditchResult: ditch >= 2 ? true : false,
+                        duration: firstFive[i].duration,
+                        arr,
+                        arrLength: arr.length,
+                        expectedArr,
+                      };
+                      allResultsArr.push(result);
+
+                      resolve(result);
+                      return result;
+                    } else {
+                      reject();
+                      return;
+                    }
                   } else {
-                    reject();
+                    resolve();
                     return;
                   }
                 })

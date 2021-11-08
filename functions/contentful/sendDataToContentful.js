@@ -8,7 +8,9 @@ const sendDataToContentful = async (
   matchDuration,
   matchArr,
   roundedBeatPositions,
-  trimmed
+  trimmed,
+  matchExpected,
+  videoID
 ) => {
   const client = contentful.createClient({
     accessToken: process.env.CONTENT_MANAGEMENT_TOKEN,
@@ -115,6 +117,9 @@ const sendDataToContentful = async (
                         artist: {
                           "en-US": artist,
                         },
+                        sourceId: {
+                          "en-US": videoID,
+                        },
                         goat: {
                           "en-US": goat ? "yes" : "no",
                         },
@@ -144,6 +149,9 @@ const sendDataToContentful = async (
                         },
                         beats: {
                           "en-US": roundedBeatPositions.join(", "),
+                        },
+                        expectedSections: {
+                          "en-US": matchExpected.join(", "),
                         },
                         sections: {
                           "en-US": matchArr,

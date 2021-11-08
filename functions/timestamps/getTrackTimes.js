@@ -85,19 +85,22 @@ const getTrackTimes = async (
     .catch((err) => console.log(err));
 
   if (resultLyrics) {
-    if (resultLyrics.length > 0) {
-      // Check if track section time breakdown covers sufficient span of track
-      const lastSection = resultLyrics[resultLyrics.length - 1];
-      const lastTime = lastSection.start;
+    if (resultLyrics.lyricArr) {
+      if (resultLyrics.lyricArr.length > 0) {
+        // Check if track section time breakdown covers sufficient span of track
+        const lastSection =
+          resultLyrics.lyricArr[resultLyrics.lyricArr.length - 1];
+        const lastTime = lastSection.start;
 
-      const totalSeconds = timeStampToSeconds(lastTime);
+        const totalSeconds = timeStampToSeconds(lastTime);
 
-      const minimum = videoDuration * 0.65;
+        const minimum = videoDuration * 0.65;
 
-      if (totalSeconds >= minimum) {
-        return resultLyrics;
-      } else {
-        return;
+        if (totalSeconds >= minimum) {
+          return resultLyrics;
+        } else {
+          return;
+        }
       }
     }
   }

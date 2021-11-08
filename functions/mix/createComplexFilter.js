@@ -212,7 +212,7 @@ const createComplexFilter = (instrumentals, vox) => {
       },
       {
         filter: `rubberband=pitch=${vocalsKeyScale}:tempo=${vocalsTempoScale}:formant=preserved`,
-        inputs: `${audioInputNum}:a`,
+        inputs: `${audioInputNum}_louder:a`,
         outputs: `vox:${audioInputNum}`,
       },
     ];

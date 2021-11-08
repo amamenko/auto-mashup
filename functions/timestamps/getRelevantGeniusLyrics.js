@@ -111,40 +111,72 @@ const getRelevantGeniusLyrics = async (
       options.title = newTitleArr[0].trim();
     }
 
-    return await getLyricTimestamps(options).then(async (lyricArr) => {
-      if (lyricArr) {
-        if (urlArr[1]) {
-          const secondTitle = urlArr[1].title.split(titleRegex)[0].trim();
+    return await getLyricTimestamps(options).then(async (lyricObj) => {
+      if (lyricObj) {
+        const expectedLyricArr = lyricObj.expected;
+        const lyricArr = lyricObj.returned;
 
-          const newOptions = {
-            ...options,
-            title: secondTitle,
-          };
+        if (lyricArr) {
+          if (urlArr[1]) {
+            const secondTitle = urlArr[1].title.split(titleRegex)[0].trim();
 
-          const formattedVideoTitle = removeAccents(videoTitle).toLowerCase();
+            const newOptions = {
+              ...options,
+              title: secondTitle,
+            };
 
-          const firstTitleFormatted = removeAccents(
-            urlArr[0].title.split(titleRegex)[0].trim()
-          ).toLowerCase();
+            const formattedVideoTitle = removeAccents(videoTitle).toLowerCase();
 
-          return await getLyricTimestamps(newOptions).then((newLyricArr) => {
-            if (formattedVideoTitle.includes("remix")) {
-              if (firstTitleFormatted.includes("remix")) {
-                return lyricArr;
+            const firstTitleFormatted = removeAccents(
+              urlArr[0].title.split(titleRegex)[0].trim()
+            ).toLowerCase();
+
+            return await getLyricTimestamps(newOptions).then((newLyricObj) => {
+              if (newLyricObj) {
+                const newExpectedLyricArr = newLyricObj.expected;
+                const newLyricArr = newLyricObj.returned;
+
+                if (formattedVideoTitle.includes("remix")) {
+                  if (firstTitleFormatted.includes("remix")) {
+                    return {
+                      expectedLyricArr,
+                      lyricArr,
+                    };
+                  } else {
+                    return {
+                      expectedLyricArr: newExpectedLyricArr,
+                      lyricArr: newLyricArr,
+                    };
+                  }
+                } else {
+                  if (newLyricArr.length > lyricArr.length) {
+                    return {
+                      expectedLyricArr: newExpectedLyricArr,
+                      lyricArr: newLyricArr,
+                    };
+                  } else {
+                    return {
+                      expectedLyricArr,
+                      lyricArr,
+                    };
+                  }
+                }
               } else {
-                return newLyricArr;
+                return {
+                  expectedLyricArr,
+                  lyricArr,
+                };
               }
-            } else {
-              if (newLyricArr.length > lyricArr.length) {
-                return newLyricArr;
-              } else {
-                return lyricArr;
-              }
-            }
-          });
-        } else {
-          return lyricArr;
+            });
+          } else {
+            return {
+              expectedLyricArr,
+              lyricArr,
+            };
+          }
         }
+      } else {
+        return;
       }
     });
   }

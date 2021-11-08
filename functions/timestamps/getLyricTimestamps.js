@@ -43,20 +43,28 @@ const getLyricTimestamps = async (options) => {
           for (let i = 0; i < sectionArr.length; i++) {
             const current = getSection(sectionArr[i]);
 
-            const mostRecentMatch = geniusArr.find(
-              (item) => item.sectionName.split(" ")[0] === current
-            );
+            if (
+              current &&
+              current.length >= 3 &&
+              current !== "letra" &&
+              current !== "lyric" &&
+              current !== "lyrics"
+            ) {
+              const mostRecentMatch = geniusArr.find(
+                (item) => item.sectionName.split(" ")[0] === current
+              );
 
-            if (mostRecentMatch) {
-              geniusArr.push({
-                sectionName:
-                  current +
-                  " " +
-                  (Number(mostRecentMatch.sectionName.split(" ")[1]) + 1),
-                lyrics: "",
-              });
-            } else {
-              geniusArr.push({ sectionName: current + " 1", lyrics: "" });
+              if (mostRecentMatch) {
+                geniusArr.push({
+                  sectionName:
+                    current +
+                    " " +
+                    (Number(mostRecentMatch.sectionName.split(" ")[1]) + 1),
+                  lyrics: "",
+                });
+              } else {
+                geniusArr.push({ sectionName: current + " 1", lyrics: "" });
+              }
             }
           }
 
@@ -109,11 +117,13 @@ const getLyricTimestamps = async (options) => {
                   ? lyricsSplit.slice(i + 1, i + 1 + nextSectionIndex)
                   : slicedLyrics;
 
-              geniusArr[sectionNumber].lyrics = sectionLyrics
-                .join(" ")
-                .toLowerCase()
-                .replace(punctuationRegex, "");
-              sectionNumber++;
+              if (geniusArr[sectionNumber]) {
+                geniusArr[sectionNumber].lyrics = sectionLyrics
+                  .join(" ")
+                  .toLowerCase()
+                  .replace(punctuationRegex, "");
+                sectionNumber++;
+              }
             }
           }
 
@@ -160,22 +170,25 @@ const getLyricTimestamps = async (options) => {
             }
           }
 
-          return matchArr;
+          return {
+            expected: geniusArr.map((item) => item.sectionName),
+            returned: matchArr.filter((item) => item.start),
+          };
         } else {
           console.log("No YouTube captions available.");
-          return [];
+          return;
         }
       } else {
         console.log("No lyrics served");
-        return [];
+        return;
       }
     })
     .catch((err) => console.error(err));
 
   if (returnedLyrics) {
-    return returnedLyrics.filter((item) => item.start);
+    return returnedLyrics;
   } else {
-    return [];
+    return;
   }
 };
 

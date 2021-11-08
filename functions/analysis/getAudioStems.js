@@ -3,15 +3,20 @@ const axios = require("axios");
 const { PythonShell } = require("python-shell");
 const getBeatPositions = require("./getBeatPositions");
 const esPkg = require("essentia.js");
-const essentia = new esPkg.Essentia(esPkg.EssentiaWASM);
 const MP3Cutter = require("../mp3Cutter/cutter");
 const sendDataToContentful = require("../contentful/sendDataToContentful");
 const checkFileExists = require("../utils/checkFileExists");
+let essentia;
+
+if (esPkg.EssentiaWASM) {
+  essentia = new esPkg.Essentia(esPkg.EssentiaWASM);
+}
 
 const getAudioStems = async (
   videoID,
   matchTitle,
   matchDuration,
+  matchExpected,
   matchArr,
   trackDataJSON
 ) => {
@@ -144,7 +149,9 @@ const getAudioStems = async (
                                           360,
                                           matchArr,
                                           roundedBeatPositions,
-                                          "trimmed"
+                                          "trimmed",
+                                          matchExpected,
+                                          videoID
                                         ),
                                     }),
                                 });
@@ -159,7 +166,10 @@ const getAudioStems = async (
                                 trackDataJSON,
                                 matchDuration,
                                 matchArr,
-                                roundedBeatPositions
+                                roundedBeatPositions,
+                                "",
+                                matchExpected,
+                                videoID
                               );
                             }
                           } else {

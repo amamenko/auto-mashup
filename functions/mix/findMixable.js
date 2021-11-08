@@ -22,7 +22,7 @@ const findMixable = async () => {
       "fields.mode": "major",
       "fields.goat": "no",
       select:
-        "fields.title,fields.artist,fields.tempo,fields.key,fields.duration,fields.sections,fields.beats,fields.accompaniment,fields.vocals",
+        "fields.title,fields.artist,fields.tempo,fields.key,fields.duration,fields.expectedSections,fields.sections,fields.beats,fields.accompaniment,fields.vocals",
       content_type: "song",
       limit: 200,
     })
@@ -89,10 +89,18 @@ const findMixable = async () => {
                           item !== "intro" && item !== "outro";
 
                         const song1Sections = song1.fields.sections
-                          .map((section) => section.sectionName.split(" ")[0])
+                          .map((section) =>
+                            section.sectionName
+                              ? section.sectionName.split(" ")[0]
+                              : ""
+                          )
                           .filter(noIntroOrOutro);
                         const song2Sections = song2.fields.sections
-                          .map((section) => section.sectionName.split(" ")[0])
+                          .map((section) =>
+                            section.sectionName
+                              ? section.sectionName.split(" ")[0]
+                              : ""
+                          )
                           .filter(noIntroOrOutro);
 
                         const bothSections = [
@@ -139,10 +147,10 @@ const findMixable = async () => {
                         };
                         const matchArr = [];
 
-                        for (let i = 0; i < bothSections.length; i++) {
-                          const currentName = bothSections[i].name;
+                        for (let j = 0; j < bothSections.length; j++) {
+                          const currentName = bothSections[j].name;
 
-                          const currentSection = bothSections[i];
+                          const currentSection = bothSections[j];
                           const otherSection = bothSections.find(
                             (item) => item.name !== currentName
                           );
@@ -189,9 +197,90 @@ const findMixable = async () => {
                         const hasDuplicates = (array) =>
                           new Set(array).size !== array.length;
 
+                        const expectedPerfectSectionOutput = (arr) => {
+                          const expectedOutputArr = [];
+
+                          for (let j = 0; j < arr.length; j++) {
+                            const current = arr[j];
+
+                            const mostRecentMatch = expectedOutputArr.find(
+                              (item) => item && item.split(" ")[0] === current
+                            );
+
+                            if (mostRecentMatch) {
+                              expectedOutputArr.push(
+                                current +
+                                  " " +
+                                  (Number(mostRecentMatch.split(" ")[1]) + 1)
+                              );
+                            } else {
+                              expectedOutputArr.push(current + " 1");
+                            }
+                          }
+
+                          return expectedOutputArr.filter(noIntroOrOutro);
+                        };
+
+                        const song1SectionNamesOnly = song1.fields
+                          .expectedSections
+                          ? song1.fields.expectedSections
+                              .split(", ")
+                              .map((section) =>
+                                section.sectionName
+                                  ? section.sectionName.split(" ")[0]
+                                  : ""
+                              )
+                          : [];
+                        const song2SectionNamesOnly = song2.fields
+                          .expectedSections
+                          ? song2.fields.expectedSections
+                              .split(", ")
+                              .map((section) =>
+                                section.sectionName
+                                  ? section.sectionName.split(" ")[0]
+                                  : ""
+                              )
+                          : [];
+
+                        const song1Expected = expectedPerfectSectionOutput(
+                          song1SectionNamesOnly
+                        );
+                        const song1Actual = song1.fields.sections
+                          .map((section) => section.sectionName)
+                          .filter(noIntroOrOutro);
+                        const song1Deviations = song1Expected.filter(
+                          (item) => !song1Actual.includes(item)
+                        );
+
+                        const song2Expected = expectedPerfectSectionOutput(
+                          song2SectionNamesOnly
+                        );
+                        const song2Actual = song2.fields.sections
+                          .map((section) => section.sectionName)
+                          .filter(noIntroOrOutro);
+                        const song2Deviations = song2Expected.filter(
+                          (item) => !song2Actual.includes(item)
+                        );
+
+                        // if (song1Deviations[0]) {
+                        //   const firstDeviation = song1Deviations[0];
+                        //   const deviationIndex = song1Expected.findIndex(
+                        //     (item) => item === song1Deviations[0]
+                        //   );
+                        //   const firstSectionBefore =
+                        //     song1Expected[deviationIndex - 1];
+
+                        //   if (firstSectionBefore) {
+                        //     song1Actual.find(
+                        //       (item) => item === firstSectionBefore
+                        //     );
+                        //   }
+                        // }
+
                         if (
                           matchArr[0] === 0 &&
-                          !hasDuplicates(song1SectionsTimes)
+                          !hasDuplicates(song1SectionsTimes) &&
+                          song1Expected.length === song1Actual.length
                         ) {
                           matches.push({
                             accompaniment: song1Obj,
@@ -201,7 +290,8 @@ const findMixable = async () => {
 
                         if (
                           matchArr[1] === 0 &&
-                          !hasDuplicates(song2SectionsTimes)
+                          !hasDuplicates(song2SectionsTimes) &&
+                          song2Expected.length === song2Actual.length
                         ) {
                           matches.push({
                             accompaniment: song2Obj,
@@ -238,10 +328,11 @@ const findMixable = async () => {
           });
 
           if (matchArr && matchArr.length > 0) {
-            normalizeInputsAndMix(
-              matchArr[0].accompaniment,
-              matchArr[0].vocals
-            );
+            console.log(matchArr.length);
+            // normalizeInputsAndMix(
+            //   matchArr[0].accompaniment,
+            //   matchArr[0].vocals
+            // );
           }
         }
       }

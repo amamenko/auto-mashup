@@ -230,19 +230,12 @@ const getTrack = async (
                                 const matchID = match.id;
                                 const matchTitle = match.videoTitle;
                                 const matchDuration = match.duration;
+                                const matchExpected = match.expectedArr;
                                 const matchArr = match.arr.map((item) => {
-                                  if (item.end) {
-                                    return {
-                                      sectionName: item.sectionName,
-                                      start: item.start,
-                                      end: item.end,
-                                    };
-                                  } else {
-                                    return {
-                                      sectionName: item.sectionName,
-                                      start: item.start,
-                                    };
-                                  }
+                                  return {
+                                    sectionName: item.sectionName,
+                                    start: item.start,
+                                  };
                                 });
 
                                 const youtubeAudioFileExists =
@@ -253,6 +246,7 @@ const getTrack = async (
                                     matchID,
                                     matchTitle,
                                     matchDuration,
+                                    matchExpected,
                                     matchArr,
                                     trackDataJSON
                                   ).catch((err) => {

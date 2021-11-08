@@ -17,10 +17,10 @@ const updateChartLoopInProgress = async (chart, state) => {
             "en-US": state === "in progress" ? true : false,
           };
 
-          // Loop expected to end in n number of songs times 5 minutes each
+          // Loop expected to end in n number of songs times 5 minutes each plus 10 minute buffer
           const expectedEndDate = addMinutes(
             new Date(),
-            entry.fields.currentSongs["en-US"].length * 5
+            entry.fields.currentSongs["en-US"].length * 5 + 10
           );
 
           entry.fields.expectedLoopEnd = {
@@ -35,6 +35,10 @@ const updateChartLoopInProgress = async (chart, state) => {
 
             entry.fields.loopedThisWeek = {
               "en-US": true,
+            };
+
+            entry.fields.currentLoopPosition = {
+              "en-US": 0,
             };
           }
           entry.update().then(() => {

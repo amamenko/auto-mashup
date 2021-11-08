@@ -53,13 +53,21 @@ const cleanUpLoopsOnExit = async (signal) => {
                               "en-US": true,
                             };
 
+                            entry.fields.expectedLoopEnd = {
+                              "en-US": "",
+                            };
+
+                            entry.fields.currentLoopPosition = {
+                              "en-US": 0,
+                            };
+
                             return await entry.update().then(() => {
                               environment
                                 .getEntry(res.items[0].sys.id)
                                 .then((updatedEntry) => {
                                   updatedEntry.publish().then(() => {
                                     console.log(
-                                      `Server killed. Songs loop for chart ${updatedEntry.fields.name} no longer in progress.`
+                                      `Server killed. Songs loop for chart ${chartInProgress.fields.name} no longer in progress.`
                                     );
                                     if (signal) {
                                       process.kill(process.pid, signal);
