@@ -126,6 +126,23 @@ const formatVideo = async (video, speedDate, description) => {
         }
       }
 
+      let views = 0;
+
+      if (video.viewCountText) {
+        if (video.viewCountText.runs) {
+          if (video.viewCountText.runs[0]) {
+            if (video.viewCountText.runs[0].text) {
+              const viewNumStr = video.viewCountText.runs[0].text
+                .split(" ")[0]
+                .split(",")
+                .join("");
+
+              views = Number(viewNumStr);
+            }
+          }
+        }
+      }
+
       return {
         id: id,
         original_title: video.original_title.trim(),
@@ -133,6 +150,7 @@ const formatVideo = async (video, speedDate, description) => {
         artist: video.artist.trim(),
         description: description ? description : "",
         duration: hour + minute + second,
+        views,
         channel_name,
         channel_id,
         publishedAt: publishedAt,
@@ -148,6 +166,7 @@ const formatVideo = async (video, speedDate, description) => {
         artist: "",
         description: "",
         duration: 0,
+        views: 0,
         channel_name: "",
         channel_id: "",
         publishedAt: new Date(Date.now()),

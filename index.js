@@ -14,7 +14,7 @@ const SpotifyWebApi = require("spotify-web-api-node");
 const { format } = require("date-fns");
 require("dotenv").config();
 
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || 4001;
 
 const spotifyCredentials = {
   clientId: process.env.SPOTIFY_CLIENT_ID,

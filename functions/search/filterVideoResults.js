@@ -33,7 +33,8 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
       formattedVideoTitle.includes(trackTitleWithoutAlias) &&
       artistArr.some((artist) => formattedVideoTitle.includes(artist)) &&
       video.duration > 60 &&
-      video.duration < 660
+      video.duration < 660 &&
+      video.views >= 1000
     );
   });
 
@@ -55,7 +56,13 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                 }`
               );
 
-              const filterOutDesc = ["cover", "karaoke", "acapella", "parody"];
+              const filterOutDesc = [
+                "cover",
+                "karaoke",
+                "acapella",
+                "parody",
+                "version",
+              ];
 
               if (firstFive[i].channel_name) {
                 let channelDescription = await getChannelDescription(
@@ -125,14 +132,28 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
 
                     if (arr) {
                       let ditch = 0;
+                      let repeatedMisses = 0;
 
                       for (let j = 0; j < arr.length; j++) {
                         const section = arr[j];
                         const nextSection = arr[j + 1];
 
-                        if (section.start && section.end) {
+                        if (
+                          section &&
+                          section.start &&
+                          nextSection &&
+                          nextSection.start
+                        ) {
                           const start = timeStampToSeconds(section.start);
-                          const end = timeStampToSeconds(section.end);
+                          const end = timeStampToSeconds(nextSection.start);
+
+                          if (end - start <= 8) {
+                            repeatedMisses++;
+
+                            if (repeatedMisses >= 2) {
+                              ditch += 2;
+                            }
+                          }
 
                           if (end - start <= 3) {
                             ditch++;
@@ -159,6 +180,7 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                         artistMatches,
                         ditchResult: ditch >= 2 ? true : false,
                         duration: firstFive[i].duration,
+                        views: firstFive[i].views,
                         arr,
                         arrLength: arr.length,
                         expectedArr,

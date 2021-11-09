@@ -43,12 +43,16 @@ const getLyricTimestamps = async (options) => {
           for (let i = 0; i < sectionArr.length; i++) {
             const current = getSection(sectionArr[i]);
 
+            // Filter non-ASCII characters
+            const foreignChar = /([^\x00-\x7F]+)/gim;
+
             if (
               current &&
               current.length >= 3 &&
               current !== "letra" &&
               current !== "lyric" &&
-              current !== "lyrics"
+              current !== "lyrics" &&
+              !foreignChar.test(current)
             ) {
               const mostRecentMatch = geniusArr.find(
                 (item) => item.sectionName.split(" ")[0] === current
