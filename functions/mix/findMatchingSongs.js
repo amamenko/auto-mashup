@@ -174,10 +174,13 @@ const findMatchingSongs = (allSongs) => {
                 if (
                   matchArr[0] === 0 &&
                   !hasDuplicates(song1SectionsTimes) &&
-                  song1LongestContinuous >= 80
+                  song1LongestContinuous.duration >= 80
                 ) {
                   matches.push({
-                    accompaniment: song1Obj,
+                    accompaniment: {
+                      ...song1Obj,
+                      sections: song1LongestContinuous.sections,
+                    },
                     vocals: song2Obj,
                   });
                 }
@@ -185,10 +188,13 @@ const findMatchingSongs = (allSongs) => {
                 if (
                   matchArr[1] === 0 &&
                   !hasDuplicates(song2SectionsTimes) &&
-                  song2LongestContinuous >= 80
+                  song2LongestContinuous.duration >= 80
                 ) {
                   matches.push({
-                    accompaniment: song2Obj,
+                    accompaniment: {
+                      ...song2Obj,
+                      sections: song2LongestContinuous.sections,
+                    },
                     vocals: song1Obj,
                   });
                 }

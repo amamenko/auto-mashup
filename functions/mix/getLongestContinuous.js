@@ -59,9 +59,15 @@ const getLongestContinuous = (song) => {
       timeStampToSeconds(songContinousLastSection.start) -
       timeStampToSeconds(songContinousFirstSection.start);
 
-    return songLongestContinuousSectionDuration;
+    return {
+      sections: songLongestContinous,
+      duration: songLongestContinuousSectionDuration,
+    };
   } else {
-    return 0;
+    return {
+      sections: [],
+      duration: 0,
+    };
   }
 };
 

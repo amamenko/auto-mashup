@@ -1,4 +1,3 @@
-const timeStampToSeconds = require("../utils/timeStampToSeconds");
 const {
   introSections,
   verseSections,
@@ -10,6 +9,7 @@ const {
   outroSections,
 } = require("../arrays/songSectionsArr");
 const removeAccents = require("remove-accents");
+const getClosestBeatArr = require("./getClosestBeatArr");
 
 const createComplexFilter = (instrumentals, vox) => {
   const vocalsKeyScale = vox.keyScaleFactor;
@@ -17,34 +17,6 @@ const createComplexFilter = (instrumentals, vox) => {
 
   // Apply BPM adjustment matching to original BPM of vocal track
   vox.beats = vox.beats.map((beat) => (1 / vocalsTempoScale) * beat);
-
-  const findClosestBeat = (seconds, song) => {
-    const beats = song.beats;
-    const closest = beats.reduce((a, b) => {
-      return Math.abs(b - seconds) < Math.abs(a - seconds) ? b : a;
-    });
-    const indexClosest = beats.findIndex((item) => item === closest);
-
-    // Round down one beat, if possible
-    return beats[indexClosest - 1]
-      ? beats[indexClosest - 1]
-      : beats[indexClosest];
-  };
-
-  function getClosestBeatArr(section, index, arr) {
-    const song = this;
-    const nextSection = arr[index + 1];
-    const startTime = findClosestBeat(timeStampToSeconds(section.start), song);
-    const nextSectionStartTime = nextSection
-      ? findClosestBeat(timeStampToSeconds(nextSection.start), song)
-      : song.duration;
-
-    return {
-      start: startTime,
-      duration: nextSectionStartTime - startTime,
-      sectionName: section.sectionName,
-    };
-  }
 
   const instrumentalSections = instrumentals.sections.map(
     getClosestBeatArr,
@@ -141,6 +113,7 @@ const createComplexFilter = (instrumentals, vox) => {
       (item) => item.sectionName === section.sectionName
     );
     const nextSection = vocalSections[currentIndex + 1];
+    const nextNextSection = vocalSections[currentIndex + 2];
 
     const instrumentalSection = section.instrumentalSection;
     const delay = instrumentalSection.start;
@@ -175,7 +148,7 @@ const createComplexFilter = (instrumentals, vox) => {
         filter: `aloop=loop=${
           maxDuration <= endTime - section.start
             ? 0
-            : maxDuration / (endTime - section.start)
+            : Math.floor(maxDuration / (endTime - section.start))
         }:size=${(endTime - section.start) * 44100}:start=0`,
         inputs: ffmpegSectionName,
         outputs: `loop${i + 1}`,
@@ -186,8 +159,35 @@ const createComplexFilter = (instrumentals, vox) => {
         outputs: `${ffmpegSectionName}_trim`,
       },
       {
-        filter: "loudnorm",
+        filter: "asetpts=PTS-STARTPTS",
         inputs: `${ffmpegSectionName}_trim`,
+        outputs: `${ffmpegSectionName}_trim_pts`,
+      },
+      currentIndex === 0
+        ? {
+            filter: `afade=t=in:ss=0:d=5`,
+            inputs: `${ffmpegSectionName}_trim_pts`,
+            outputs: `${ffmpegSectionName}_fade_in`,
+          }
+        : nextNextSection
+        ? {
+            filter: "asetpts=PTS-STARTPTS",
+            inputs: `${ffmpegSectionName}_trim_pts`,
+            outputs: `${ffmpegSectionName}_trim_pts_pts`,
+          }
+        : {
+            filter: `afade=t=out:st=${maxDuration - 5}:d=5`,
+            inputs: `${ffmpegSectionName}_trim_pts`,
+            outputs: `${ffmpegSectionName}_fade_out`,
+          },
+      {
+        filter: "loudnorm",
+        inputs:
+          currentIndex === 0
+            ? `${ffmpegSectionName}_fade_in`
+            : nextNextSection
+            ? `${ffmpegSectionName}_trim_pts_pts`
+            : `${ffmpegSectionName}_fade_out`,
         outputs: `${ffmpegSectionName}_normalized`,
       },
       {
@@ -198,15 +198,17 @@ const createComplexFilter = (instrumentals, vox) => {
     ];
   });
 
-  const voxOutputNamesArr = trimmedSections.map((item) => item[4].outputs);
+  const voxOutputNamesArr = trimmedSections.map(
+    (item) => item[item.length - 1].outputs
+  );
 
   const getRubberbandFilter = (num) => {
     const audioInputNum = num + 1;
 
     return [
-      // Push the vocal volume up a little but
+      // Push the vocal volume up
       {
-        filter: "volume=1.25",
+        filter: "volume=2.6",
         inputs: `${audioInputNum}:a`,
         outputs: `${audioInputNum}_louder:a`,
       },
@@ -218,7 +220,7 @@ const createComplexFilter = (instrumentals, vox) => {
     ];
   };
 
-  const rubberbandFiltersArr = [...Array(vox.sections.length).keys()]
+  const rubberbandFiltersArr = [...Array(instrumentals.sections.length).keys()]
     .map(getRubberbandFilter)
     .slice(0, trimmedSections.length);
 

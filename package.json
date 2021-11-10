@@ -28,7 +28,6 @@
     "fluent-ffmpeg": "^2.1.2",
     "genius-lyrics-api": "^3.0.6",
     "html-entities": "^2.3.2",
-    "node-cleanup": "^2.1.2",
     "node-cron": "^3.0.0",
     "python-shell": "^3.0.1",
     "remove-accents": "^0.4.2",

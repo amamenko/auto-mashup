@@ -62,7 +62,10 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
                               // If entry appears on more charts
                               // -> leave entry, just update charts it appears on
                               if (charts.length > 0) {
-                                entry.fields.charts = charts;
+                                entry.fields.charts = {
+                                  "en-US": charts,
+                                };
+
                                 entry.update().then(() => {
                                   environment
                                     .getEntry(entryID)

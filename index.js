@@ -3,7 +3,6 @@ const app = express();
 const cron = require("node-cron");
 const loopCurrentCharts = require("./functions/search/loopCurrentCharts");
 const checkLoopProgress = require("./functions/search/checkLoopProgress");
-const nodeCleanup = require("node-cleanup");
 const cleanUpLoopsOnExit = require("./functions/contentful/cleanUpLoopsOnExit");
 const loopSongs = require("./functions/search/loopSongs");
 const testSearch = require("./functions/search/testSearch");
@@ -14,7 +13,7 @@ const SpotifyWebApi = require("spotify-web-api-node");
 const { format } = require("date-fns");
 require("dotenv").config();
 
-const port = process.env.PORT || 4001;
+const port = process.env.PORT || 4000;
 
 const spotifyCredentials = {
   clientId: process.env.SPOTIFY_CLIENT_ID,
@@ -83,12 +82,6 @@ cron.schedule("*/5 * * * *", () => {
 // findMixable();
 
 // testSearch("billboard-global-200", 0);
-
-nodeCleanup((exitCode, signal) => {
-  cleanUpLoopsOnExit(signal);
-  nodeCleanup.uninstall(); // Unregister the nodeCleanup handler.
-  return false;
-});
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}...`);

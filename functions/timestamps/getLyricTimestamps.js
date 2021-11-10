@@ -52,6 +52,8 @@ const getLyricTimestamps = async (options) => {
               current !== "letra" &&
               current !== "lyric" &&
               current !== "lyrics" &&
+              current !== "instrumental" &&
+              current !== "guitar solo" &&
               !foreignChar.test(current)
             ) {
               const mostRecentMatch = geniusArr.find(
@@ -110,23 +112,32 @@ const getLyricTimestamps = async (options) => {
             const checkForSection = (el) =>
               el.includes("[") && el.includes("]");
 
+            const immediateNextSection = lyricsSplit[i + 1];
+
             if (checkForSection(lyricsSplit[i])) {
-              const slicedLyrics = lyricsSplit.slice(i + 1);
-              const nextSectionIndex = slicedLyrics.findIndex((item) =>
-                checkForSection(item)
-              );
+              if (
+                immediateNextSection &&
+                checkForSection(immediateNextSection)
+              ) {
+                continue;
+              } else {
+                const slicedLyrics = lyricsSplit.slice(i + 1);
+                const nextSectionIndex = slicedLyrics.findIndex((item) =>
+                  checkForSection(item)
+                );
 
-              const sectionLyrics =
-                nextSectionIndex >= 0
-                  ? lyricsSplit.slice(i + 1, i + 1 + nextSectionIndex)
-                  : slicedLyrics;
+                const sectionLyrics =
+                  nextSectionIndex >= 0
+                    ? lyricsSplit.slice(i + 1, i + 1 + nextSectionIndex)
+                    : slicedLyrics;
 
-              if (geniusArr[sectionNumber]) {
-                geniusArr[sectionNumber].lyrics = sectionLyrics
-                  .join(" ")
-                  .toLowerCase()
-                  .replace(punctuationRegex, "");
-                sectionNumber++;
+                if (geniusArr[sectionNumber]) {
+                  geniusArr[sectionNumber].lyrics = sectionLyrics
+                    .join(" ")
+                    .toLowerCase()
+                    .replace(punctuationRegex, "");
+                  sectionNumber++;
+                }
               }
             }
           }

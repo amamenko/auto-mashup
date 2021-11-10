@@ -96,7 +96,14 @@ const normalizeInputsAndMix = async (instrumentals, vocals) => {
                 const fullVoxRes = res[gainInfoIndex + 2].split(".mp3:")[1];
 
                 const accompanimentGainChange = fullAccompanimentRes
-                  ? fullAccompanimentRes.replace(" ", "")
+                  ? Number(
+                      fullAccompanimentRes
+                        .replace(" ", "")
+                        .replace("dB", "")
+                        .trim()
+                    ) -
+                    2 +
+                    "dB"
                   : null;
                 const voxGainChange = fullVoxRes
                   ? fullVoxRes.replace(" ", "")
@@ -121,7 +128,6 @@ const normalizeInputsAndMix = async (instrumentals, vocals) => {
                             `FFMPEG received an error when normalizing audio. Terminating process. Output: ` +
                               err.message
                           );
-                          console.log("FFMPEG output:\n" + stdout);
                           console.log("FFMPEG stderr:\n" + stderr);
 
                           fs.rmSync(accompanimentOriginalPath);

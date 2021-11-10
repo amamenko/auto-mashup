@@ -3,7 +3,7 @@ const contentful = require("contentful");
 const contentfulManagement = require("contentful-management");
 require("dotenv").config();
 
-const cleanUpLoopsOnExit = async (signal) => {
+const cleanUpLoopsOnExit = async () => {
   // Access to Contentful Delivery API
   const client = contentful.createClient({
     space: process.env.CONTENTFUL_SPACE_ID,
@@ -69,9 +69,6 @@ const cleanUpLoopsOnExit = async (signal) => {
                                     console.log(
                                       `Server killed. Songs loop for chart ${chartInProgress.fields.name} no longer in progress.`
                                     );
-                                    if (signal) {
-                                      process.kill(process.pid, signal);
-                                    }
                                     return;
                                   });
 
@@ -88,9 +85,7 @@ const cleanUpLoopsOnExit = async (signal) => {
         }
       }
       console.log("Server killed. No song loops happening at the moment.");
-      if (signal) {
-        process.kill(process.pid, signal);
-      }
+
       return;
     })
     .catch((err) => {
