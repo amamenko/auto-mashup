@@ -1,6 +1,6 @@
+const fs = require("fs");
 const ffmpeg = require("fluent-ffmpeg");
 const checkFileExists = require("../utils/checkFileExists");
-const fs = require("fs");
 const getClosestBeatArr = require("./getClosestBeatArr");
 
 const trimResultingMix = async (instrumentals) => {
@@ -21,11 +21,109 @@ const trimResultingMix = async (instrumentals) => {
         ? mixLastSection.start
         : instrumentalSections[instrumentalSections.length - 1].start;
 
+      const accompanimentModPath =
+        "./functions/mix/inputs/accompaniment_mod.mp3";
+
+      const allBeats = instrumentals.beats;
+      const indexOfFirstBeat = allBeats.findIndex((beat) => beat === mixStart);
+      const introStartBeat =
+        indexOfFirstBeat >= 16
+          ? allBeats[indexOfFirstBeat - 16]
+          : indexOfFirstBeat;
+      const introEndBeat =
+        indexOfFirstBeat >= 16 ? mixStart : allBeats[indexOfFirstBeat + 16];
+
+      const outroStartIndex = allBeats.findIndex((beat) => beat === mixEnd);
+      const outroEnd = allBeats[outroStartIndex + 16]
+        ? allBeats[outroStartIndex + 16]
+        : allBeats[allBeats.length - 1];
+
       const start = Date.now();
 
-      ffmpeg("original_mix.mp3")
+      const introDuration = introEndBeat - introStartBeat;
+      const mainMixDuration = mixEnd - mixStart;
+      const outroDelay = (introDuration + mainMixDuration) * 1000;
+
+      ffmpeg(accompanimentModPath)
+        .input("original_mix.mp3")
+        .input(accompanimentModPath)
         .output("./trimmed_mix.mp3")
-        .audioFilters(`atrim=start=${mixStart}:end=${mixEnd}`)
+        .complexFilter([
+          // Trim and fade in intro instrumental
+          {
+            filter: `atrim=start=${introStartBeat}:end=${introEndBeat}`,
+            inputs: "0:a",
+            outputs: "intro_trim",
+          },
+          {
+            filter: "asetpts=PTS-STARTPTS",
+            inputs: "intro_trim",
+            outputs: "intro_0",
+          },
+          {
+            filter: "loudnorm",
+            inputs: "intro_0",
+            outputs: "intro_normalized",
+          },
+          {
+            filter: `afade=t=in:ss=0:d=${introDuration}`,
+            inputs: "intro_normalized",
+            outputs: "intro",
+          },
+          // Trim and delay main mix
+          {
+            filter: `atrim=start=${mixStart}:end=${mixEnd}`,
+            inputs: "1:a",
+            outputs: "main_trim",
+          },
+          {
+            filter: "asetpts=PTS-STARTPTS",
+            inputs: "main_trim",
+            outputs: "main_0",
+          },
+          {
+            filter: `adelay=${introDuration * 1000}|${introDuration * 1000}`,
+            inputs: "main_0",
+            outputs: "main_delay",
+          },
+          // Instrumental/vocal mix comes out quieter than original instrumental
+          {
+            filter: "volume=10",
+            inputs: "main_delay",
+            outputs: "main",
+          },
+          // Trim, fade out, and delay outro instrumental
+          {
+            filter: `atrim=start=${mixEnd}:end=${outroEnd}`,
+            inputs: "2:a",
+            outputs: "outro_trim",
+          },
+          {
+            filter: "asetpts=PTS-STARTPTS",
+            inputs: "outro_trim",
+            outputs: "outro_0",
+          },
+          {
+            filter: "loudnorm",
+            inputs: "outro_0",
+            outputs: "outro_normalized",
+          },
+          {
+            filter: `afade=t=out:st=0:d=${outroEnd - mixEnd}`,
+            inputs: "outro_normalized",
+            outputs: "outro_fade",
+          },
+          {
+            filter: `adelay=${outroDelay}|${outroDelay}`,
+            inputs: "outro_fade",
+            outputs: "outro",
+          },
+          // Merge all three sections together
+          {
+            filter: "amix=inputs=3",
+            inputs: ["intro", "main", "outro"],
+          },
+        ])
         .on("error", async (err, stdout, stderr) => {
           console.log(
             `FFMPEG received an error when attempting to mix the instrumentals of the track "${instrumentals.title}" by ${instrumentals.artist} with the vocals of the track "${vox.title}" by ${vox.artist}. Terminating process. Output: ` +
@@ -34,6 +132,16 @@ const trimResultingMix = async (instrumentals) => {
 
           console.log("FFMPEG stdout:\n" + stdout);
           console.log("FFMPEG stderr:\n" + stderr);
+
+          const inputsExists = await checkFileExists("./functions/mix/inputs");
+
+          if (inputsExists) {
+            fs.rmdirSync("./functions/mix/inputs", {
+              recursive: true,
+              force: true,
+            });
+            console.log("Audio MP3 inputs directory deleted!");
+          }
 
           const originalOutputExists = await checkFileExists(
             "original_mix.mp3"
@@ -78,6 +186,16 @@ const trimResultingMix = async (instrumentals) => {
               (Date.now() - start) / 1000
             }s\nSuccessfully trimmed original MP3 file.\nSaved to trimmed_mix.mp3.`
           );
+
+          const inputsExists = await checkFileExists("./functions/mix/inputs");
+
+          if (inputsExists) {
+            fs.rmdirSync("./functions/mix/inputs", {
+              recursive: true,
+              force: true,
+            });
+            console.log("Audio MP3 inputs directory deleted!");
+          }
 
           const originalOutputExists = await checkFileExists(
             "original_mix.mp3"

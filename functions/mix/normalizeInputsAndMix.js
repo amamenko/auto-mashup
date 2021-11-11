@@ -102,7 +102,7 @@ const normalizeInputsAndMix = async (instrumentals, vocals) => {
                         .replace("dB", "")
                         .trim()
                     ) -
-                    2 +
+                    3 +
                     "dB"
                   : null;
                 const voxGainChange = fullVoxRes

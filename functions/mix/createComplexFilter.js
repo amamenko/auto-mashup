@@ -113,7 +113,6 @@ const createComplexFilter = (instrumentals, vox) => {
       (item) => item.sectionName === section.sectionName
     );
     const nextSection = vocalSections[currentIndex + 1];
-    const nextNextSection = vocalSections[currentIndex + 2];
 
     const instrumentalSection = section.instrumentalSection;
     const delay = instrumentalSection.start;
@@ -138,61 +137,94 @@ const createComplexFilter = (instrumentals, vox) => {
 
     const relativeDelay = delay * 1000;
 
+    const numberOfLoops =
+      maxDuration <= endTime - section.start
+        ? 0
+        : Math.floor(maxDuration / (endTime - section.start));
+
+    const loopAudios = [];
+
+    for (let j = 0; j < numberOfLoops; j++) {
+      loopAudios.push({
+        filter: "acopy",
+        inputs: ffmpegSectionName,
+        outputs: `${ffmpegSectionName}_copy_${j}`,
+      });
+
+      if (j === 0) {
+        loopAudios.push({
+          filter: "chorus=0.7:0.9:55:0.4:0.25:2",
+          inputs: `${ffmpegSectionName}_copy_${j}`,
+          outputs: `${ffmpegSectionName}_copy_${j}_chorus`,
+        });
+      } else if (j === 1) {
+        loopAudios.push({
+          filter: "chorus=0.6:0.9:50|60:0.4|0.32:0.25|0.4:2|1.3",
+          inputs: `${ffmpegSectionName}_copy_${j}`,
+          outputs: `${ffmpegSectionName}_copy_${j}_chorus`,
+        });
+      } else {
+        loopAudios.push({
+          filter: "chorus=0.5:0.9:50|60|40:0.4|0.32|0.3:0.25|0.4|0.3:2|2.3|1.3",
+          inputs: `${ffmpegSectionName}_copy_${j}`,
+          outputs: `${ffmpegSectionName}_copy_${j}_chorus`,
+        });
+      }
+
+      const currentDelay =
+        relativeDelay + (endTime - section.start) * 1000 * (j + 1);
+
+      loopAudios.push({
+        filter: `adelay=${currentDelay}|${currentDelay}`,
+        inputs: `${ffmpegSectionName}_copy_${j}_chorus`,
+        outputs: `${ffmpegSectionName}_copy_${j}_delayed`,
+      });
+    }
+
     return [
       {
         filter: `atrim=start=${section.start}:end=${endTime}`,
         inputs: `vox:${i + 1}`,
         outputs: ffmpegSectionName,
       },
-      {
-        filter: `aloop=loop=${
-          maxDuration <= endTime - section.start
-            ? 0
-            : Math.floor(maxDuration / (endTime - section.start))
-        }:size=${(endTime - section.start) * 44100}:start=0`,
-        inputs: ffmpegSectionName,
-        outputs: `loop${i + 1}`,
-      },
-      {
-        filter: `atrim=duration=${maxDuration}`,
-        inputs: `loop${i + 1}`,
-        outputs: `${ffmpegSectionName}_trim`,
-      },
-      {
-        filter: "asetpts=PTS-STARTPTS",
-        inputs: `${ffmpegSectionName}_trim`,
-        outputs: `${ffmpegSectionName}_trim_pts`,
-      },
-      currentIndex === 0
+      ...loopAudios,
+      // If first vocal section, fade in
+      i === 0
         ? {
             filter: `afade=t=in:ss=0:d=5`,
-            inputs: `${ffmpegSectionName}_trim_pts`,
+            inputs: ffmpegSectionName,
             outputs: `${ffmpegSectionName}_fade_in`,
           }
-        : nextNextSection
-        ? {
-            filter: "asetpts=PTS-STARTPTS",
-            inputs: `${ffmpegSectionName}_trim_pts`,
-            outputs: `${ffmpegSectionName}_trim_pts_pts`,
-          }
+        : // If last vocal section, fade out
+        i === arr.length - 1
+        ? numberOfLoops === 0
+          ? {
+              filter: `afade=t=out:st=${maxDuration - 5}:d=5`,
+              inputs: ffmpegSectionName,
+              outputs: `${ffmpegSectionName}_fade_out`,
+            }
+          : {
+              filter: `afade=t=out:st=${maxDuration - 5}:d=5`,
+              inputs: `${ffmpegSectionName}_copy_${numberOfLoops - 1}_delayed`,
+              outputs: `${ffmpegSectionName}_copy_${
+                numberOfLoops - 1
+              }_fade_out`,
+            }
         : {
-            filter: `afade=t=out:st=${maxDuration - 5}:d=5`,
-            inputs: `${ffmpegSectionName}_trim_pts`,
-            outputs: `${ffmpegSectionName}_fade_out`,
+            filter: "asetpts=PTS-STARTPTS",
+            inputs: `${ffmpegSectionName}`,
+            outputs: `${ffmpegSectionName}_pts`,
           },
       {
-        filter: "loudnorm",
-        inputs:
-          currentIndex === 0
-            ? `${ffmpegSectionName}_fade_in`
-            : nextNextSection
-            ? `${ffmpegSectionName}_trim_pts_pts`
-            : `${ffmpegSectionName}_fade_out`,
-        outputs: `${ffmpegSectionName}_normalized`,
-      },
-      {
         filter: `adelay=${relativeDelay}|${relativeDelay}`,
-        inputs: `${ffmpegSectionName}_normalized`,
+        inputs:
+          i === 0
+            ? `${ffmpegSectionName}_fade_in`
+            : i === arr.length - 1
+            ? numberOfLoops === 0
+              ? `${ffmpegSectionName}_fade_out`
+              : `${ffmpegSectionName}_copy_${numberOfLoops - 1}_fade_out`
+            : `${ffmpegSectionName}_pts`,
         outputs: `${ffmpegSectionName}_delayed`,
       },
     ];
@@ -206,15 +238,9 @@ const createComplexFilter = (instrumentals, vox) => {
     const audioInputNum = num + 1;
 
     return [
-      // Push the vocal volume up
-      {
-        filter: "volume=2.6",
-        inputs: `${audioInputNum}:a`,
-        outputs: `${audioInputNum}_louder:a`,
-      },
       {
         filter: `rubberband=pitch=${vocalsKeyScale}:tempo=${vocalsTempoScale}:formant=preserved`,
-        inputs: `${audioInputNum}_louder:a`,
+        inputs: `${audioInputNum}:a`,
         outputs: `vox:${audioInputNum}`,
       },
     ];

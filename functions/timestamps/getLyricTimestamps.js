@@ -53,7 +53,7 @@ const getLyricTimestamps = async (options) => {
               current !== "lyric" &&
               current !== "lyrics" &&
               current !== "instrumental" &&
-              current !== "guitar solo" &&
+              current !== "guitar" &&
               !foreignChar.test(current)
             ) {
               const mostRecentMatch = geniusArr.find(

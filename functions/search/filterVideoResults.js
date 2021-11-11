@@ -147,16 +147,12 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                           const start = timeStampToSeconds(section.start);
                           const end = timeStampToSeconds(nextSection.start);
 
-                          if (end - start <= 8) {
+                          if (end - start <= 9) {
                             repeatedMisses++;
 
                             if (repeatedMisses >= 2) {
                               ditch += 2;
                             }
-                          }
-
-                          if (end - start <= 3) {
-                            ditch++;
                           }
                         } else {
                           if (nextSection) {

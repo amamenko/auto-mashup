@@ -74,16 +74,6 @@ const mixTracks = (instrumentals, vox, accompanimentModPath, voxModPath) => {
           }" by ${vox.artist}.\nSaved to original_mix.mp3.`
         );
 
-        const inputsExists = await checkFileExists("./functions/mix/inputs");
-
-        if (inputsExists) {
-          fs.rmdirSync("./functions/mix/inputs", {
-            recursive: true,
-            force: true,
-          });
-          console.log("Audio MP3 inputs directory deleted!");
-        }
-
         trimResultingMix(instrumentals);
 
         return;
