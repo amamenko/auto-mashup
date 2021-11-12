@@ -39,20 +39,20 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
   });
 
   if (filteredVids.length > 0) {
-    const firstFive = filteredVids.slice(0, 5);
+    const firstFour = filteredVids.slice(0, 4);
 
     const loopOverVideos = async () => {
       const allResultsArr = [];
 
       const promiseArray = [];
 
-      for (let i = 0; i < firstFive.length; i++) {
+      for (let i = 0; i < firstFour.length; i++) {
         const delayedTimeoutPromise = async (delay) => {
           return new Promise((resolve, reject) => {
             setTimeout(async () => {
               console.log(
-                `Getting subtitles for video ${i + 1} of ${firstFive.length}: ${
-                  firstFive[i].original_title
+                `Getting subtitles for video ${i + 1} of ${firstFour.length}: ${
+                  firstFour[i].original_title
                 }`
               );
 
@@ -64,9 +64,9 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                 "version",
               ];
 
-              if (firstFive[i].channel_name) {
+              if (firstFour[i].channel_name) {
                 let channelDescription = await getChannelDescription(
-                  firstFive[i]
+                  firstFour[i]
                 ).catch((e) => console.error(e));
 
                 if (
@@ -81,7 +81,7 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                     )
                   ) {
                     console.log(
-                      `The channel for this video (${firstFive[i].channel_name}) appears to be a cover channel. Moving on to next available video!`
+                      `The channel for this video (${firstFour[i].channel_name}) appears to be a cover channel. Moving on to next available video!`
                     );
                     resolve();
                     return;
@@ -90,7 +90,7 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
               }
 
               let videoDescription = await getVideoDescription(
-                firstFive[i].id
+                firstFour[i].id
               ).catch((e) => console.error(e));
 
               if (videoDescription && typeof videoDescription === "string") {
@@ -100,7 +100,7 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                   filterOutDesc.some((item) => videoDescription.includes(item))
                 ) {
                   console.log(
-                    `The description for this video (https://www.youtube.com/watch?v=${firstFive[i].id}) appears to indicate that it is a cover. Moving on to next available video!`
+                    `The description for this video (https://www.youtube.com/watch?v=${firstFour[i].id}) appears to indicate that it is a cover. Moving on to next available video!`
                   );
                   resolve();
                   return;
@@ -108,9 +108,9 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
               }
 
               return await getSubtitleJSON(
-                firstFive[i].id,
-                firstFive[i].original_title,
-                firstFive[i].duration,
+                firstFour[i].id,
+                firstFour[i].original_title,
+                firstFour[i].duration,
                 trackTitle,
                 trackArtist
               )
@@ -120,7 +120,7 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                     const arr = lyricsObj.lyricArr;
 
                     const videoTitle = removeAccents(
-                      firstFive[i].original_title
+                      firstFour[i].original_title
                     ).toLowerCase();
                     let artistMatches = 0;
 
@@ -171,12 +171,12 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                       }
 
                       const result = {
-                        id: firstFive[i].id,
+                        id: firstFour[i].id,
                         videoTitle,
                         artistMatches,
                         ditchResult: ditch >= 2 ? true : false,
-                        duration: firstFive[i].duration,
-                        views: firstFive[i].views,
+                        duration: firstFour[i].duration,
+                        views: firstFour[i].views,
                         arr,
                         arrLength: arr.length,
                         expectedArr,

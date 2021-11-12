@@ -26,31 +26,6 @@ const searchYouTube = async (trackTitle, trackArtist) => {
     true
   ).catch((e) => console.error(e));
 
-  const backUpSearchVideos = async () => {
-    console.log(
-      `No applicable YouTube videos found for search term "${trackTitle} ${trackArtist} lyrics". Trying again without the "lyrics" phrase.`
-    );
-
-    // No useful closed-captioned videos, see if there are any useful auto-generated captions available
-    const regularVideos = await searchForVideoFunction(
-      `${trackTitle} ${trackArtist}`,
-      false
-    ).catch((e) => console.error(e));
-
-    if (regularVideos && regularVideos.length > 0) {
-      return await filterVideoResults(
-        regularVideos,
-        trackTitle,
-        trackArtist
-      ).catch((e) => console.error(e));
-    } else {
-      console.log(
-        `No applicable YouTube videos found for search term "${trackTitle} ${trackArtist}" either.`
-      );
-      return;
-    }
-  };
-
   if (videosWithLyrics && videosWithLyrics.length > 0) {
     const filtered = await filterVideoResults(
       videosWithLyrics,
@@ -61,10 +36,16 @@ const searchYouTube = async (trackTitle, trackArtist) => {
     if (filtered) {
       return filtered;
     } else {
-      return await backUpSearchVideos().catch((e) => console.error(e));
+      console.log(
+        `No applicable YouTube videos found for search term "${trackTitle} ${trackArtist} lyrics"`
+      );
+      return;
     }
   } else {
-    return await backUpSearchVideos().catch((e) => console.error(e));
+    console.log(
+      `No applicable YouTube videos found for search term "${trackTitle} ${trackArtist} lyrics"`
+    );
+    return;
   }
 };
 

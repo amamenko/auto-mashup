@@ -79,7 +79,7 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
                                 });
                               } else {
                                 // If entry does NOT appear in any other charts
-                                // -> delete entry assets and entry itself
+                                // -> Unpublish and delete entry assets and entry itself
                                 if (fields) {
                                   const accompaniment = fields.accompaniment;
                                   const vocals = fields.vocals;
@@ -87,48 +87,70 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
                                   const accompanimentID = accompaniment.sys.id;
                                   const vocalsID = vocals.sys.id;
 
-                                  // Delete accompaniment asset
-                                  if (accompanimentID) {
-                                    environment
-                                      .getAsset(accompanimentID)
-                                      .then((accompanimentAsset) => {
-                                        accompanimentAsset
-                                          .delete()
-                                          .then(() => {
-                                            console.log(
-                                              `Accompaniment asset for track "${fields.title}" by ${fields.artist} has been deleted.`
-                                            );
-                                            return;
-                                          })
-                                          .catch(console.error);
-                                      });
-                                  }
-
-                                  // Delete vocals asset
-                                  if (vocalsID) {
-                                    environment
-                                      .getAsset(vocalsID)
-                                      .then((vocalsAsset) => {
-                                        vocalsAsset
-                                          .delete()
-                                          .then(() => {
-                                            console.log(
-                                              `Vocals asset for track "${fields.title}" by ${fields.artist} has been deleted.`
-                                            );
-                                            return;
-                                          })
-                                          .catch(console.error);
-                                      });
-                                  }
-
-                                  // Delete entry itself
+                                  // Unpublish and delete entry itself
                                   entry
-                                    .delete()
+                                    .unpublish()
+                                    .then((unpublishedEntry) => {
+                                      console.log(
+                                        `Entry for track "${fields.title}" by ${fields.artist} has been unpublished. Deleting now...`
+                                      );
+                                      unpublishedEntry.delete();
+                                    })
                                     .then(() => {
                                       console.log(
                                         `Entry for track "${fields.title}" by ${fields.artist} has been deleted.`
                                       );
-                                      return;
+
+                                      // Delete accompaniment asset
+                                      if (accompanimentID) {
+                                        environment
+                                          .getAsset(accompanimentID)
+                                          .then((accompanimentAsset) => {
+                                            accompanimentAsset
+                                              .unpublish()
+                                              .then(
+                                                (unpublishedAccompaniment) => {
+                                                  console.log(
+                                                    `Accompaniment asset for track "${fields.title}" by ${fields.artist} has been unpublished. Deleting now...`
+                                                  );
+                                                  unpublishedAccompaniment.delete();
+                                                }
+                                              )
+                                              .then(() => {
+                                                console.log(
+                                                  `Accompaniment asset for track "${fields.title}" by ${fields.artist} has been deleted.`
+                                                );
+
+                                                // Delete vocals asset
+                                                if (vocalsID) {
+                                                  environment
+                                                    .getAsset(vocalsID)
+                                                    .then((vocalsAsset) => {
+                                                      vocalsAsset
+                                                        .unpublish()
+                                                        .then(
+                                                          (
+                                                            unpublishedVocalsAsset
+                                                          ) => {
+                                                            console.log(
+                                                              `Vocals asset for track "${fields.title}" by ${fields.artist} has been unpublished. Deleting now...`
+                                                            );
+                                                            unpublishedVocalsAsset.delete();
+                                                          }
+                                                        )
+                                                        .then(() => {
+                                                          console.log(
+                                                            `Vocals asset for track "${fields.title}" by ${fields.artist} has been deleted.`
+                                                          );
+                                                          return;
+                                                        })
+                                                        .catch(console.error);
+                                                    });
+                                                }
+                                              })
+                                              .catch(console.error);
+                                          });
+                                      }
                                     })
                                     .catch(console.error);
                                 }

@@ -5,6 +5,7 @@ const languageCodeArr = require("../arrays/languageCodeArr");
 const secondsToTimestamp = require("../utils/secondsToTimestamp");
 
 const getVideoSubtitles = async (video_id) => {
+  // A call to YouTube's caption list method has a quota cost of 50 units.
   return await axios
     .get(
       `https://www.youtube.com/api/timedtext?&lang=en&type=list&v=${video_id}`
@@ -43,6 +44,7 @@ const getVideoSubtitles = async (video_id) => {
                     `Getting YouTube subtitle transcripts for ${fullLang["$"].lang_translated}.`
                   );
 
+                  // A call to YouTube's caption download method has a quota cost of 200 units.
                   return await axios
                     .get(
                       `http://video.google.com/timedtext?lang=${foundLanguage}&v=${video_id}`
