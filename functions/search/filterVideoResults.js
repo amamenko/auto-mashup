@@ -204,7 +204,7 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
           });
         };
 
-        promiseArray.push(delayedTimeoutPromise(i * 20000));
+        promiseArray.push(delayedTimeoutPromise(i * 30000));
       }
 
       // Waits for all Promise objects to resolve

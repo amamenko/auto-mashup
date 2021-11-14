@@ -13,8 +13,7 @@ const getTrack = async (
   currentSongs,
   goat,
   spotifyApi,
-  index,
-  currentYouTubeAPIKey
+  index
 ) => {
   const topSong = currentSongs[index];
   const songRank = currentSongs[index].rank;

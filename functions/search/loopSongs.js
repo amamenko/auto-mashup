@@ -5,7 +5,7 @@ const addSongPositionValue = require("../contentful/addSongPositionValue");
 const getTrack = require("./getTrack");
 require("dotenv").config();
 
-const loopSongs = async (spotifyApi, currentYouTubeAPIKey) => {
+const loopSongs = async (spotifyApi) => {
   if (spotifyApi) {
     // Access to Contentful Delivery API
     const client = contentful.createClient({
@@ -41,8 +41,7 @@ const loopSongs = async (spotifyApi, currentYouTubeAPIKey) => {
                   fields.currentSongs,
                   fields.goat,
                   spotifyApi,
-                  currentIndex,
-                  currentYouTubeAPIKey
+                  currentIndex
                 );
               };
 
