@@ -11,10 +11,11 @@ const loopGoatCharts = require("./functions/search/loopGoatCharts");
 const findMixable = require("./functions/mix/findMixable");
 const timeSectionArr = require("./functions/arrays/timeSectionsArr");
 const SpotifyWebApi = require("spotify-web-api-node");
+const Youtube = require("youtube-api");
 const { format } = require("date-fns");
 require("dotenv").config();
 
-const port = process.env.PORT || 4001;
+const port = process.env.PORT || 4000;
 
 const spotifyCredentials = {
   clientId: process.env.SPOTIFY_CLIENT_ID,
@@ -23,25 +24,25 @@ const spotifyCredentials = {
 
 const spotifyApi = new SpotifyWebApi(spotifyCredentials);
 
-// Run on Tuesdays/Wednesdays starting at noon and then every two minutes until 1 o'clock (for non-GOAT charts)
-// cron.schedule("0,*/2 12-12 * * 2,3", () => {
-//   // Get state of previous week's charts
-//   loopCurrentCharts();
-// });
+// // Run on Tuesdays/Wednesdays starting at noon and then every two minutes until 1 o'clock (for non-GOAT charts)
+cron.schedule("0,*/2 12-12 * * 2,3", () => {
+  // Get state of previous week's charts
+  loopCurrentCharts();
+});
 
-// Run every Sunday at midnight, check if it's the first Sunday of the month - if so, update GOAT charts
-// cron.schedule("0 0 * * 0", () => {
-//   if (isFirstSundayOfMonth()) {
-//     loopGoatCharts();
-//   }
-// });
+// // Run every Sunday at midnight, check if it's the first Sunday of the month - if so, update GOAT charts
+cron.schedule("0 0 * * 0", () => {
+  if (isFirstSundayOfMonth()) {
+    loopGoatCharts();
+  }
+});
 
-// Check for or update current loop progression every 30 minutes
-// cron.schedule("0,30 * * * *", () => {
-//   checkLoopProgress();
-// });
+// // Check for or update current loop progression every 30 minutes
+cron.schedule("0,30 * * * *", () => {
+  checkLoopProgress();
+});
 
-// Loop next song position of current in-progress chart (if any) every 5 minutes
+// // Loop next song position of current in-progress chart (if any) every 5 minutes
 cron.schedule("*/5 * * * *", () => {
   const currentMinutes = format(Date.now(), "mm");
   const currentMilitaryTime = format(Date.now(), "HH:mm");
@@ -50,6 +51,30 @@ cron.schedule("*/5 * * * *", () => {
   );
   const currentYouTubeAPIKey =
     process.env[`YOUTUBE_CAPTIONS_API_KEY_${apiKeyIndex}`];
+
+  const oauth = Youtube.authenticate({
+    type: "oauth",
+    client_id: process.env[`YOUTUBE_CAPTIONS_CLIENT_ID_${apiKeyIndex}`],
+    client_secret: process.env[`YOUTUBE_CAPTIONS_CLIENT_SECRET_${apiKeyIndex}`],
+    redirect_url: process.env.YOUTUBE_REDIRECT_URL,
+  });
+
+  const authURL = oauth.generateAuthUrl({
+    access_type: "offline",
+    scope: ["https://www.googleapis.com/auth/youtube.force-ssl"],
+  });
+
+  oauth.getToken(process.env.YOUTUBE_CAPTIONS_CLIENT_CODE_0, (err, tokens) => {
+    if (err) {
+      console.error(err);
+    }
+
+    console.log("Got the tokens.");
+
+    oauth.setCredentials(tokens);
+
+    console.log({ tokens });
+  });
 
   if (currentYouTubeAPIKey) {
     if (
