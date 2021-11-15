@@ -21,20 +21,20 @@ const spotifyCredentials = {
 
 const spotifyApi = new SpotifyWebApi(spotifyCredentials);
 
-// // Run on Tuesdays/Wednesdays starting at noon and then every two minutes until 1 o'clock (for non-GOAT charts)
+// Run on Tuesdays/Wednesdays starting at noon and then every two minutes until 1 o'clock (for non-GOAT charts)
 cron.schedule("0,*/2 12-12 * * 2,3", () => {
   // Get state of previous week's charts
   loopCurrentCharts();
 });
 
-// // Run every Sunday at midnight, check if it's the first Sunday of the month - if so, update GOAT charts
+// Run every Sunday at midnight, check if it's the first Sunday of the month - if so, update GOAT charts
 cron.schedule("0 0 * * 0", () => {
   if (isFirstSundayOfMonth()) {
     loopGoatCharts();
   }
 });
 
-// // Check for or update current loop progression every 30 minutes
+// Check for or update current loop progression every 30 minutes
 cron.schedule("0,30 * * * *", () => {
   checkLoopProgress();
 });

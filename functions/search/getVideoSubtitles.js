@@ -17,7 +17,13 @@ const getVideoSubtitles = async (video_id) => {
   );
 
   if (lyricsArr) {
-    const parsedJSON = JSON.parse(lyricsArr);
+    let parsedJSON = "";
+
+    try {
+      parsedJSON = JSON.parse(lyricsArr);
+    } catch (e) {
+      console.error(e);
+    }
 
     if (parsedJSON) {
       const lyricsArr = parsedJSON[0];
