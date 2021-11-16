@@ -143,6 +143,18 @@ const formatVideo = async (video, speedDate, description) => {
         }
       }
 
+      let relativePublishedTime = "";
+
+      if (video.publishedTimeText) {
+        if (video.publishedTimeText.runs) {
+          if (video.publishedTimeText.runs[0]) {
+            if (video.publishedTimeText.runs[0].text) {
+              relativePublishedTime = video.publishedTimeText.runs[0].text;
+            }
+          }
+        }
+      }
+
       return {
         id: id,
         original_title: video.original_title.trim(),
@@ -153,6 +165,7 @@ const formatVideo = async (video, speedDate, description) => {
         views,
         channel_name,
         channel_id,
+        relativePublishedTime,
         publishedAt: publishedAt,
       };
     } else if (video.didYouMeanRenderer || video.showingResultsForRenderer) {
@@ -169,6 +182,7 @@ const formatVideo = async (video, speedDate, description) => {
         views: 0,
         channel_name: "",
         channel_id: "",
+        relativePublishedTime: "",
         publishedAt: new Date(Date.now()),
         views: 0,
       };

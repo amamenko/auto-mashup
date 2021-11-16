@@ -23,18 +23,24 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
       .replace(withinParantheses, "")
       .trim();
 
+    const viewsMinimum = video.relativePublishedTime
+      ? video.relativePublishedTime.toLowerCase().includes("years")
+        ? Number(video.relativePublishedTime.split(" ")[0]) * 10000
+        : 5000
+      : 5000;
+
     return (
       !filterArray.some((item) =>
         item instanceof RegExp
           ? item.test(formattedVideoTitle)
           : formattedVideoTitle.includes(item)
       ) &&
-      mustContainArray.some((word) => formattedVideoTitle.includes(word)) &&
+      // mustContainArray.some((word) => formattedVideoTitle.includes(word)) &&
       formattedVideoTitle.includes(trackTitleWithoutAlias) &&
       artistArr.some((artist) => formattedVideoTitle.includes(artist)) &&
       video.duration > 60 &&
       video.duration < 660 &&
-      video.views >= 1000
+      video.views >= viewsMinimum
     );
   });
 

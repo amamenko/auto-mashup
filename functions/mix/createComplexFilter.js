@@ -142,32 +142,74 @@ const createComplexFilter = (instrumentals, vox) => {
         ? 0
         : Math.floor(maxDuration / (endTime - section.start));
 
-    const allLoopEndingTimes = [];
     const chorusEffectArr = [];
+    const allSplitSections = [];
+    const allTrimmedSections = [];
 
-    for (let j = 1; j < numberOfLoops + 1; j++) {
-      allLoopEndingTimes.push((endTime - section.start) * j);
+    for (let j = 0; j < numberOfLoops + 1; j++) {
+      const duration = endTime - section.start;
 
-      if (j === 1) {
+      chorusEffectArr.push({
+        filter: `atrim=start=${section.start + duration * j}:end=${
+          endTime + duration * j
+        }`,
+        inputs: `${ffmpegSectionName}_split_${j}`,
+        outputs: `${ffmpegSectionName}_trimmed_${j}`,
+      });
+
+      if (j === 0) {
         chorusEffectArr.push({
           filter: "chorus=0.7:0.9:55:0.4:0.25:2",
-          inputs: `${ffmpegSectionName}_copy_${j}`,
-          outputs: `${ffmpegSectionName}_copy_${j}_chorus`,
+          inputs: `${ffmpegSectionName}_trimmed_${j}`,
+          outputs: `${ffmpegSectionName}_chorus_${j}`,
         });
-      } else if (j === 2) {
+      } else if (j === 1) {
         chorusEffectArr.push({
           filter: "chorus=0.6:0.9:50|60:0.4|0.32:0.25|0.4:2|1.3",
-          inputs: `${ffmpegSectionName}_copy_${j}`,
-          outputs: `${ffmpegSectionName}_copy_${j}_chorus`,
+          inputs: `${ffmpegSectionName}_trimmed_${j}`,
+          outputs: `${ffmpegSectionName}_chorus_${j}`,
         });
       } else {
         chorusEffectArr.push({
           filter: "chorus=0.5:0.9:50|60|40:0.4|0.32|0.3:0.25|0.4|0.3:2|2.3|1.3",
-          inputs: `${ffmpegSectionName}_copy_${j}`,
-          outputs: `${ffmpegSectionName}_copy_${j}_chorus`,
+          inputs: `${ffmpegSectionName}_trimmed_${j}`,
+          outputs: `${ffmpegSectionName}_chorus_${j}`,
         });
       }
+
+      allSplitSections.push(`${ffmpegSectionName}_split_${j}`);
+      allTrimmedSections.push(`${ffmpegSectionName}_chorus_${j}`);
     }
+
+    const sectionNormalizedFilter = {
+      filter: "loudnorm",
+      inputs:
+        i === 0
+          ? `${ffmpegSectionName}_fade_in`
+          : i === arr.length - 1
+          ? `${ffmpegSectionName}_fade_out`
+          : `${ffmpegSectionName}_pts`,
+      outputs: `${ffmpegSectionName}_normalized`,
+    };
+
+    const loopsFilters =
+      numberOfLoops === 0
+        ? [sectionNormalizedFilter]
+        : [
+            sectionNormalizedFilter,
+            {
+              filter: "asplit",
+              options: allSplitSections.length,
+              inputs: `${ffmpegSectionName}_normalized`,
+              outputs: allSplitSections,
+            },
+            ...chorusEffectArr,
+            {
+              filter: `concat=n=${numberOfLoops + 1}:v=0:a=1`,
+              inputs: allTrimmedSections,
+              outputs: `${ffmpegSectionName}_concat`,
+            },
+          ];
 
     return [
       {
@@ -206,40 +248,13 @@ const createComplexFilter = (instrumentals, vox) => {
             inputs: `${ffmpegSectionName}_trim`,
             outputs: `${ffmpegSectionName}_pts`,
           },
-      {
-        filter: "loudnorm",
-        inputs:
-          i === 0
-            ? `${ffmpegSectionName}_fade_in`
-            : i === arr.length - 1
-            ? `${ffmpegSectionName}_fade_out`
-            : `${ffmpegSectionName}_pts`,
-        outputs: `${ffmpegSectionName}_normalized`,
-      },
-      {
-        filter: `segment=timestamps="${allLoopEndingTimes.join("|")}"`,
-        inputs: `${ffmpegSectionName}_normalized`,
-        outputs: [
-          `${ffmpegSectionName}_original`,
-          ...allLoopEndingTimes.map(
-            (item, i) => `${ffmpegSectionName}_copy_${i}`
-          ),
-        ],
-      },
-      ...chorusEffectArr,
-      {
-        filter: `concat=n=${numberOfLoops + 1}:v=0:a=1`,
-        inputs: [
-          `${ffmpegSectionName}_original`,
-          ...allLoopEndingTimes.map(
-            (item, i) => `${ffmpegSectionName}_copy_${i}`
-          ),
-        ],
-        outputs: `${ffmpegSectionName}_concat`,
-      },
+      ...loopsFilters,
       {
         filter: `adelay=${relativeDelay}|${relativeDelay}`,
-        inputs: `${ffmpegSectionName}_concat`,
+        inputs:
+          numberOfLoops === 0
+            ? `${ffmpegSectionName}_normalized`
+            : `${ffmpegSectionName}_concat`,
         outputs: `${ffmpegSectionName}_delayed`,
       },
     ];

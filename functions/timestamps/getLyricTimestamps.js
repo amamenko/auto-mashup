@@ -25,9 +25,16 @@ const getLyricTimestamps = async (options) => {
 
         if (youtubeCaptions) {
           const bracketRegex = /\[|\]/gim;
-          const sectionArr = lyricsSplit.filter(
-            (lyric) => lyric.includes("[") && lyric.includes("]")
-          );
+          const checkForSection = (el) => el.includes("[") && el.includes("]");
+          const sectionArr = lyricsSplit.filter((lyric, i, arr) => {
+            const nextLyric = arr[i + 1];
+
+            if (checkForSection(lyric)) {
+              if (nextLyric && !checkForSection(nextLyric)) {
+                return true;
+              }
+            }
+          });
 
           const getSection = (str) => {
             return removeAccents(

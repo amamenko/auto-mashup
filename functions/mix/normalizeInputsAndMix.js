@@ -113,13 +113,23 @@ const normalizeInputsAndMix = async (instrumentals, vocals) => {
                   for (let i = 0; i < streamArr.length; i++) {
                     const file = streamArr[i];
 
+                    const accompanimentNum = Number(
+                      accompanimentGainChange.replace("dB", "")
+                    );
+                    const voxNum = Number(voxGainChange.replace("dB", ""));
+
+                    const newAccompanimentGainChange =
+                      accompanimentNum * 10 + "dB";
+
                     if (fs.existsSync(file.path)) {
                       ffmpeg(file.path)
                         .audioFilters(
                           `volume=${
                             file.name === "accompaniment"
-                              ? accompanimentGainChange
-                              : voxGainChange
+                              ? accompanimentNum > 0
+                                ? newAccompanimentGainChange
+                                : accompanimentGainChange
+                              : voxNum + 30 + "dB"
                           }`
                         )
                         .output(file.mod_path)
@@ -142,7 +152,7 @@ const normalizeInputsAndMix = async (instrumentals, vocals) => {
                             console.log(
                               `\nDone in ${
                                 (Date.now() - start) / 1000
-                              }s\nSuccessfully normalized both accompaniment (${accompanimentGainChange}) and vocal (${voxGainChange}) audio inputs.`
+                              }s\nSuccessfully normalized both accompaniment (${newAccompanimentGainChange}) and vocal (${voxGainChange}) audio inputs.`
                             );
 
                             fs.rmSync(accompanimentOriginalPath);
