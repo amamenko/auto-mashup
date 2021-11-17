@@ -25,7 +25,7 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
 
     const viewsMinimum = video.relativePublishedTime
       ? video.relativePublishedTime.toLowerCase().includes("years")
-        ? Number(video.relativePublishedTime.split(" ")[0]) * 10000
+        ? Number(video.relativePublishedTime.split(" ")[0]) * 5000
         : 5000
       : 5000;
 

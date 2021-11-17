@@ -18,10 +18,25 @@ const createComplexFilter = (instrumentals, vox) => {
   // Apply BPM adjustment matching to original BPM of vocal track
   vox.beats = vox.beats.map((beat) => (1 / vocalsTempoScale) * beat);
 
-  const instrumentalSections = instrumentals.sections.map(
+  let instrumentalSections = instrumentals.sections.map(
     getClosestBeatArr,
     instrumentals
   );
+  const mixStart = instrumentalSections[0].start;
+  const mixLastSectionIndex = instrumentalSections.findIndex(
+    (section) => section.start - mixStart >= 80
+  );
+
+  if (mixLastSectionIndex >= -1) {
+    instrumentalSections = instrumentalSections.slice(0, mixLastSectionIndex);
+  }
+
+  // console.log({
+  //   mixStart,
+  //   mixLastSectionIndex,
+  //   instrumentalSections,
+  // });
+
   const vocalSections = vox.sections.map(getClosestBeatArr, vox);
   const voxNameSections = vox.sections.map((item) => item.sectionName);
 
@@ -137,21 +152,27 @@ const createComplexFilter = (instrumentals, vox) => {
 
     const relativeDelay = delay * 1000;
 
+    const duration = endTime - section.start;
+
     const numberOfLoops =
-      maxDuration <= endTime - section.start
-        ? 0
-        : Math.floor(maxDuration / (endTime - section.start));
+      maxDuration <= duration ? 0 : Math.round(maxDuration / duration) - 1;
 
     const chorusEffectArr = [];
     const allSplitSections = [];
     const allTrimmedSections = [];
 
+    let currentMax = maxDuration;
+
     for (let j = 0; j < numberOfLoops + 1; j++) {
-      const duration = endTime - section.start;
+      const sectionStart = section.start + duration * j;
+      const sectionEnd = endTime + duration * j;
+      const sectionDur = sectionEnd - sectionStart;
+
+      currentMax -= sectionDur;
 
       chorusEffectArr.push({
-        filter: `atrim=start=${section.start + duration * j}:end=${
-          endTime + duration * j
+        filter: `atrim=start=${sectionStart}:end=${
+          currentMax < sectionDur ? sectionStart + currentMax : sectionEnd
         }`,
         inputs: `${ffmpegSectionName}_split_${j}`,
         outputs: `${ffmpegSectionName}_trimmed_${j}`,
@@ -177,18 +198,20 @@ const createComplexFilter = (instrumentals, vox) => {
         });
       }
 
+      // All concatentated sections have to start at 0
+      chorusEffectArr.push({
+        filter: "asetpts=PTS-STARTPTS",
+        inputs: `${ffmpegSectionName}_chorus_${j}`,
+        outputs: `${ffmpegSectionName}_chorus_pts_${j}`,
+      });
+
       allSplitSections.push(`${ffmpegSectionName}_split_${j}`);
-      allTrimmedSections.push(`${ffmpegSectionName}_chorus_${j}`);
+      allTrimmedSections.push(`${ffmpegSectionName}_chorus_pts_${j}`);
     }
 
     const sectionNormalizedFilter = {
       filter: "loudnorm",
-      inputs:
-        i === 0
-          ? `${ffmpegSectionName}_fade_in`
-          : i === arr.length - 1
-          ? `${ffmpegSectionName}_fade_out`
-          : `${ffmpegSectionName}_pts`,
+      inputs: `${ffmpegSectionName}_fade_out`,
       outputs: `${ffmpegSectionName}_normalized`,
     };
 
@@ -232,21 +255,33 @@ const createComplexFilter = (instrumentals, vox) => {
       // If first vocal section, fade in
       i === 0
         ? {
-            filter: `afade=t=in:ss=0:d=5`,
+            filter: `afade=t=in:ss=0:d=20`,
             inputs: `${ffmpegSectionName}_trim`,
             outputs: `${ffmpegSectionName}_fade_in`,
           }
-        : // If last vocal section, fade out
+        : // Otherwise, fade out
         i === arr.length - 1
         ? {
+            filter: `afade=t=out:st=${maxDuration - 10}:d=10`,
+            inputs: `${ffmpegSectionName}_trim`,
+            outputs: `${ffmpegSectionName}_fade`,
+          }
+        : {
             filter: `afade=t=out:st=${maxDuration - 5}:d=5`,
             inputs: `${ffmpegSectionName}_trim`,
+            outputs: `${ffmpegSectionName}_fade`,
+          },
+      // If first vocal section - fade out, as well
+      i === 0
+        ? {
+            filter: `afade=t=out:st=${maxDuration - 5}:d=5`,
+            inputs: `${ffmpegSectionName}_fade_in`,
             outputs: `${ffmpegSectionName}_fade_out`,
           }
         : {
-            filter: "asetpts=PTS-STARTPTS",
-            inputs: `${ffmpegSectionName}_trim`,
-            outputs: `${ffmpegSectionName}_pts`,
+            filter: "volume=1",
+            inputs: `${ffmpegSectionName}_fade`,
+            outputs: `${ffmpegSectionName}_fade_out`,
           },
       ...loopsFilters,
       {
@@ -268,9 +303,15 @@ const createComplexFilter = (instrumentals, vox) => {
     const audioInputNum = num + 1;
 
     return [
+      // Push the vocal volume up for vox
+      {
+        filter: "volume=20",
+        inputs: `${audioInputNum}:a`,
+        outputs: `${audioInputNum}_louder:a`,
+      },
       {
         filter: `rubberband=pitch=${vocalsKeyScale}:tempo=${vocalsTempoScale}:formant=preserved`,
-        inputs: `${audioInputNum}:a`,
+        inputs: `${audioInputNum}_louder:a`,
         outputs: `vox:${audioInputNum}`,
       },
     ];

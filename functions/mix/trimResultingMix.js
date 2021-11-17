@@ -88,7 +88,7 @@ const trimResultingMix = async (instrumentals) => {
           },
           // Instrumental/vocal mix comes out quieter than original instrumental
           {
-            filter: "volume=10",
+            filter: "volume=5",
             inputs: "main_delay",
             outputs: "main",
           },
@@ -109,8 +109,13 @@ const trimResultingMix = async (instrumentals) => {
             outputs: "outro_normalized",
           },
           {
-            filter: `afade=t=out:st=0:d=${outroEnd - mixEnd}`,
+            filter: "volume=2",
             inputs: "outro_normalized",
+            outputs: "outro_volume",
+          },
+          {
+            filter: `afade=t=out:st=0:d=${outroEnd - mixEnd}`,
+            inputs: "outro_volume",
             outputs: "outro_fade",
           },
           {

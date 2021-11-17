@@ -11,7 +11,7 @@ const findMixable = async () => {
   await client
     .getEntries({
       "fields.mode": "major",
-      "fields.goat": "no",
+      "fields.goat": "no" || "both",
       select:
         "fields.title,fields.artist,fields.tempo,fields.key,fields.duration,fields.expectedSections,fields.sections,fields.beats,fields.accompaniment,fields.vocals",
       content_type: "song",
