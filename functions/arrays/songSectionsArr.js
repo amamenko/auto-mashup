@@ -3,7 +3,7 @@ const verseSections = ["verse", "verso"];
 const refrainSections = ["refrain", "refran", "middle-eight"];
 const preChorusSections = ["pre-chorus", "pre-coro"];
 const chorusSections = ["chorus", "coro", "hook"];
-const postChorusSections = ["post-chorus", "post-coro"];
+const postChorusSections = ["post-chorus", "post-coro", "drop"];
 const bridgeSections = [
   "bridge",
   "puente",

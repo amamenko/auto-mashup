@@ -20,7 +20,6 @@ const filterArray = [
   "late show",
   "starring",
   "fallon",
-  "leno",
   "letterman",
   "conan",
   "ferguson",
