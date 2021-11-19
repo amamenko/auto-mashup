@@ -267,7 +267,7 @@ const createComplexFilter = (instrumentals, vox) => {
 
     const sectionNormalizedFilter = {
       filter: "loudnorm",
-      inputs: `${ffmpegSectionName}_fade_out`,
+      inputs: `${ffmpegSectionName}_fade`,
       outputs: `${ffmpegSectionName}_normalized`,
     };
 
@@ -299,15 +299,23 @@ const createComplexFilter = (instrumentals, vox) => {
       {
         filter: "asetpts=PTS-STARTPTS",
         inputs: `${ffmpegSectionName}_initial`,
+        outputs: `${ffmpegSectionName}_pts`,
+      },
+      {
+        filter: `atrim=duration=${maxDuration}`,
+        inputs: `${ffmpegSectionName}_pts`,
         outputs: ffmpegSectionName,
       },
       numberOfLoops === 0
         ? // If first vocal section, fade in
           i === 0
           ? {
-              filter: "afade=t=in:st=0:d=20",
+              // filter: `afade=t=in:st=5:d=5,afade=t=out:st=${duration - 3}:d=3`,
+              // filter: `volume=-1:enable='between(t\,0\,1)',volume=-0.9:enable='between(t\,1\,2)',volume=-0.8:enable='between(t\,2\,3)',volume=-0.7:enable='between(t\,3\,4)',volume=-0.6:enable='between(t\,4\,5)',volume=-0.5:enable='between(t\,5\,6)',volume=-0.4:enable='between(t\,6\,7)',volume=-0.3:enable='between(t\,7\,8)',volume=-0.2:enable='between(t\,8\,9)',volume=-0.1:enable='between(t\,9\,10)',volume=0:enable='between(t\,10\,11)'`,
+              // filter: `volume=0.05:enable='between(t\,0\,1)',volume=0.1:enable='between(t\,1\,2)',volume=0.15:enable='between(t\,2\,3)',volume=0.2:enable='between(t\,3\,4)',volume=0.3:enable='between(t\,4\,5)',volume=0.4:enable='between(t\,5\,6)',volume=0.5:enable='between(t\,6\,7)',volume=0.6:enable='between(t\,7\,8)',volume=0.7:enable='between(t\,8\,9)'`,
+              filter: `volume=enable='between(t,0,10)':volume='0+(0.1*t)':eval=frame`,
               inputs: ffmpegSectionName,
-              outputs: `${ffmpegSectionName}_fade_in`,
+              outputs: `${ffmpegSectionName}_fade`,
             }
           : // Otherwise, fade out
           i === arr.length - 1
@@ -325,24 +333,6 @@ const createComplexFilter = (instrumentals, vox) => {
             filter: "anull",
             inputs: ffmpegSectionName,
             outputs: `${ffmpegSectionName}_fade`,
-          },
-      numberOfLoops === 0
-        ? // If first vocal section - fade out, as well
-          i === 0
-          ? {
-              filter: `anull`,
-              inputs: `${ffmpegSectionName}_fade_in`,
-              outputs: `${ffmpegSectionName}_fade_out`,
-            }
-          : {
-              filter: "anull",
-              inputs: `${ffmpegSectionName}_fade`,
-              outputs: `${ffmpegSectionName}_fade_out`,
-            }
-        : {
-            filter: "anull",
-            inputs: `${ffmpegSectionName}_fade`,
-            outputs: `${ffmpegSectionName}_fade_out`,
           },
       ...loopsFilters,
       {

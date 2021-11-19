@@ -25,9 +25,9 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
 
     const viewsMinimum = video.relativePublishedTime
       ? video.relativePublishedTime.toLowerCase().includes("years")
-        ? Number(video.relativePublishedTime.split(" ")[0]) * 5000
-        : 5000
-      : 5000;
+        ? Number(video.relativePublishedTime.split(" ")[0]) * 2000
+        : 500
+      : 500;
 
     return (
       !filterArray.some((item) =>
@@ -160,18 +160,9 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                               ditch += 2;
                             }
                           }
-                        } else {
-                          if (nextSection) {
-                            const currentSectionStart = timeStampToSeconds(
-                              section.start
-                            );
-                            const nextSectionStart = timeStampToSeconds(
-                              nextSection.start
-                            );
 
-                            if (nextSectionStart - currentSectionStart >= 120) {
-                              ditch += 2;
-                            }
+                          if (end - start >= 120) {
+                            ditch += 2;
                           }
                         }
                       }
