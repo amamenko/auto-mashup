@@ -23,7 +23,7 @@ const getAudioStems = async (
   console.log(`Now downloading video: ${matchTitle}`);
 
   const mp3Link = await axios
-    .get(`https://www.yt-download.org/api/button/mp3/${videoID}}`)
+    .get(`https://www.yt-download.org/api/button/mp3/${videoID}`)
     .then((res) => res.data)
     .then((data) => data.split('<a href="')[1].split('" class="shadow-xl')[0])
     .catch((e) => console.error(e));

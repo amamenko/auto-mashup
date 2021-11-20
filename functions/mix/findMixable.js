@@ -44,11 +44,19 @@ const findMixable = async () => {
           });
 
           if (matchArr && matchArr.length > 0) {
+            const foundMatch = matchArr.find(
+              (item) =>
+                item.accompaniment.title === "Tequila Little Time" &&
+                item.vocals.title === "One Mississippi"
+            );
+
             console.log(matchArr.length);
             if (foundMatch) {
               normalizeInputsAndMix(
-                matchArr[0].accompaniment,
-                matchArr[0].vocals
+                foundMatch.accompaniment,
+                foundMatch.vocals
+                // matchArr[0].accompaniment,
+                // matchArr[0].vocals
               );
             }
           }

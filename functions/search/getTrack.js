@@ -69,8 +69,8 @@ const getTrack = async (
 
                       const regNames = allChartNames.filter(
                         (item) =>
-                          !item.includes("greatest") ||
-                          !item.includes("80s") ||
+                          !item.includes("greatest") &&
+                          !item.includes("80s") &&
                           !item.includes("90s")
                       );
 
