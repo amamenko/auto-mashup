@@ -5,6 +5,7 @@ const getAudioStems = require("../analysis/getAudioStems");
 const searchYouTube = require("./searchYouTube");
 const updatePreviousEntries = require("../contentful/updatePreviousEntries");
 const checkFileExists = require("../utils/checkFileExists");
+const fs = require("fs");
 require("dotenv").config();
 
 const getTrack = async (
@@ -251,6 +252,13 @@ const getTrack = async (
                                     trackDataJSON
                                   ).catch((err) => {
                                     console.log(err);
+
+                                    if (youtubeAudioFileExists) {
+                                      fs.rmSync("YouTubeAudio.mp3", {
+                                        recursive: true,
+                                        force: true,
+                                      });
+                                    }
                                     return;
                                   });
                                 };

@@ -48,7 +48,7 @@ const getLyricTimestamps = async (options) => {
           let geniusArr = [{ sectionName: "", lyrics: "" }];
 
           for (let i = 0; i < sectionArr.length; i++) {
-            const current = getSection(sectionArr[i]);
+            let current = getSection(sectionArr[i]);
 
             // Filter non-ASCII characters
             const foreignChar = /([^\x00-\x7F]+)/gim;
@@ -66,6 +66,14 @@ const getLyricTimestamps = async (options) => {
               const mostRecentMatch = geniusArr.find(
                 (item) => item.sectionName.split(" ")[0] === current
               );
+
+              if (current === "pre") {
+                current = "pre-chorus";
+              } else {
+                if (current === "post") {
+                  current = "post-chorus";
+                }
+              }
 
               if (mostRecentMatch) {
                 geniusArr.push({
@@ -168,7 +176,7 @@ const getLyricTimestamps = async (options) => {
               if (!sameStart) {
                 if (
                   !lastSectionStart ||
-                  lastSectionStart + 5 < currentSectionStart
+                  lastSectionStart + 8 < currentSectionStart
                 ) {
                   const youtubeLyrics = youtubeCaptions[j].lyrics;
                   const numChars = youtubeLyrics.length;

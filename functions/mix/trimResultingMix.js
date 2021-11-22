@@ -33,6 +33,8 @@ const trimResultingMix = async (instrumentals) => {
       const introEndBeat =
         indexOfFirstBeat >= 16 ? mixStart : allBeats[indexOfFirstBeat + 16];
 
+      const mainSongFourthMeasure = allBeats[indexOfFirstBeat + 16];
+
       const outroStartIndex = allBeats.findIndex((beat) => beat === mixEnd);
       const outroEnd = allBeats[outroStartIndex + 16]
         ? allBeats[outroStartIndex + 16]
@@ -63,11 +65,6 @@ const trimResultingMix = async (instrumentals) => {
           {
             filter: "loudnorm",
             inputs: "intro_0",
-            outputs: "intro_normalized",
-          },
-          {
-            filter: `afade=t=in:ss=0:d=${introDuration}`,
-            inputs: "intro_normalized",
             outputs: "intro",
           },
           // Trim and delay main mix
@@ -114,19 +111,26 @@ const trimResultingMix = async (instrumentals) => {
             outputs: "outro_volume",
           },
           {
-            filter: `afade=t=out:st=0:d=${outroEnd - mixEnd}`,
-            inputs: "outro_volume",
-            outputs: "outro_fade",
-          },
-          {
             filter: `adelay=${outroDelay}|${outroDelay}`,
-            inputs: "outro_fade",
+            inputs: "outro_volume",
             outputs: "outro",
           },
           // Merge all three sections together
           {
             filter: "amix=inputs=3",
             inputs: ["intro", "main", "outro"],
+            outputs: "full_mix",
+          },
+          {
+            filter: "loudnorm",
+            inputs: "full_mix",
+            outputs: "full_mix_normalized",
+          },
+          {
+            filter: `afade=t=in:ss=0:d=${mainSongFourthMeasure},afade=t=out:st=${mixEnd}:d=${
+              outroEnd - mixEnd
+            }`,
+            inputs: "full_mix_normalized",
           },
         ])
         .on("error", async (err, stdout, stderr) => {

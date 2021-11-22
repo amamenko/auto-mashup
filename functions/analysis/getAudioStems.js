@@ -38,6 +38,17 @@ const getAudioStems = async (
     url: mp3Link,
     method: "GET",
     responseType: "stream",
+  }).catch(async (e) => {
+    console.error(e);
+
+    const youtubeAudioFileExists = await checkFileExists("YouTubeAudio.mp3");
+
+    if (youtubeAudioFileExists) {
+      fs.rmSync("YouTubeAudio.mp3", {
+        recursive: true,
+        force: true,
+      });
+    }
   });
 
   response.data.pipe(writer);

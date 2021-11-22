@@ -1,6 +1,9 @@
 const getSubtitleJSON = require("./getSubtitleJSON");
 const removeAccents = require("remove-accents");
-const { filterArray, mustContainArray } = require("../arrays/videoFilterArr");
+const {
+  filterArray,
+  descriptionChannelFilterArray,
+} = require("../arrays/videoFilterArr");
 const getEachArtist = require("./getEachArtist");
 const timeStampToSeconds = require("../utils/timeStampToSeconds");
 const getChannelDescription = require("./getChannelDescription");
@@ -35,7 +38,6 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
           ? item.test(formattedVideoTitle)
           : formattedVideoTitle.includes(item)
       ) &&
-      // mustContainArray.some((word) => formattedVideoTitle.includes(word)) &&
       formattedVideoTitle.includes(trackTitleWithoutAlias) &&
       artistArr.some((artist) => formattedVideoTitle.includes(artist)) &&
       video.duration > 60 &&
@@ -62,14 +64,6 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                 }`
               );
 
-              const filterOutDesc = [
-                "cover",
-                "karaoke",
-                "acapella",
-                "parody",
-                "version",
-              ];
-
               if (firstFour[i].channel_name) {
                 let channelDescription = await getChannelDescription(
                   firstFour[i]
@@ -82,7 +76,7 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                   channelDescription = channelDescription.toLowerCase();
 
                   if (
-                    filterOutDesc.some((item) =>
+                    descriptionChannelFilterArray.some((item) =>
                       channelDescription.includes(item)
                     )
                   ) {
@@ -103,10 +97,12 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                 videoDescription = videoDescription.toLowerCase();
 
                 if (
-                  filterOutDesc.some((item) => videoDescription.includes(item))
+                  descriptionChannelFilterArray.some((item) =>
+                    videoDescription.includes(item)
+                  )
                 ) {
                   console.log(
-                    `The description for this video (https://www.youtube.com/watch?v=${firstFour[i].id}) appears to indicate that it is a cover. Moving on to next available video!`
+                    `The description for this video (https://www.youtube.com/watch?v=${firstFour[i].id}) appears to indicate that it is a cover or live performance. Moving on to next available video!`
                   );
                   resolve();
                   return;
