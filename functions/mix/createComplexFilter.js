@@ -151,26 +151,28 @@ const createComplexFilter = (instrumentals, vox) => {
     const numberOfLoops =
       maxDuration <= duration ? 0 : Math.round(maxDuration / duration) - 1;
 
-    const currentBeatsIndex = vox.beats.findIndex((beat) => beat === endTime);
-    const eightMeasuresBeforeEnd = vox.beats[currentBeatsIndex - 32];
-    const fourMeasuresBeforeEnd = vox.beats[currentBeatsIndex - 16];
+    const currentBeatsIndex = vox.beats.findIndex(
+      (beat) => beat === section.start
+    );
+    const eightMeasuresAfterStart = vox.beats[currentBeatsIndex + 32];
+    const fourMeasuresAfterStart = vox.beats[currentBeatsIndex + 16];
 
-    let loopStart = 0;
+    let loopTime = 0;
 
-    if (eightMeasuresBeforeEnd) {
-      if (eightMeasuresBeforeEnd >= section.start) {
-        loopStart = endTime - eightMeasuresBeforeEnd;
+    if (eightMeasuresAfterStart) {
+      if (eightMeasuresAfterStart >= section.start) {
+        loopTime = eightMeasuresAfterStart - section.start;
       } else {
-        if (fourMeasuresBeforeEnd) {
-          if (fourMeasuresBeforeEnd >= section.start) {
-            loopStart = endTime - fourMeasuresBeforeEnd;
+        if (fourMeasuresAfterStart) {
+          if (fourMeasuresAfterStart >= section.start) {
+            loopTime = fourMeasuresAfterStart - section.start;
           }
         }
       }
     } else {
-      if (fourMeasuresBeforeEnd) {
-        if (fourMeasuresBeforeEnd >= section.start) {
-          loopStart = endTime - fourMeasuresBeforeEnd;
+      if (fourMeasuresAfterStart) {
+        if (fourMeasuresAfterStart >= section.start) {
+          loopTime = fourMeasuresAfterStart - section.start;
         }
       }
     }
@@ -187,9 +189,7 @@ const createComplexFilter = (instrumentals, vox) => {
         outputs: `${ffmpegSectionName}_pts`,
       },
       {
-        filter: `aloop=loop=${numberOfLoops}:size=${
-          (endTime - (loopStart ? loopStart : section.start)) * 44100
-        }:start=0`,
+        filter: `aloop=loop=${numberOfLoops}:size=${loopTime * 44100}:start=0`,
         inputs: `${ffmpegSectionName}_pts`,
         outputs: `loop${i + 1}`,
       },
@@ -204,9 +204,15 @@ const createComplexFilter = (instrumentals, vox) => {
         outputs: `loop${i + 1}_pts_trim_pts`,
       },
       {
-        filter: `afade=enable='between(t,0,5)':t=in:d=5,afade=enable='between(t,${
-          maxDuration - 5
-        },${maxDuration})':t=out:st=${maxDuration - 5}:d=5`,
+        filter: `${
+          i === 0
+            ? "afade=enable='between(t,0,10)':t=in:st=0:d=10,"
+            : "afade=enable='between(t,0,1)':t=in:st=0:d=1,"
+        }afade=enable='between(t,${
+          maxDuration - (i === arr.length - 1 ? maxDuration : 1)
+        },${maxDuration})':t=out:st=${
+          maxDuration - (i === arr.length - 1 ? maxDuration : 1)
+        }:d=${i === arr.length - 1 ? maxDuration : 1}`,
         inputs: `loop${i + 1}_pts_trim_pts`,
         outputs: `${ffmpegSectionName}_fade`,
       },
@@ -252,7 +258,7 @@ const createComplexFilter = (instrumentals, vox) => {
   const complexFilter = [
     // Normalize instrumental audio
     {
-      filter: "loudnorm",
+      filter: "loudnorm=tp=-7:i=-30",
       inputs: "0:a",
       outputs: "0:a:normalized",
     },

@@ -11,11 +11,11 @@ const findMixable = async () => {
   await client
     .getEntries({
       "fields.mode": "major",
-      "fields.goat": "no" || "both",
+      // "fields.goat": "no" || "both",
       select:
         "fields.title,fields.artist,fields.tempo,fields.key,fields.duration,fields.expectedSections,fields.sections,fields.beats,fields.accompaniment,fields.vocals",
       content_type: "song",
-      limit: 200,
+      limit: 1000,
     })
     .then((res) => {
       if (res) {
@@ -26,7 +26,7 @@ const findMixable = async () => {
             return [...str.split(", ").map((item) => Number(item))];
           };
 
-          const matchArr = matches.map((item) => {
+          let matchArr = matches.map((item) => {
             return {
               accompaniment: {
                 ...item.accompaniment.fields,
@@ -43,13 +43,16 @@ const findMixable = async () => {
             };
           });
 
+          const list = matchArr.map((item) => JSON.stringify(item));
+          const uniqueList = new Set(list);
+          matchArr = Array.from(uniqueList).map((item) => JSON.parse(item));
+
           if (matchArr && matchArr.length > 0) {
-            console.log(matchArr.length);
+            // console.log(matchArr.length);
             if (foundMatch) {
-              normalizeInputsAndMix(
-                matchArr[0].accompaniment,
-                matchArr[0].vocals
-              );
+              normalizeInputsAndMix();
+              // matchArr[55].accompaniment,
+              // matchArr[55].vocals
             }
           }
         }

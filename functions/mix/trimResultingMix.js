@@ -8,10 +8,13 @@ const trimResultingMix = async (instrumentals) => {
 
   if (mp3Exists) {
     if (instrumentals) {
-      const instrumentalSections = instrumentals.sections.map(
-        getClosestBeatArr,
-        instrumentals
-      );
+      const instrumentalSections = instrumentals.sections
+        .map(getClosestBeatArr, instrumentals)
+        .filter(
+          (item) =>
+            !item.sectionName.includes("intro") &&
+            !item.sectionName.includes("outro")
+        );
 
       const mixStart = instrumentalSections[0].start;
       const mixLastSection = instrumentalSections.find(
@@ -32,8 +35,6 @@ const trimResultingMix = async (instrumentals) => {
           : indexOfFirstBeat;
       const introEndBeat =
         indexOfFirstBeat >= 16 ? mixStart : allBeats[indexOfFirstBeat + 16];
-
-      const mainSongFourthMeasure = allBeats[indexOfFirstBeat + 16];
 
       const outroStartIndex = allBeats.findIndex((beat) => beat === mixEnd);
       const outroEnd = allBeats[outroStartIndex + 16]
@@ -63,7 +64,7 @@ const trimResultingMix = async (instrumentals) => {
             outputs: "intro_0",
           },
           {
-            filter: "loudnorm",
+            filter: "loudnorm=tp=-7:i=-30",
             inputs: "intro_0",
             outputs: "intro",
           },
@@ -85,7 +86,7 @@ const trimResultingMix = async (instrumentals) => {
           },
           // Instrumental/vocal mix comes out quieter than original instrumental
           {
-            filter: "volume=5",
+            filter: "volume=6",
             inputs: "main_delay",
             outputs: "main",
           },
@@ -101,7 +102,7 @@ const trimResultingMix = async (instrumentals) => {
             outputs: "outro_0",
           },
           {
-            filter: "loudnorm",
+            filter: "loudnorm=tp=-7:i=-30",
             inputs: "outro_0",
             outputs: "outro_normalized",
           },
@@ -111,8 +112,13 @@ const trimResultingMix = async (instrumentals) => {
             outputs: "outro_volume",
           },
           {
-            filter: `adelay=${outroDelay}|${outroDelay}`,
+            filter: `afade=t=out:st=0:d=${outroEnd - mixEnd}`,
             inputs: "outro_volume",
+            outputs: "outro_fade",
+          },
+          {
+            filter: `adelay=${outroDelay}|${outroDelay}`,
+            inputs: "outro_fade",
             outputs: "outro",
           },
           // Merge all three sections together
@@ -122,20 +128,18 @@ const trimResultingMix = async (instrumentals) => {
             outputs: "full_mix",
           },
           {
-            filter: "loudnorm",
+            filter: "loudnorm=tp=-7:i=-30",
             inputs: "full_mix",
             outputs: "full_mix_normalized",
           },
           {
-            filter: `afade=t=in:ss=0:d=${mainSongFourthMeasure},afade=t=out:st=${mixEnd}:d=${
-              outroEnd - mixEnd
-            }`,
+            filter: `afade=t=in:st=0:d=${introDuration}`,
             inputs: "full_mix_normalized",
           },
         ])
         .on("error", async (err, stdout, stderr) => {
           console.log(
-            `FFMPEG received an error when attempting to mix the instrumentals of the track "${instrumentals.title}" by ${instrumentals.artist} with the vocals of the track "${vox.title}" by ${vox.artist}. Terminating process. Output: ` +
+            `FFMPEG received an error. Terminating process. Output: ` +
               err.message
           );
 

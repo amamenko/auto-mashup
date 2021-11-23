@@ -63,6 +63,7 @@ const filterArray = [
   "live at",
   "live @",
   "live earth",
+  "en vivo",
   "awards",
   "t in the park",
   "coachella",
