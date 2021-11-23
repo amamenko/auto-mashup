@@ -48,12 +48,13 @@ const findMixable = async () => {
           matchArr = Array.from(uniqueList).map((item) => JSON.parse(item));
 
           if (matchArr && matchArr.length > 0) {
-            // console.log(matchArr.length);
-            if (foundMatch) {
-              normalizeInputsAndMix();
-              // matchArr[55].accompaniment,
-              // matchArr[55].vocals
-            }
+            console.log(matchArr);
+            normalizeInputsAndMix(
+              matchArr[0].accompaniment,
+              matchArr[0].vocals
+            );
+            // matchArr[55].accompaniment,
+            // matchArr[55].vocals
           }
         }
       }

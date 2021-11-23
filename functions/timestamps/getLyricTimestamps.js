@@ -45,6 +45,15 @@ const getLyricTimestamps = async (options) => {
             );
           };
 
+          const getNextWordInSection = (str) => {
+            return removeAccents(
+              str
+                .replace(bracketRegex, "")
+                .toLowerCase()
+                .split(/[:]|[\s]+/gim)[1]
+            );
+          };
+
           let geniusArr = [{ sectionName: "", lyrics: "" }];
 
           for (let i = 0; i < sectionArr.length; i++) {
@@ -69,6 +78,8 @@ const getLyricTimestamps = async (options) => {
 
               if (current === "pre") {
                 current = "pre-chorus";
+              } else if (current === "abridged" || current === "spoken") {
+                current = getNextWordInSection(sectionArr[i]);
               } else {
                 if (current === "post") {
                   current = "post-chorus";

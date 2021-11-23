@@ -64,7 +64,7 @@ const trimResultingMix = async (instrumentals) => {
             outputs: "intro_0",
           },
           {
-            filter: "loudnorm=tp=-7:i=-30",
+            filter: "loudnorm=tp=-7:i=-28",
             inputs: "intro_0",
             outputs: "intro",
           },
@@ -86,7 +86,7 @@ const trimResultingMix = async (instrumentals) => {
           },
           // Instrumental/vocal mix comes out quieter than original instrumental
           {
-            filter: "volume=6",
+            filter: "volume=3",
             inputs: "main_delay",
             outputs: "main",
           },
@@ -102,12 +102,12 @@ const trimResultingMix = async (instrumentals) => {
             outputs: "outro_0",
           },
           {
-            filter: "loudnorm=tp=-7:i=-30",
+            filter: "loudnorm=tp=-7:i=-28",
             inputs: "outro_0",
             outputs: "outro_normalized",
           },
           {
-            filter: "volume=2",
+            filter: "volume=2.5",
             inputs: "outro_normalized",
             outputs: "outro_volume",
           },
@@ -128,7 +128,7 @@ const trimResultingMix = async (instrumentals) => {
             outputs: "full_mix",
           },
           {
-            filter: "loudnorm=tp=-7:i=-30",
+            filter: "loudnorm=tp=-7:i=-28",
             inputs: "full_mix",
             outputs: "full_mix_normalized",
           },

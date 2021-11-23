@@ -34,8 +34,8 @@ const createComplexFilter = (instrumentals, vox) => {
   const vocalSections = vox.sections.map(getClosestBeatArr, vox);
   const voxNameSections = vox.sections.map((item) => item.sectionName);
 
-  const matchedVocalSections = instrumentalSections
-    .map((instrumentalSection) => {
+  let matchedVocalSections = instrumentalSections.map((instrumentalSection) => {
+    if (instrumentalSection) {
       const name = instrumentalSection.sectionName.split(" ")[0];
       const number = instrumentalSection.sectionName.split(" ")[1];
 
@@ -104,18 +104,23 @@ const createComplexFilter = (instrumentals, vox) => {
           instrumentalSection,
         };
       } else {
-        return null;
+        return;
       }
-    })
-    .filter(
-      (item) =>
+    }
+  });
+
+  matchedVocalSections = matchedVocalSections.filter((item) => {
+    if (item) {
+      return (
         item.sectionName &&
         item.start &&
         item.duration &&
         item.instrumentalSection.sectionName &&
         item.instrumentalSection.start &&
         item.instrumentalSection.duration
-    );
+      );
+    }
+  });
 
   const trimmedSections = matchedVocalSections.map((section, i, arr) => {
     const currentIndex = vocalSections.findIndex(
@@ -189,7 +194,15 @@ const createComplexFilter = (instrumentals, vox) => {
         outputs: `${ffmpegSectionName}_pts`,
       },
       {
-        filter: `aloop=loop=${numberOfLoops}:size=${loopTime * 44100}:start=0`,
+        filter: `${
+          numberOfLoops >= 0
+            ? `afade=enable='between(t,0,2)':t=in:st=0:d=2,afade=enable='between(t,${
+                duration - 2
+              },${duration})':t=out:st=${duration - 2}:d=1,`
+            : ""
+        }aloop=loop=${numberOfLoops === 0 ? 0 : 5}:size=${
+          loopTime * 44100
+        }:start=0`,
         inputs: `${ffmpegSectionName}_pts`,
         outputs: `loop${i + 1}`,
       },
@@ -204,20 +217,17 @@ const createComplexFilter = (instrumentals, vox) => {
         outputs: `loop${i + 1}_pts_trim_pts`,
       },
       {
-        filter: `${
-          i === 0
-            ? "afade=enable='between(t,0,10)':t=in:st=0:d=10,"
-            : "afade=enable='between(t,0,1)':t=in:st=0:d=1,"
-        }afade=enable='between(t,${
-          maxDuration - (i === arr.length - 1 ? maxDuration : 1)
-        },${maxDuration})':t=out:st=${
-          maxDuration - (i === arr.length - 1 ? maxDuration : 1)
-        }:d=${i === arr.length - 1 ? maxDuration : 1}`,
+        filter:
+          numberOfLoops === 0
+            ? `afade=enable='between(t,0,5)':t=in:st=0:d=5,afade=enable='between(t,${
+                maxDuration - 4
+              },${maxDuration})':t=out:st=${maxDuration - 4}:d=4`
+            : "anull",
         inputs: `loop${i + 1}_pts_trim_pts`,
         outputs: `${ffmpegSectionName}_fade`,
       },
       {
-        filter: "loudnorm",
+        filter: "loudnorm=tp=-3:i=-26",
         inputs: `${ffmpegSectionName}_fade`,
         outputs: `${ffmpegSectionName}_normalized`,
       },
@@ -258,7 +268,7 @@ const createComplexFilter = (instrumentals, vox) => {
   const complexFilter = [
     // Normalize instrumental audio
     {
-      filter: "loudnorm=tp=-7:i=-30",
+      filter: "loudnorm=tp=-7:i=-28",
       inputs: "0:a",
       outputs: "0:a:normalized",
     },
