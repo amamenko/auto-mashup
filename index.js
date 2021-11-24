@@ -10,6 +10,7 @@ const loopGoatCharts = require("./functions/search/loopGoatCharts");
 const findMixable = require("./functions/mix/findMixable");
 const SpotifyWebApi = require("spotify-web-api-node");
 const { format } = require("date-fns");
+const { getChart } = require("./functions/billboard/getChart");
 require("dotenv").config();
 
 const port = process.env.PORT || 4000;

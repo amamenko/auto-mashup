@@ -12,7 +12,6 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.23.0",
-    "billboard-top-100": "^2.5.9",
     "cheerio": "^1.0.0-rc.10",
     "child-process": "^1.0.2",
     "cloudscraper": "^4.6.0",
@@ -31,6 +30,7 @@
     "node-cron": "^3.0.0",
     "python-shell": "^3.0.1",
     "remove-accents": "^0.4.2",
+    "request": "^2.88.2",
     "spotify-web-api-node": "^5.0.2",
     "string-similarity": "^4.0.4",
     "usetube": "^2.1.4",

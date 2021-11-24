@@ -22,9 +22,6 @@ const getTrack = async (
 
   updatePreviousEntries(topSong, songRank, currentChart, goat);
 
-  // Replace image dimensions to grab larger-sized image URL
-  songCover = songCover.replace(/(\d+)x(\d+)/, "155x155");
-
   // Access to Contentful Delivery API
   const client = contentful.createClient({
     space: process.env.CONTENTFUL_SPACE_ID,

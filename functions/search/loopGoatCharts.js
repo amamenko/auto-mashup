@@ -1,4 +1,5 @@
-const { listCharts, getChart } = require("billboard-top-100");
+const { getChart } = require("../billboard/getChart");
+const { listCharts } = require("../billboard/listCharts");
 const { format, startOfWeek, addDays } = require("date-fns");
 const contentful = require("contentful");
 const contentfulManagement = require("contentful-management");
@@ -14,7 +15,7 @@ const loopGoatCharts = () => {
         const name = chart.name.toLowerCase();
 
         return (
-          (name.includes("greatest") ||
+          (name.includes("goat") ||
             name.includes("'80s") ||
             name.includes("'90s")) &&
           name.includes("songs") &&
