@@ -66,6 +66,12 @@ const trimResultingMix = async (instrumentals) => {
           {
             filter: "loudnorm=tp=-7:i=-28",
             inputs: "intro_0",
+            outputs: "intro_norm",
+          },
+          // Bring down instrumental intro volume a little bit
+          {
+            filter: "volume=0.75",
+            inputs: "intro_norm",
             outputs: "intro",
           },
           // Trim and delay main mix
@@ -86,7 +92,7 @@ const trimResultingMix = async (instrumentals) => {
           },
           // Instrumental/vocal mix comes out quieter than original instrumental
           {
-            filter: "volume=3",
+            filter: "volume=4",
             inputs: "main_delay",
             outputs: "main",
           },
@@ -119,6 +125,12 @@ const trimResultingMix = async (instrumentals) => {
           {
             filter: `adelay=${outroDelay}|${outroDelay}`,
             inputs: "outro_fade",
+            outputs: "outro_delay",
+          },
+          // Bring down instrumental outro volume a little bit
+          {
+            filter: "volume=0.75",
+            inputs: "outro_delay",
             outputs: "outro",
           },
           // Merge all three sections together

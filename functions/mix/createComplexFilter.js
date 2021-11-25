@@ -219,15 +219,19 @@ const createComplexFilter = (instrumentals, vox) => {
       {
         filter:
           numberOfLoops === 0
-            ? `afade=enable='between(t,0,5)':t=in:st=0:d=5,afade=enable='between(t,${
-                maxDuration - 4
-              },${maxDuration})':t=out:st=${maxDuration - 4}:d=4`
+            ? `afade=enable='between(t,0,${i === 0 ? 5 : 1})':t=in:st=0:d=${
+                i === 0 ? 5 : 1
+              },afade=enable='between(t,${
+                maxDuration - (i === arr.length - 1 ? 5 : 1)
+              },${maxDuration})':t=out:st=${
+                maxDuration - (i === arr.length - 1 ? 5 : 1)
+              }:d=${i === arr.length - 1 ? 5 : 1}`
             : "anull",
         inputs: `loop${i + 1}_pts_trim_pts`,
         outputs: `${ffmpegSectionName}_fade`,
       },
       {
-        filter: "loudnorm=tp=-3:i=-26",
+        filter: "loudnorm=tp=-3:i=-25",
         inputs: `${ffmpegSectionName}_fade`,
         outputs: `${ffmpegSectionName}_normalized`,
       },

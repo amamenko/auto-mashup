@@ -80,6 +80,11 @@ const getLyricTimestamps = async (options) => {
                 current = "pre-chorus";
               } else if (current === "abridged" || current === "spoken") {
                 current = getNextWordInSection(sectionArr[i]);
+              } else if (current === "classical") {
+                const nextWord = getNextWordInSection(sectionArr[i]);
+                if (nextWord !== "guitar") {
+                  current = nextWord;
+                }
               } else {
                 if (current === "post") {
                   current = "post-chorus";

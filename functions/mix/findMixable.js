@@ -30,6 +30,7 @@ const findMixable = async () => {
             return {
               accompaniment: {
                 ...item.accompaniment.fields,
+                sections: item.accompaniment.sections,
                 beats: makeBeatArr(item.accompaniment.fields.beats),
                 keyScaleFactor: item.accompaniment.keyScaleFactor,
                 tempoScaleFactor: item.accompaniment.tempoScaleFactor,
@@ -48,9 +49,7 @@ const findMixable = async () => {
           matchArr = Array.from(uniqueList).map((item) => JSON.parse(item));
 
           if (matchArr && matchArr.length > 0) {
-            console.log(matchArr);
-
-            // normalizeInputsAndMix();
+            normalizeInputsAndMix();
             // matchArr[55].accompaniment,
             // matchArr[55].vocals
           }

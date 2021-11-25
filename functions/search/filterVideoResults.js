@@ -17,14 +17,16 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
 
   const withinParantheses = /\(([^)]+)\)/gim;
 
+  const formattedTrackTitle = removeAccents(trackTitle).toLowerCase();
+  const formattedTrackArtist = removeAccents(trackArtist).toLowerCase();
+  const trackTitleWithoutAlias = formattedTrackTitle
+    .replace(withinParantheses, "")
+    .trim();
+
   const filteredVids = videos.filter((video) => {
     const formattedVideoTitle = removeAccents(
       video.original_title.toLowerCase()
     );
-    const formattedTrackTitle = removeAccents(trackTitle).toLowerCase();
-    const trackTitleWithoutAlias = formattedTrackTitle
-      .replace(withinParantheses, "")
-      .trim();
 
     const viewsMinimum = video.relativePublishedTime
       ? video.relativePublishedTime.toLowerCase().includes("years")
@@ -36,12 +38,15 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
       !filterArray.some((item) =>
         item instanceof RegExp
           ? item.test(formattedVideoTitle)
-          : formattedVideoTitle.includes(item)
+          : !formattedTrackTitle.includes(item) &&
+            !formattedTrackArtist.includes(item)
+          ? formattedVideoTitle.includes(item)
+          : false
       ) &&
       formattedVideoTitle.includes(trackTitleWithoutAlias) &&
       artistArr.some((artist) => formattedVideoTitle.includes(artist)) &&
       video.duration > 60 &&
-      video.duration < 660 &&
+      video.duration <= 990 &&
       video.views >= viewsMinimum
     );
   });
@@ -76,9 +81,16 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                   channelDescription = channelDescription.toLowerCase();
 
                   if (
-                    descriptionChannelFilterArray.some((item) =>
-                      channelDescription.includes(item)
-                    )
+                    descriptionChannelFilterArray.some((item) => {
+                      if (
+                        !formattedTrackTitle.includes(item) &&
+                        !formattedTrackArtist.includes(item)
+                      ) {
+                        return channelDescription.includes(item);
+                      } else {
+                        return false;
+                      }
+                    })
                   ) {
                     console.log(
                       `The channel for this video (${firstFour[i].channel_name}) appears to be a cover channel. Moving on to next available video!`
@@ -97,9 +109,16 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                 videoDescription = videoDescription.toLowerCase();
 
                 if (
-                  descriptionChannelFilterArray.some((item) =>
-                    videoDescription.includes(item)
-                  )
+                  descriptionChannelFilterArray.some((item) => {
+                    if (
+                      !formattedTrackTitle.includes(item) &&
+                      !formattedTrackArtist.includes(item)
+                    ) {
+                      return videoDescription.includes(item);
+                    } else {
+                      return false;
+                    }
+                  })
                 ) {
                   console.log(
                     `The description for this video (https://www.youtube.com/watch?v=${firstFour[i].id}) appears to indicate that it is a cover or live performance. Moving on to next available video!`
