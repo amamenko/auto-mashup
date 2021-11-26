@@ -1,3 +1,4 @@
+// Code adapted from https://github.com/darthbatman/billboard-top-100
 const axios = require("axios");
 const cheerio = require("cheerio");
 const { getChartObjects } = require("./getChartObjects");

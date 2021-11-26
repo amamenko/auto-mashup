@@ -134,6 +134,7 @@ const findMatchingSongs = (allSongs) => {
                       (section) => item === section.sectionName
                     )
                   );
+
                   matches.push({
                     accompaniment: {
                       ...song1Obj,
@@ -153,6 +154,12 @@ const findMatchingSongs = (allSongs) => {
                       (section) => item === section.sectionName
                     )
                   );
+                  if (song2Obj.fields.title === "Without Me") {
+                    console.log({
+                      newAccompanimentSections,
+                      vocalsSections: song1Obj.fields.sections,
+                    });
+                  }
                   matches.push({
                     accompaniment: {
                       ...song2Obj,

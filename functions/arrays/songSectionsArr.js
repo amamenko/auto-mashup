@@ -12,6 +12,7 @@ const bridgeSections = [
   "breakdown",
   "b-section",
 ];
+const spokenSections = ["spoken"];
 const outroSections = ["outro"];
 
 module.exports = {
@@ -22,5 +23,6 @@ module.exports = {
   chorusSections,
   postChorusSections,
   bridgeSections,
+  spokenSections,
   outroSections,
 };

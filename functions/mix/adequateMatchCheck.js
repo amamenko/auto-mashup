@@ -5,6 +5,7 @@ const {
   chorusSections,
   postChorusSections,
   bridgeSections,
+  spokenSections,
 } = require("../arrays/songSectionsArr");
 
 const adequateMatchCheck = (currentSongSections, otherSongSections) => {
@@ -13,13 +14,16 @@ const adequateMatchCheck = (currentSongSections, otherSongSections) => {
   for (let j = 0; j < currentSongSections.length; j++) {
     for (let k = 0; k < currentSongSections[j].length; k++) {
       const current = currentSongSections[k];
+      const generalSections = current
+        ? current.map((section) => section.split(" ")[0])
+        : [];
 
       if (
         current &&
         current.length === 4 &&
         !current.includes("intro 1") &&
         !current.includes("intro 2") &&
-        !current.includes("outro")
+        !current.includes("outro 1")
       ) {
         const applicableSongsSectionsArr = [
           verseSections,
@@ -28,20 +32,27 @@ const adequateMatchCheck = (currentSongSections, otherSongSections) => {
           chorusSections,
           postChorusSections,
           bridgeSections,
+          spokenSections,
         ];
 
-        const noMatch = 0;
-
-        const checkInclusion = (section) => {
-          if (section.includes(current)) {
-            if (!section.some((item) => otherSongSections.includes(item))) {
-              noMatch++;
-            }
-          }
-        };
+        let noMatch = 0;
 
         for (let l = 0; l < applicableSongsSectionsArr.length; l++) {
-          checkInclusion(applicableSongsSectionsArr[l]);
+          for (let m = 0; m < generalSections.length; m++) {
+            if (applicableSongsSectionsArr[l].includes(generalSections[m])) {
+              if (otherSongSections) {
+                if (
+                  applicableSongsSectionsArr[l].some((item) =>
+                    otherSongSections.includes(item)
+                  )
+                ) {
+                  continue;
+                } else {
+                  noMatch++;
+                }
+              }
+            }
+          }
         }
 
         if (noMatch === 0) {

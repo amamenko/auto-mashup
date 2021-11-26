@@ -1,3 +1,4 @@
+// Code adapted from https://github.com/darthbatman/billboard-top-100
 const cheerio = require("cheerio");
 const request = require("request");
 const { format, addDays, startOfWeek } = require("date-fns");

@@ -4,7 +4,7 @@ const { getChart } = require("../billboard/getChart");
 const { format, startOfWeek, addDays } = require("date-fns");
 const deepEqual = require("deep-equal");
 
-const loopCurrentCharts = async () => {
+const loopCurrentCharts = async (goat) => {
   // Access to Contentful Delivery API
   const client = contentful.createClient({
     space: process.env.CONTENTFUL_SPACE_ID,
@@ -14,7 +14,7 @@ const loopCurrentCharts = async () => {
   await client
     .getEntries({
       "fields.updatedThisWeek": false,
-      "fields.goat": false,
+      "fields.goat": goat === "goat" ? true : false,
       content_type: "chart",
     })
     .then(async (res) => {
@@ -92,7 +92,7 @@ const loopCurrentCharts = async () => {
                                 };
 
                                 entry.fields.updatedThisWeek = {
-                                  "en-US": true,
+                                  "en-US": changed,
                                 };
 
                                 entry.fields.loopedThisWeek = {

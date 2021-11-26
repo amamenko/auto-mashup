@@ -46,12 +46,21 @@ const getLyricTimestamps = async (options) => {
           };
 
           const getNextWordInSection = (str) => {
-            return removeAccents(
-              str
-                .replace(bracketRegex, "")
-                .toLowerCase()
-                .split(/[:]|[\s]+/gim)[1]
-            );
+            const parsedStr = str
+              .replace(bracketRegex, "")
+              .toLowerCase()
+              .split(/[:]|[\s]+/gim)[1];
+
+            if (parsedStr) {
+              return removeAccents(
+                str
+                  .replace(bracketRegex, "")
+                  .toLowerCase()
+                  .split(/[:]|[\s]+/gim)[1]
+              );
+            } else {
+              return "";
+            }
           };
 
           let geniusArr = [{ sectionName: "", lyrics: "" }];
@@ -79,7 +88,9 @@ const getLyricTimestamps = async (options) => {
               if (current === "pre") {
                 current = "pre-chorus";
               } else if (current === "abridged" || current === "spoken") {
-                current = getNextWordInSection(sectionArr[i]);
+                if (getNextWordInSection(sectionArr[i])) {
+                  current = getNextWordInSection(sectionArr[i]);
+                }
               } else if (current === "classical") {
                 const nextWord = getNextWordInSection(sectionArr[i]);
                 if (nextWord !== "guitar") {

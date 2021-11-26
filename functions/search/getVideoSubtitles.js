@@ -12,17 +12,23 @@ const getVideoSubtitles = async (video_id) => {
       .catch((e) => console.error(e));
   };
 
-  const lyricsArr = await getYouTubeTranscript(video_id).catch((e) =>
+  const lyricsArrayAsString = await getYouTubeTranscript(video_id).catch((e) =>
     console.error(e)
   );
 
-  if (lyricsArr) {
+  if (lyricsArrayAsString) {
     let parsedJSON = "";
 
-    try {
-      parsedJSON = JSON.parse(lyricsArr);
-    } catch (e) {
-      console.error(e);
+    const isValidJSON = (str) => {
+      try {
+        return !!(JSON.parse(str) && str);
+      } catch (e) {
+        return false;
+      }
+    };
+
+    if (isValidJSON(lyricsArrayAsString)) {
+      parsedJSON = JSON.parse(lyricsArrayAsString);
     }
 
     if (parsedJSON) {
@@ -73,6 +79,9 @@ const getVideoSubtitles = async (video_id) => {
         console.log("No usable subtitles found.");
         return;
       }
+    } else {
+      console.log("No usable subtitles found.");
+      return;
     }
   } else {
     console.log("No subtitles found for this video!");
