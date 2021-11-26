@@ -2,7 +2,8 @@ const getSubtitleJSON = require("./getSubtitleJSON");
 const removeAccents = require("remove-accents");
 const {
   filterArray,
-  descriptionChannelFilterArray,
+  descriptionFilterArray,
+  channelAboutFilterArray,
 } = require("../arrays/videoFilterArr");
 const getEachArtist = require("./getEachArtist");
 const timeStampToSeconds = require("../utils/timeStampToSeconds");
@@ -81,7 +82,7 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                   channelDescription = channelDescription.toLowerCase();
 
                   if (
-                    descriptionChannelFilterArray.some((item) => {
+                    channelAboutFilterArray.some((item) => {
                       if (
                         !formattedTrackTitle.includes(item) &&
                         !formattedTrackArtist.includes(item)
@@ -109,7 +110,7 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                 videoDescription = videoDescription.toLowerCase();
 
                 if (
-                  descriptionChannelFilterArray.some((item) => {
+                  descriptionFilterArray.some((item) => {
                     if (
                       !formattedTrackTitle.includes(item) &&
                       !formattedTrackArtist.includes(item)

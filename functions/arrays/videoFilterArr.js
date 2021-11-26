@@ -148,7 +148,7 @@ const filterArray = [
   foreignChar,
 ];
 
-const descriptionChannelFilterArray = [
+const descriptionFilterArray = [
   "cover",
   "karaoke",
   "acapella",
@@ -158,12 +158,17 @@ const descriptionChannelFilterArray = [
   "live @",
   "live earth",
   "interview",
+  "tour",
   "hall of fame",
-  "awards",
   "playing for change",
   "song around the world",
   "iheart",
+  "teen choice awards",
+  "video music awards",
+  "vma",
   "nye",
+  "new years eve",
+  "new year's eve",
   "music city midnight",
   "t in the park",
   "coachella",
@@ -202,6 +207,8 @@ const descriptionChannelFilterArray = [
   "colbert",
 ];
 
+const channelAboutFilterArray = ["cover", "karaoke", "acapella", "parody"];
+
 const mustContainArray = [
   "video",
   "audio",
@@ -215,6 +222,7 @@ const mustContainArray = [
 
 module.exports = {
   filterArray,
-  descriptionChannelFilterArray,
+  descriptionFilterArray,
+  channelAboutFilterArray,
   mustContainArray,
 };
