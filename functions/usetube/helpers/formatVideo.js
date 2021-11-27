@@ -3,7 +3,7 @@
 const getVideoDate = require("../usetubeGetVideoDate");
 const getDateFromText = require("./getDateFromText");
 const findVal = require("./findVal");
-const { logger } = require("../logger/initializeLogger");
+const { logger } = require("../../logger/initializeLogger");
 require("dotenv").config();
 
 const formatVideo = async (video, speedDate, description) => {
