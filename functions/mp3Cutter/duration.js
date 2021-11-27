@@ -1,5 +1,7 @@
 // Taken from mp3-cutter and modified to add callback function
 const fs = require("fs");
+const { logger } = require("../logger/initializeLogger");
+require("dotenv").config();
 
 const versions = ["2.5", "x", "2", "1"],
   layers = ["x", "3", "2", "1"],
@@ -95,8 +97,20 @@ class Duration {
           }
         }
       }
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      if (process.env.NODE_ENV === "production") {
+        logger.error(
+          "Error calculating MP3 audio duration within mp3Cutter's 'duration' function!",
+          {
+            indexMeta: true,
+            meta: {
+              message: err.message,
+            },
+          }
+        );
+      } else {
+        console.error(err);
+      }
     } finally {
       fs.closeSync(fd);
     }

@@ -1,5 +1,6 @@
 const contentfulManagement = require("contentful-management");
 const { addMinutes } = require("date-fns");
+const { logger } = require("../logger/initializeLogger");
 require("dotenv").config();
 
 const updateChartLoopInProgress = async (chart, state) => {
@@ -45,13 +46,17 @@ const updateChartLoopInProgress = async (chart, state) => {
             environment.getEntry(chart.id).then((updatedEntry) => {
               updatedEntry.publish();
 
-              console.log(
-                `Entry update was successful! ${
-                  chart.name
-                } chart loop marked as ${
-                  state === "in progress" ? "in progress." : "done."
-                }`
-              );
+              const successStatement = `Entry update was successful! ${
+                chart.name
+              } chart loop marked as ${
+                state === "in progress" ? "in progress." : "done."
+              }`;
+
+              if (process.env.NODE_ENV === "production") {
+                logger.log(successStatement);
+              } else {
+                console.log(successStatement);
+              }
             });
           });
         });

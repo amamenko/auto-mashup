@@ -1,5 +1,7 @@
 const { PythonShell } = require("python-shell");
 const languageCodeArr = require("../arrays/languageCodeArr");
+const { logger } = require("../logger/initializeLogger");
+require("dotenv").config();
 
 const getTranscripts = (videoId) => {
   const preferredLanguages = languageCodeArr.join(" ");
@@ -15,14 +17,32 @@ const getTranscripts = (videoId) => {
     });
 
     pyshell.on("stderr", (stderr) => {
-      console.log(stderr);
+      if (process.env.NODE_ENV === "production") {
+        logger.error(
+          `Something went wrong when running the Python script get_transcripts.py within the function "getTranscripts.js" for video ID "${videoId}"`,
+          {
+            indexMeta: true,
+            meta: {
+              message: stderr.message,
+            },
+          }
+        );
+      } else {
+        console.error(stderr);
+      }
     });
 
     pyshell.end((err, code, signal) => {
       if (err) {
         reject(err);
       } else {
-        console.log("Transcript successfully acquired.");
+        const successStatement = "Transcript successfully acquired.";
+
+        if (process.env.NODE_ENV === "production") {
+          logger.log(successStatement);
+        } else {
+          console.log(successStatement);
+        }
         resolve(result);
       }
     });

@@ -1,4 +1,6 @@
 const getData = require("./helpers/getData");
+const { logger } = require("../logger/initializeLogger");
+require("dotenv").config();
 
 const getVideoDate = async (id) => {
   try {
@@ -14,8 +16,14 @@ const getVideoDate = async (id) => {
       ":" +
       Math.floor(Math.random() * 60);
     return new Date(Date.parse(publishText));
-  } catch (e) {
-    console.log("cannot get date for " + id + ", try again");
+  } catch (err) {
+    const failureStatement = "cannot get date for " + id + ", try again";
+
+    if (process.env.NODE_ENV === "production") {
+      logger.log(failureStatement);
+    } else {
+      console.log(failureStatement);
+    }
   }
 };
 

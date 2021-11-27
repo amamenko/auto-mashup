@@ -2,6 +2,8 @@ const contentful = require("contentful-management");
 const fs = require("fs");
 const path = require("path");
 const checkFileExists = require("../utils/checkFileExists");
+const { logger } = require("../logger/initializeLogger");
+require("dotenv").config();
 
 const sendDataToContentful = async (
   trackDataJSON,
@@ -35,7 +37,14 @@ const sendDataToContentful = async (
         recursive: true,
         force: true,
       });
-      console.log("Deleted output directory!");
+
+      const deletedStatement = "Deleted output directory!";
+
+      if (process.env.NODE_ENV === "production") {
+        logger.log(deletedStatement);
+      } else {
+        console.log(deletedStatement);
+      }
     }
   };
 
@@ -48,6 +57,19 @@ const sendDataToContentful = async (
     (await checkFileExists("output/YouTubeAudio/vocals_trimmed.mp3"));
 
   if (accompanimentFileExists && vocalsFileExists) {
+    const getErrorLogs = (err) => {
+      if (process.env.NODE_ENV === "production") {
+        logger.error("Received error during entry creation", {
+          indexMeta: true,
+          meta: {
+            message: err.message,
+          },
+        });
+      } else {
+        console.error(`Received error during entry creation: ${err}`);
+      }
+    };
+
     client.getSpace(process.env.CONTENTFUL_SPACE_ID).then((space) => {
       space
         .getEnvironment("master")
@@ -179,39 +201,51 @@ const sendDataToContentful = async (
                     .then((entry) => {
                       entry.publish();
                       deleteOutputDir();
-                      console.log("Successfully created new entry!");
+
+                      const successStatement =
+                        "Successfully created new entry!";
+
+                      if (process.env.NODE_ENV === "production") {
+                        logger.log(successStatement);
+                      } else {
+                        console.log(successStatement);
+                      }
+
                       return;
                     })
                     .catch((err) => {
-                      console.log(
-                        `Received error during entry creation: ${err}`
-                      );
+                      getErrorLogs(err);
                       deleteOutputDir();
                       return err;
                     });
                 })
                 .catch((err) => {
-                  console.log(`Received error during entry creation: ${err}`);
+                  getErrorLogs(err);
                   deleteOutputDir();
                   return err;
                 });
             })
             .catch((err) => {
-              console.log(`Received error during entry creation: ${err}`);
+              getErrorLogs(err);
               deleteOutputDir();
               return err;
             });
         })
         .catch((err) => {
-          console.log(`Received error during entry creation: ${err}`);
+          getErrorLogs(err);
           deleteOutputDir();
           return err;
         });
     });
   } else {
-    console.log(
-      "Either vocals or accompaniment file does not exist! Moving on to next track."
-    );
+    const doesntExistStatement =
+      "Either vocals or accompaniment file does not exist! Moving on to next track.";
+
+    if (process.env.NODE_ENV === "production") {
+      logger.log(doesntExistStatement);
+    } else {
+      console.log(doesntExistStatement);
+    }
     return;
   }
 };

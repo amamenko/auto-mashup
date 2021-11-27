@@ -9,6 +9,8 @@ const getEachArtist = require("./getEachArtist");
 const timeStampToSeconds = require("../utils/timeStampToSeconds");
 const getChannelDescription = require("./getChannelDescription");
 const getVideoDescription = require("./getVideoDescription");
+const { logger } = require("../logger/initializeLogger");
+require("dotenv").config();
 
 const filterVideoResults = async (videos, trackTitle, trackArtist) => {
   const { artist1, artist2, artist3 } = getEachArtist(trackArtist);
@@ -63,17 +65,35 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
       for (let i = 0; i < firstFour.length; i++) {
         const delayedTimeoutPromise = async (delay) => {
           return new Promise((resolve, reject) => {
+            const gettingStatement = `Getting subtitles for video ${i + 1} of ${
+              firstFour.length
+            }: ${firstFour[i].original_title}`;
+
             setTimeout(async () => {
-              console.log(
-                `Getting subtitles for video ${i + 1} of ${firstFour.length}: ${
-                  firstFour[i].original_title
-                }`
-              );
+              if (process.env.NODE_ENV === "production") {
+                logger.log(gettingStatement);
+              } else {
+                console.log(gettingStatement);
+              }
 
               if (firstFour[i].channel_name) {
                 let channelDescription = await getChannelDescription(
                   firstFour[i]
-                ).catch((e) => console.error(e));
+                ).catch((err) => {
+                  if (process.env.NODE_ENV === "production") {
+                    logger.error(
+                      `Something went wrong when getting channel description for YouTube video with title "${firstFour[i].original_title}".`,
+                      {
+                        indexMeta: true,
+                        meta: {
+                          message: err.message,
+                        },
+                      }
+                    );
+                  } else {
+                    console.error(err);
+                  }
+                });
 
                 if (
                   channelDescription &&
@@ -93,9 +113,14 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                       }
                     })
                   ) {
-                    console.log(
-                      `The channel for this video (${firstFour[i].channel_name}) appears to be a cover channel. Moving on to next available video!`
-                    );
+                    const coverChannelStatement = `The channel for this video (${firstFour[i].channel_name}) appears to be a cover channel. Moving on to next available video!`;
+
+                    if (process.env.NODE_ENV === "production") {
+                      logger.log(coverChannelStatement);
+                    } else {
+                      console.log(coverChannelStatement);
+                    }
+
                     resolve();
                     return;
                   }
@@ -104,7 +129,21 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
 
               let videoDescription = await getVideoDescription(
                 firstFour[i].id
-              ).catch((e) => console.error(e));
+              ).catch((err) => {
+                if (process.env.NODE_ENV === "production") {
+                  logger.error(
+                    `Something went wrong when getting the video description for YouTube video with ID "${firstFour[i].id}"`,
+                    {
+                      indexMeta: true,
+                      meta: {
+                        message: err.message,
+                      },
+                    }
+                  );
+                } else {
+                  console.error(err);
+                }
+              });
 
               if (videoDescription && typeof videoDescription === "string") {
                 videoDescription = videoDescription.toLowerCase();
@@ -121,9 +160,13 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                     }
                   })
                 ) {
-                  console.log(
-                    `The description for this video (https://www.youtube.com/watch?v=${firstFour[i].id}) appears to indicate that it is a cover or live performance. Moving on to next available video!`
-                  );
+                  const coverStatement = `The description for this video (https://www.youtube.com/watch?v=${firstFour[i].id}) appears to indicate that it is a cover or live performance. Moving on to next available video!`;
+
+                  if (process.env.NODE_ENV === "production") {
+                    logger.log(coverStatement);
+                  } else {
+                    console.log(coverStatement);
+                  }
                   resolve();
                   return;
                 }
@@ -208,8 +251,21 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                   }
                 })
                 .catch((err) => {
-                  console.log("Subtitle function resulted in an error!");
-                  console.log(err);
+                  const subtitleErrorStatement =
+                    "Subtitle function resulted in an error!";
+
+                  if (process.env.NODE_ENV === "production") {
+                    logger.error(subtitleErrorStatement, {
+                      indexMeta: true,
+                      meta: {
+                        message: err.message,
+                      },
+                    });
+                  } else {
+                    console.log(subtitleErrorStatement);
+                    console.error(err);
+                  }
+
                   reject();
                   return;
                 });
@@ -225,12 +281,29 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
       // Instead resolves all Promise objects with errors to null in the resulting array
       return Promise.all(promiseArray.map((p) => p.catch((error) => null)))
         .then((arr) => {
-          console.log("All promises of Promise.all resolved!");
+          const allResolvedStatement = "All promises of Promise.all resolved!";
+
+          if (process.env.NODE_ENV === "production") {
+            logger.log(allResolvedStatement);
+          } else {
+            console.log(allResolvedStatement);
+          }
           return arr;
         })
         .catch((err) => {
-          console.log("Error in iterable promises of Promise.all");
-          console.log(err);
+          const errorStatement = "Error in iterable promises of Promise.all";
+
+          if (process.env.NODE_ENV === "production") {
+            logger.error(errorStatement, {
+              indexMeta: true,
+              meta: {
+                message: err.message,
+              },
+            });
+          } else {
+            console.log(errorStatement);
+            console.error(err);
+          }
         });
     };
 

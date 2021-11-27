@@ -1,5 +1,7 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
+const { logger } = require("../logger/initializeLogger");
+require("dotenv").config();
 
 const BILLBOARD_BASE_URL = "https://www.billboard.com";
 
@@ -16,7 +18,21 @@ const getChartObjects = async (encodedChart, ms) => {
     const newHTML = await axios
       .get(fullURL)
       .then((res) => res.data)
-      .catch((e) => console.error(e));
+      .catch((err) => {
+        if (process.env.NODE_ENV === "production") {
+          logger.error(
+            `Something went wrong when performing a GET request to the Billboard URL "${fullURL}" in the getChartObjects function.`,
+            {
+              indexMeta: true,
+              meta: {
+                message: err.message,
+              },
+            }
+          );
+        } else {
+          console.error(err);
+        }
+      });
 
     if (newHTML) {
       const htmlObj = newHTML;

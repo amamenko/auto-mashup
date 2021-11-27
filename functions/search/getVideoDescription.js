@@ -1,4 +1,5 @@
 const axios = require("axios");
+const { logger } = require("../logger/initializeLogger");
 require("dotenv").config();
 
 const getVideoDescription = async (videoID) => {
@@ -21,9 +22,30 @@ const getVideoDescription = async (videoID) => {
           }
         }
       }
-      console.log("No useful description data found!");
+
+      const noUsefulDescriptionStatement = "No useful description data found!";
+
+      if (process.env.NODE_ENV === "production") {
+        logger.log(noUsefulDescriptionStatement);
+      } else {
+        console.log(noUsefulDescriptionStatement);
+      }
     })
-    .catch((e) => console.error(e));
+    .catch((err) => {
+      if (process.env.NODE_ENV === "production") {
+        logger.error(
+          `Received error when getting video description for video ID ${videoID}.`,
+          {
+            indexMeta: true,
+            meta: {
+              message: err.message,
+            },
+          }
+        );
+      } else {
+        console.error(err);
+      }
+    });
 };
 
 module.exports = getVideoDescription;

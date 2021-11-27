@@ -1,6 +1,8 @@
 // Taken from mp3-cutter and modified to add callback function
 const fs = require("fs");
 const Duration = require("./duration.js");
+const { logger } = require("../logger/initializeLogger");
+require("dotenv").config();
 
 class MP3Cutter {
   /**
@@ -34,8 +36,20 @@ class MP3Cutter {
       );
       fs.writeFileSync(o.target, audioBuffer);
       o.callback();
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      if (process.env.NODE_ENV === "production") {
+        logger.error(
+          "Error writing file with Buffer within mp3Cutter's 'cutter' function!",
+          {
+            indexMeta: true,
+            meta: {
+              message: err.message,
+            },
+          }
+        );
+      } else {
+        console.error(err);
+      }
     } finally {
       fs.closeSync(fd);
     }

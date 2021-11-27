@@ -1,3 +1,4 @@
+const fs = require("fs");
 const contentful = require("contentful");
 const contentfulManagement = require("contentful-management");
 const filterOutArr = require("../arrays/filterOutArr");
@@ -5,7 +6,7 @@ const getAudioStems = require("../analysis/getAudioStems");
 const searchYouTube = require("./searchYouTube");
 const updatePreviousEntries = require("../contentful/updatePreviousEntries");
 const checkFileExists = require("../utils/checkFileExists");
-const fs = require("fs");
+const { logger } = require("../logger/initializeLogger");
 require("dotenv").config();
 
 const getTrack = async (
@@ -108,9 +109,13 @@ const getTrack = async (
                           .then((updatedEntry) => {
                             updatedEntry.publish();
 
-                            console.log(
-                              `Entry update was successful and has been published for track "${topSong.title}" by ${topSong.artist}. Its associated charts have been updated to include its new ${currentChartName} rank.`
-                            );
+                            const logStatement = `Entry update was successful and has been published for track "${topSong.title}" by ${topSong.artist}. Its associated charts have been updated to include its new ${currentChartName} rank.`;
+
+                            if (process.env.NODE_ENV === "production") {
+                              logger.log(logStatement);
+                            } else {
+                              console.log(logStatement);
+                            }
                           });
                       });
                     });
@@ -132,9 +137,14 @@ const getTrack = async (
                   updateContentfulCharts();
                 }
               } else {
-                console.log(
-                  `No changes in chart rank this week for "${topSong.title}" by ${topSong.artist}.`
-                );
+                const noChangesStatement = `No changes in chart rank this week for "${topSong.title}" by ${topSong.artist}.`;
+
+                if (process.env.NODE_ENV === "production") {
+                  logger.log(noChangesStatement);
+                } else {
+                  console.log(noChangesStatement);
+                }
+
                 return;
               }
             } else {
@@ -175,7 +185,19 @@ const getTrack = async (
                 }
               },
               (err) => {
-                console.log("Something went wrong!", err);
+                if (process.env.NODE_ENV === "production") {
+                  logger.error("Something went wrong when searching Spotify!", {
+                    indexMeta: true,
+                    meta: {
+                      message: err.message,
+                    },
+                  });
+                } else {
+                  console.log(
+                    "Something went wrong when searching Spotify!",
+                    err
+                  );
+                }
               }
             )
             .then((id) => {
@@ -222,6 +244,8 @@ const getTrack = async (
                           topSong.title,
                           topSong.artist
                         ).then(async (match) => {
+                          const noMatchFoundStatement = `No match found for track "${topSong.title}" by ${topSong.artist}.`;
+
                           if (match) {
                             if (match.arr) {
                               if (match.arr.length >= 4) {
@@ -248,7 +272,19 @@ const getTrack = async (
                                     matchArr,
                                     trackDataJSON
                                   ).catch((err) => {
-                                    console.log(err);
+                                    if (process.env.NODE_ENV === "production") {
+                                      logger.error(
+                                        "Something went wrong when running audio analysis!",
+                                        {
+                                          indexMeta: true,
+                                          meta: {
+                                            message: err.message,
+                                          },
+                                        }
+                                      );
+                                    } else {
+                                      console.log(err);
+                                    }
 
                                     if (youtubeAudioFileExists) {
                                       fs.rmSync("YouTubeAudio.mp3", {
@@ -261,52 +297,98 @@ const getTrack = async (
                                 };
 
                                 if (youtubeAudioFileExists) {
-                                  console.log(
-                                    `Whoops, a different song loop is still running! Delaying for one minute and then analyzing audio for track "${topSong.title}" by ${topSong.artist}.`
-                                  );
+                                  const stillRunningStatement = `Whoops, a different song loop is still running! Delaying for one minute and then analyzing audio for track "${topSong.title}" by ${topSong.artist}.`;
+                                  if (process.env.NODE_ENV === "production") {
+                                    logger.log(stillRunningStatement);
+                                  } else {
+                                    console.log(stillRunningStatement);
+                                  }
+
                                   setTimeout(() => runAudioAnalysis(), 60000);
                                 } else {
                                   runAudioAnalysis();
                                 }
                               } else {
-                                console.log(
-                                  `No match found for track "${topSong.title}" by ${topSong.artist}.`
-                                );
+                                if (process.env.NODE_ENV === "production") {
+                                  logger.error(noMatchFoundStatement);
+                                } else {
+                                  console.log(noMatchFoundStatement);
+                                }
+
                                 return;
                               }
                             } else {
-                              console.log(
-                                `No match found for track "${topSong.title}" by ${topSong.artist}.`
-                              );
+                              if (process.env.NODE_ENV === "production") {
+                                logger.error(noMatchFoundStatement);
+                              } else {
+                                console.log(noMatchFoundStatement);
+                              }
+
                               return;
                             }
                           } else {
-                            console.log(
-                              `No match found for track "${topSong.title}" by ${topSong.artist}.`
-                            );
+                            if (process.env.NODE_ENV === "production") {
+                              logger.error(noMatchFoundStatement);
+                            } else {
+                              console.log(noMatchFoundStatement);
+                            }
+
                             return;
                           }
                         });
                       } else {
-                        console.log(
-                          `Track "${topSong.title}" by ${topSong.artist} has a time signature that is not 4/4. Moving on to the next track.`
-                        );
+                        const not4ErrorStatement = `Track "${topSong.title}" by ${topSong.artist} has a time signature that is not 4/4. Moving on to the next track.`;
+
+                        if (process.env.NODE_ENV === "production") {
+                          logger.log(not4ErrorStatement);
+                        } else {
+                          console.log(not4ErrorStatement);
+                        }
                         return;
                       }
                     },
                     (err) => {
-                      console.log(err);
+                      if (process.env.NODE_ENV === "production") {
+                        logger.error(
+                          `Something went wrong after fetching Spotify's audio analysis for "${topSong.title}" by ${filteredArtist[0]}.`,
+                          {
+                            indexMeta: true,
+                            meta: {
+                              message: err.message,
+                            },
+                          }
+                        );
+                      } else {
+                        console.error(err);
+                      }
                       return;
                     }
                   )
-                  .catch((error) => {
-                    console.log(error);
+                  .catch((err) => {
+                    if (process.env.NODE_ENV === "production") {
+                      logger.error(
+                        `Something went wrong when fetching Spotify's audio analysis for "${topSong.title}" by ${filteredArtist[0]}.`,
+                        {
+                          indexMeta: true,
+                          meta: {
+                            message: err.message,
+                          },
+                        }
+                      );
+                    } else {
+                      console.error(err);
+                    }
+
                     return;
                   });
               } else {
-                console.log(
-                  `Spotify did not return a song ID for "${topSong.title}" by ${filteredArtist[0]}. Moving on to next song!`
-                );
+                const noSongIDStatement = `Spotify did not return a song ID for "${topSong.title}" by ${filteredArtist[0]}. Moving on to next song!`;
+
+                if (process.env.NODE_ENV === "production") {
+                  logger.log(noSongIDStatement);
+                } else {
+                  console.log(noSongIDStatement);
+                }
                 return;
               }
             });

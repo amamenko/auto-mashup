@@ -1,19 +1,63 @@
 const { decode } = require("html-entities");
+const { logger } = require("../logger/initializeLogger");
 const getTranscripts = require("../timestamps/getTranscripts");
 const installYouTubeTranscriptAPI = require("../timestamps/installYouTubeTranscriptAPI");
 const secondsToTimestamp = require("../utils/secondsToTimestamp");
+require("dotenv").config();
 
 const getVideoSubtitles = async (video_id) => {
   const getYouTubeTranscript = async (id) => {
     return await installYouTubeTranscriptAPI()
       .then(async () => {
-        return await getTranscripts(id).catch((e) => console.error(e));
+        return await getTranscripts(id).catch((err) => {
+          if (process.env.NODE_ENV === "production") {
+            logger.error(
+              `Received error when getting transcripts for video ID ${id}.`,
+              {
+                indexMeta: true,
+                meta: {
+                  message: err.message,
+                },
+              }
+            );
+          } else {
+            console.error(err);
+          }
+        });
       })
-      .catch((e) => console.error(e));
+      .catch((err) => {
+        if (process.env.NODE_ENV === "production") {
+          logger.error(
+            "Received error when installing youtube_transcript_api.",
+            {
+              indexMeta: true,
+              meta: {
+                message: err.message,
+              },
+            }
+          );
+        } else {
+          console.error(err);
+        }
+      });
   };
 
-  const lyricsArrayAsString = await getYouTubeTranscript(video_id).catch((e) =>
-    console.error(e)
+  const lyricsArrayAsString = await getYouTubeTranscript(video_id).catch(
+    (err) => {
+      if (process.env.NODE_ENV === "production") {
+        logger.error(
+          `Received error when getting YouTube transcript for video ID ${video_id}.`,
+          {
+            indexMeta: true,
+            meta: {
+              message: err.message,
+            },
+          }
+        );
+      } else {
+        console.error(err);
+      }
+    }
   );
 
   if (lyricsArrayAsString) {
@@ -30,6 +74,8 @@ const getVideoSubtitles = async (video_id) => {
     if (isValidJSON(lyricsArrayAsString)) {
       parsedJSON = JSON.parse(lyricsArrayAsString);
     }
+
+    const noUsableStatement = "No usable subtitles found.";
 
     if (parsedJSON) {
       const lyricsArr = parsedJSON[0];
@@ -76,15 +122,29 @@ const getVideoSubtitles = async (video_id) => {
 
         return sortedSubtitleArr;
       } else {
-        console.log("No usable subtitles found.");
+        if (process.env.NODE_ENV === "production") {
+          logger.log(noUsableStatement);
+        } else {
+          console.log(noUsableStatement);
+        }
         return;
       }
     } else {
-      console.log("No usable subtitles found.");
+      if (process.env.NODE_ENV === "production") {
+        logger.log(noUsableStatement);
+      } else {
+        console.log(noUsableStatement);
+      }
       return;
     }
   } else {
-    console.log("No subtitles found for this video!");
+    const noSubtitlesFoundStatement = "No subtitles found for this video!";
+
+    if (process.env.NODE_ENV === "production") {
+      logger.log(noSubtitlesFoundStatement);
+    } else {
+      console.log(noSubtitlesFoundStatement);
+    }
     return;
   }
 };

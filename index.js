@@ -9,6 +9,8 @@ const isFirstSundayOfMonth = require("./functions/utils/isFirstSundayOfMonth");
 const findMixable = require("./functions/mix/findMixable");
 const SpotifyWebApi = require("spotify-web-api-node");
 const { format } = require("date-fns");
+const { logger } = require("./functions/logger/initializeLogger");
+const { onLoggerShutdown } = require("./functions/logger/onLoggerShutdown");
 require("dotenv").config();
 
 const port = process.env.PORT || 4000;
@@ -19,6 +21,8 @@ const spotifyCredentials = {
 };
 
 const spotifyApi = new SpotifyWebApi(spotifyCredentials);
+
+onLoggerShutdown();
 
 // Run on Tuesdays/Wednesdays starting at noon and then every two minutes until 1 o'clock (for non-GOAT charts)
 cron.schedule("0,*/2 12-12 * * 2,3", () => {
@@ -55,23 +59,57 @@ cron.schedule("*/5 * * * *", () => {
       .clientCredentialsGrant()
       .then(
         (data) => {
-          console.log(
-            "Retrieved new access token: " + data.body["access_token"]
-          );
+          if (process.env.NODE_ENV === "production") {
+            logger.log("Retrieved new access token:", {
+              indexMeta: true,
+              meta: {
+                access_token: data.body["access_token"],
+              },
+            });
+          } else {
+            console.log(
+              "Retrieved new access token: " + data.body["access_token"]
+            );
+          }
 
           // Save the access token so that it's used in future calls
           spotifyApi.setAccessToken(data.body["access_token"]);
         },
         (err) => {
-          console.log(
-            "Something went wrong when retrieving an access token",
-            err.message
-          );
+          if (process.env.NODE_ENV === "production") {
+            logger.error(
+              "Something went wrong when retrieving an access token",
+              {
+                indexMeta: true,
+                meta: {
+                  message: err.message,
+                },
+              }
+            );
+          } else {
+            console.error(
+              "Something went wrong when retrieving an access token",
+              err.message
+            );
+          }
         }
       )
       .then(() => loopSongs(spotifyApi))
       .catch((error) => {
-        console.log(error);
+        if (process.env.NODE_ENV === "production") {
+          logger.error(
+            "Something went wrong when granting Spotify client credentials.",
+            {
+              indexMeta: true,
+              meta: {
+                message: error.message,
+              },
+            }
+          );
+        } else {
+          console.error(error);
+        }
+
         return;
       });
   }
@@ -82,5 +120,11 @@ cron.schedule("*/5 * * * *", () => {
 // testSearch("hot-100", 0)
 
 app.listen(port, () => {
-  console.log(`Listening on port ${port}...`);
+  const portStatement = `Listening on port ${port}...`;
+
+  if (process.env.NODE_ENV === "production") {
+    logger.log(portStatement);
+  } else {
+    console.log(portStatement);
+  }
 });

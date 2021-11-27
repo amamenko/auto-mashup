@@ -2,6 +2,8 @@ const { getLyrics } = require("genius-lyrics-api");
 const stringSimilarity = require("string-similarity");
 const timeStampToSeconds = require("../utils/timeStampToSeconds");
 const removeAccents = require("remove-accents");
+const { logger } = require("../logger/initializeLogger");
+require("dotenv").config();
 
 const getLyricTimestamps = async (options) => {
   const returnedLyrics = await getLyrics(options)
@@ -232,15 +234,40 @@ const getLyricTimestamps = async (options) => {
             returned: matchArr.filter((item) => item.start),
           };
         } else {
-          console.log("No YouTube captions available.");
+          const noneAvailableStatement = "No YouTube captions available.";
+          if (process.env.NODE_ENV === "production") {
+            logger.log(noneAvailableStatement);
+          } else {
+            console.log(noneAvailableStatement);
+          }
           return;
         }
       } else {
-        console.log("No lyrics served");
+        const noneServedStatement = "No lyrics served";
+        if (process.env.NODE_ENV === "production") {
+          logger.log(noneServedStatement);
+        } else {
+          console.log(noneServedStatement);
+        }
+
         return;
       }
     })
-    .catch((err) => console.error(err));
+    .catch((err) => {
+      if (process.env.NODE_ENV === "production") {
+        logger.error(
+          "Something went wrong when getting lyric timestamps within 'getLyricTimestamps' function!",
+          {
+            indexMeta: true,
+            meta: {
+              message: err.message,
+            },
+          }
+        );
+      } else {
+        console.error(err);
+      }
+    });
 
   if (returnedLyrics) {
     return returnedLyrics;

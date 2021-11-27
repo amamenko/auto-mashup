@@ -1,5 +1,7 @@
 const searchVideo = require("../usetube/usetubeSearchVideo");
 const filterVideoResults = require("./filterVideoResults");
+const { logger } = require("../logger/initializeLogger");
+require("dotenv").config();
 
 const searchYouTube = async (trackTitle, trackArtist) => {
   const searchForVideoFunction = async (searchTerm, captionOnly) => {
@@ -12,39 +14,93 @@ const searchYouTube = async (trackTitle, trackArtist) => {
 
               return allResultsArr;
             } else {
-              console.log("No results found!");
+              const noResultsStatement = "No results found!";
+
+              if (process.env.NODE_ENV === "production") {
+                logger.log(noResultsStatement);
+              } else {
+                console.log(noResultsStatement);
+              }
               return;
             }
           }
         }
       })
-      .catch((e) => console.error(e));
+      .catch((err) => {
+        if (process.env.NODE_ENV === "production") {
+          logger.error(
+            `Something went wrong when attempting to search for YouTube video with search term "${searchTerm}"`,
+            {
+              indexMeta: true,
+              meta: {
+                message: err.message,
+              },
+            }
+          );
+        } else {
+          console.error(err);
+        }
+      });
   };
 
   const videosWithLyrics = await searchForVideoFunction(
     `${trackTitle} ${trackArtist} lyrics`,
     true
-  ).catch((e) => console.error(e));
+  ).catch((err) => {
+    if (process.env.NODE_ENV === "production") {
+      logger.error(
+        `Something went wrong when attempting to search for YouTube video with search term "${trackTitle} ${trackArtist} lyrics"`,
+        {
+          indexMeta: true,
+          meta: {
+            message: err.message,
+          },
+        }
+      );
+    } else {
+      console.error(err);
+    }
+  });
+
+  const noApplicableVideosStatement = `No applicable YouTube videos found for search term "${trackTitle} ${trackArtist} lyrics"`;
 
   if (videosWithLyrics && videosWithLyrics.length > 0) {
     const filtered = await filterVideoResults(
       videosWithLyrics,
       trackTitle,
       trackArtist
-    ).catch((e) => console.error(e));
+    ).catch((err) => {
+      if (process.env.NODE_ENV === "production") {
+        logger.error(
+          "Something went wrong when attempting to filter all YouTube video results!",
+          {
+            indexMeta: true,
+            meta: {
+              message: err.message,
+            },
+          }
+        );
+      } else {
+        console.error(err);
+      }
+    });
 
     if (filtered) {
       return filtered;
     } else {
-      console.log(
-        `No applicable YouTube videos found for search term "${trackTitle} ${trackArtist} lyrics"`
-      );
+      if (process.env.NODE_ENV === "production") {
+        logger.log(noApplicableVideosStatement);
+      } else {
+        console.log(noApplicableVideosStatement);
+      }
       return;
     }
   } else {
-    console.log(
-      `No applicable YouTube videos found for search term "${trackTitle} ${trackArtist} lyrics"`
-    );
+    if (process.env.NODE_ENV === "production") {
+      logger.log(noApplicableVideosStatement);
+    } else {
+      console.log(noApplicableVideosStatement);
+    }
     return;
   }
 };

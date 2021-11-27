@@ -1,5 +1,6 @@
 const contentful = require("contentful");
 const contentfulManagement = require("contentful-management");
+const { logger } = require("../logger/initializeLogger");
 require("dotenv").config();
 
 const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
@@ -72,9 +73,15 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
                                     .then((updatedEntry) => {
                                       updatedEntry.publish();
 
-                                      console.log(
-                                        `The charts field for the track "${fields.title}" by ${fields.artist} has been updated successfully and published.`
-                                      );
+                                      const successStatement = `The charts field for the track "${fields.title}" by ${fields.artist} has been updated successfully and published.`;
+
+                                      if (
+                                        process.env.NODE_ENV === "production"
+                                      ) {
+                                        logger.log(successStatement);
+                                      } else {
+                                        console.log(successStatement);
+                                      }
                                     });
                                 });
                               } else {
@@ -91,15 +98,28 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
                                   entry
                                     .unpublish()
                                     .then((unpublishedEntry) => {
-                                      console.log(
-                                        `Entry for track "${fields.title}" by ${fields.artist} has been unpublished. Deleting now...`
-                                      );
+                                      const unpublishedStatement = `Entry for track "${fields.title}" by ${fields.artist} has been unpublished. Deleting now...`;
+
+                                      if (
+                                        process.env.NODE_ENV === "production"
+                                      ) {
+                                        logger.log(unpublishedStatement);
+                                      } else {
+                                        console.log(unpublishedStatement);
+                                      }
+
                                       unpublishedEntry.delete();
                                     })
                                     .then(() => {
-                                      console.log(
-                                        `Entry for track "${fields.title}" by ${fields.artist} has been deleted.`
-                                      );
+                                      const deletedStatement = `Entry for track "${fields.title}" by ${fields.artist} has been deleted.`;
+
+                                      if (
+                                        process.env.NODE_ENV === "production"
+                                      ) {
+                                        logger.log(deletedStatement);
+                                      } else {
+                                        console.log(deletedStatement);
+                                      }
 
                                       // Delete accompaniment asset
                                       if (accompanimentID) {
@@ -110,16 +130,39 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
                                               .unpublish()
                                               .then(
                                                 (unpublishedAccompaniment) => {
-                                                  console.log(
-                                                    `Accompaniment asset for track "${fields.title}" by ${fields.artist} has been unpublished. Deleting now...`
-                                                  );
+                                                  const accompanimentUnpublishedStatement = `Accompaniment asset for track "${fields.title}" by ${fields.artist} has been unpublished. Deleting now...`;
+
+                                                  if (
+                                                    process.env.NODE_ENV ===
+                                                    "production"
+                                                  ) {
+                                                    logger.log(
+                                                      accompanimentUnpublishedStatement
+                                                    );
+                                                  } else {
+                                                    console.log(
+                                                      accompanimentUnpublishedStatement
+                                                    );
+                                                  }
+
                                                   unpublishedAccompaniment.delete();
                                                 }
                                               )
                                               .then(() => {
-                                                console.log(
-                                                  `Accompaniment asset for track "${fields.title}" by ${fields.artist} has been deleted.`
-                                                );
+                                                const accompanimentDeletedStatement = `Accompaniment asset for track "${fields.title}" by ${fields.artist} has been deleted.`;
+
+                                                if (
+                                                  process.env.NODE_ENV ===
+                                                  "production"
+                                                ) {
+                                                  logger.log(
+                                                    accompanimentDeletedStatement
+                                                  );
+                                                } else {
+                                                  console.log(
+                                                    accompanimentDeletedStatement
+                                                  );
+                                                }
 
                                                 // Delete vocals asset
                                                 if (vocalsID) {
@@ -132,27 +175,105 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
                                                           (
                                                             unpublishedVocalsAsset
                                                           ) => {
-                                                            console.log(
-                                                              `Vocals asset for track "${fields.title}" by ${fields.artist} has been unpublished. Deleting now...`
-                                                            );
+                                                            const voxUnpublishedStatement = `Vocals asset for track "${fields.title}" by ${fields.artist} has been unpublished. Deleting now...`;
+
+                                                            if (
+                                                              process.env
+                                                                .NODE_ENV ===
+                                                              "production"
+                                                            ) {
+                                                              logger.log(
+                                                                voxUnpublishedStatement
+                                                              );
+                                                            } else {
+                                                              console.log(
+                                                                voxUnpublishedStatement
+                                                              );
+                                                            }
+
                                                             unpublishedVocalsAsset.delete();
                                                           }
                                                         )
                                                         .then(() => {
-                                                          console.log(
-                                                            `Vocals asset for track "${fields.title}" by ${fields.artist} has been deleted.`
-                                                          );
+                                                          const voxDeletedStatement = `Vocals asset for track "${fields.title}" by ${fields.artist} has been deleted.`;
+
+                                                          if (
+                                                            process.env
+                                                              .NODE_ENV ===
+                                                            "production"
+                                                          ) {
+                                                            logger.log(
+                                                              voxDeletedStatement
+                                                            );
+                                                          } else {
+                                                            console.log(
+                                                              voxDeletedStatement
+                                                            );
+                                                          }
+
                                                           return;
                                                         })
-                                                        .catch(console.error);
+                                                        .catch((err) => {
+                                                          if (
+                                                            process.env
+                                                              .NODE_ENV ===
+                                                            "production"
+                                                          ) {
+                                                            logger.error(
+                                                              `Error unpublishing and deleting vocals asset for track "${fields.title}" by ${fields.artist}`,
+                                                              {
+                                                                indexMeta: true,
+                                                                meta: {
+                                                                  message:
+                                                                    err.message,
+                                                                },
+                                                              }
+                                                            );
+                                                          } else {
+                                                            console.error(err);
+                                                          }
+                                                        });
                                                     });
                                                 }
                                               })
-                                              .catch(console.error);
+                                              .catch((err) => {
+                                                if (
+                                                  process.env.NODE_ENV ===
+                                                  "production"
+                                                ) {
+                                                  logger.error(
+                                                    `Error unpublishing and deleting accompaniment asset for track "${fields.title}" by ${fields.artist}`,
+                                                    {
+                                                      indexMeta: true,
+                                                      meta: {
+                                                        message: err.message,
+                                                      },
+                                                    }
+                                                  );
+                                                } else {
+                                                  console.error(err);
+                                                }
+                                              });
                                           });
                                       }
                                     })
-                                    .catch(console.error);
+                                    .catch((err) => {
+                                      if (
+                                        process.env.NODE_ENV === "production"
+                                      ) {
+                                        logger.error(
+                                          `Error unpublishing and deleting Contentful entry for track "${fields.title}" by ${fields.artist}`,
+                                          {
+                                            indexMeta: true,
+                                            meta: {
+                                              message: err.message,
+                                            },
+                                          }
+                                        );
+                                      } else {
+                                        console.error(err);
+                                      }
+                                    });
                                 }
                               }
                             });
@@ -167,8 +288,20 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
         }
       }
     })
-    .catch((e) => {
-      console.error(e);
+    .catch((err) => {
+      if (process.env.NODE_ENV === "production") {
+        logger.error(
+          "Error getting Contentful entries within updatePreviousEntries.js file.",
+          {
+            indexMeta: true,
+            meta: {
+              message: err.message,
+            },
+          }
+        );
+      } else {
+        console.error(err);
+      }
       return;
     });
 };

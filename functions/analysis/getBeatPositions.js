@@ -3,6 +3,8 @@ const audioCtx = new AudioContext();
 const fs = require("fs");
 const path = require("path");
 const checkFileExists = require("../utils/checkFileExists");
+const { logger } = require("../logger/initializeLogger");
+require("dotenv").config();
 
 const getBeatPositions = async (successCallback) => {
   const accompanimentExists = await checkFileExists(
@@ -15,19 +17,42 @@ const getBeatPositions = async (successCallback) => {
     );
 
     if (audioBuffer) {
-      return await audioCtx.decodeAudioData(audioBuffer, successCallback, (e) =>
-        console.log("Error with decoding audio data" + e.err)
+      return await audioCtx.decodeAudioData(
+        audioBuffer,
+        successCallback,
+        (err) => {
+          if (process.env.NODE_ENV === "production") {
+            logger.error("Error with decoding audio data", {
+              indexMeta: true,
+              meta: {
+                message: err.err,
+              },
+            });
+          } else {
+            console.error("Error with decoding audio data" + err.err);
+          }
+        }
       );
     } else {
-      console.log(
-        "Audio buffer cannot be read for beat position decoding with Essentia. Moving on to next track!"
-      );
+      const badAudioBufferStatement =
+        "Audio buffer cannot be read for beat position decoding with Essentia. Moving on to next track!";
+
+      if (process.env.NODE_ENV === "production") {
+        logger.log(badAudioBufferStatement);
+      } else {
+        console.log(badAudioBufferStatement);
+      }
       return;
     }
   } else {
-    console.log(
-      "No local accompaniment MP3 file was found. Cannot get beat positions. Moving on to next track!"
-    );
+    const noMP3Statement =
+      "No local accompaniment MP3 file was found. Cannot get beat positions. Moving on to next track!";
+
+    if (process.env.NODE_ENV === "production") {
+      logger.log(noMP3Statement);
+    } else {
+      console.log(noMP3Statement);
+    }
 
     const cleanUpOutputDir = async () => {
       if (await checkFileExists(path.resolve("output"))) {
@@ -35,7 +60,14 @@ const getBeatPositions = async (successCallback) => {
           recursive: true,
           force: true,
         });
-        console.log("Deleted output directory!");
+
+        const outputDeletedStatement = "Deleted output directory!";
+
+        if (process.env.NODE_ENV === "production") {
+          logger.log(outputDeletedStatement);
+        } else {
+          console.log(outputDeletedStatement);
+        }
       }
     };
 

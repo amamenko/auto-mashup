@@ -2,6 +2,8 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
 const { getChartObjects } = require("./getChartObjects");
+const { logger } = require("../logger/initializeLogger");
+require("dotenv").config();
 
 const BILLBOARD_BASE_URL = "http://www.billboard.com";
 const BILLBOARD_CHARTS_URL = `${BILLBOARD_BASE_URL}/charts/`;
@@ -15,7 +17,21 @@ const listCharts = async (cb) => {
   const chartsHTML = await axios
     .get(BILLBOARD_CHARTS_URL)
     .then((res) => res.data)
-    .catch((e) => console.error(e));
+    .catch((err) => {
+      if (process.env.NODE_ENV === "production") {
+        logger.error(
+          `Something went wrong when performing a GET request to the Billboard URL "${BILLBOARD_CHARTS_URL}" in the listCharts.js function.`,
+          {
+            indexMeta: true,
+            meta: {
+              message: err.message,
+            },
+          }
+        );
+      } else {
+        console.error(err);
+      }
+    });
 
   if (chartsHTML) {
     const $ = cheerio.load(chartsHTML);
@@ -78,7 +94,19 @@ const listCharts = async (cb) => {
         return arr;
       })
       .catch((err) => {
-        console.log(err);
+        if (process.env.NODE_ENV === "production") {
+          logger.error(
+            "Something went wrong when waiting for all promises to resolve in the listCharts.js function",
+            {
+              indexMeta: true,
+              meta: {
+                message: err.message,
+              },
+            }
+          );
+        } else {
+          console.error(err);
+        }
       });
 
     // Callback with charts if charts array was populated

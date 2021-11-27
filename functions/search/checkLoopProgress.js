@@ -2,6 +2,7 @@ const contentful = require("contentful");
 const updateChartLoopInProgress = require("../contentful/updateChartLoopInProgress");
 const { isBefore, parseISO } = require("date-fns");
 const cleanUpLoopsOnExit = require("../contentful/cleanUpLoopsOnExit");
+const { logger } = require("../logger/initializeLogger");
 require("dotenv").config();
 
 const checkLoopProgress = async () => {
@@ -50,7 +51,19 @@ const checkLoopProgress = async () => {
                           firstChart,
                           "in progress"
                         ).catch((err) => {
-                          console.error(err);
+                          if (process.env.NODE_ENV === "production") {
+                            logger.error(
+                              "Error updating chart to 'in progress' within checkLoopProgress function!",
+                              {
+                                indexMeta: true,
+                                meta: {
+                                  message: err.message,
+                                },
+                              }
+                            );
+                          } else {
+                            console.error(err);
+                          }
                           cleanUpLoopsOnExit();
                         });
                       }
@@ -59,7 +72,19 @@ const checkLoopProgress = async () => {
                 }
               })
               .catch((err) => {
-                console.error(err);
+                if (process.env.NODE_ENV === "production") {
+                  logger.error(
+                    "Error getting Contentful chart entries within checkLoopProgress function!",
+                    {
+                      indexMeta: true,
+                      meta: {
+                        message: err.message,
+                      },
+                    }
+                  );
+                } else {
+                  console.error(err);
+                }
                 cleanUpLoopsOnExit();
               });
           } else {
@@ -89,7 +114,19 @@ const checkLoopProgress = async () => {
       }
     })
     .catch((err) => {
-      console.error(err);
+      if (process.env.NODE_ENV === "production") {
+        logger.error(
+          "Error getting Contentful chart loops in progress within checkLoopProgress function!",
+          {
+            indexMeta: true,
+            meta: {
+              message: err.message,
+            },
+          }
+        );
+      } else {
+        console.error(err);
+      }
       cleanUpLoopsOnExit();
     });
 };

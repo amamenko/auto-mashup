@@ -6,6 +6,8 @@ const esPkg = require("essentia.js");
 const MP3Cutter = require("../mp3Cutter/cutter");
 const sendDataToContentful = require("../contentful/sendDataToContentful");
 const checkFileExists = require("../utils/checkFileExists");
+const { logger } = require("../logger/initializeLogger");
+require("dotenv").config();
 let essentia;
 
 if (esPkg.EssentiaWASM) {
@@ -20,7 +22,12 @@ const getAudioStems = async (
   matchArr,
   trackDataJSON
 ) => {
-  console.log(`Now downloading video: ${matchTitle}`);
+  const downloadingStatement = `Now downloading video: ${matchTitle}`;
+  if (process.env.NODE_ENV === "production") {
+    logger.log(downloadingStatement);
+  } else {
+    console.log(downloadingStatement);
+  }
 
   const mp3Link = await axios
     .get(`https://www.yt-download.org/api/button/mp3/${videoID}`)
@@ -28,7 +35,21 @@ const getAudioStems = async (
     .then((data) =>
       data ? data.split('<a href="')[1].split('" class="shadow-xl')[0] : ""
     )
-    .catch((e) => console.error(e));
+    .catch((err) => {
+      if (process.env.NODE_ENV === "production") {
+        logger.error(
+          `Something went wrong when accessing yt-download.org with video ID "${videoID}"`,
+          {
+            indexMeta: true,
+            meta: {
+              message: err.message,
+            },
+          }
+        );
+      } else {
+        console.error(err);
+      }
+    });
 
   const start = Date.now();
 
@@ -42,8 +63,20 @@ const getAudioStems = async (
     url: mp3Link ? mp3Link : "",
     method: "GET",
     responseType: "stream",
-  }).catch(async (e) => {
-    console.error(e);
+  }).catch(async (err) => {
+    if (process.env.NODE_ENV === "production") {
+      logger.error(
+        `Something went wrong when performing a GET request to the URL "${mp3Link}"`,
+        {
+          indexMeta: true,
+          meta: {
+            message: err.message,
+          },
+        }
+      );
+    } else {
+      console.error(err);
+    }
 
     if (youtubeAudioFileExists) {
       fs.rmSync("YouTubeAudio.mp3", {
@@ -57,17 +90,32 @@ const getAudioStems = async (
     response.data.pipe(writer);
 
     response.data.on("error", (err) => {
-      console.log(
-        "Received an error when attempting to download YouTube video audio. Terminating process. Output: " +
-          err
-      );
+      const errorStatement =
+        "Received an error when attempting to download YouTube video audio. Terminating process. Output: ";
+
+      if (process.env.NODE_ENV === "production") {
+        logger.error(errorStatement, {
+          indexMeta: true,
+          meta: {
+            message: err.message,
+          },
+        });
+      } else {
+        console.error(errorStatement + err);
+      }
       return;
     });
 
     response.data.on("end", () => {
-      console.log(
-        `\nDone in ${(Date.now() - start) / 1000}s\nSaved to ${filePath}.`
-      );
+      const doneTimestampStatement = `\nDone in ${
+        (Date.now() - start) / 1000
+      }s\nSaved to ${filePath}.`;
+
+      if (process.env.NODE_ENV === "production") {
+        logger.log(doneTimestampStatement);
+      } else {
+        console.log(doneTimestampStatement);
+      }
 
       // Make sure Spleeter is installed
       PythonShell.run(
@@ -77,7 +125,13 @@ const getAudioStems = async (
           if (err) {
             throw err;
           } else {
-            console.log("Splitting audio file.");
+            const splittingStatement = "Splitting audio file.";
+
+            if (process.env.NODE_ENV === "production") {
+              logger.log(splittingStatement);
+            } else {
+              console.log(splittingStatement);
+            }
 
             // Split audio into stems and clean up
             PythonShell.run(
@@ -89,7 +143,14 @@ const getAudioStems = async (
                 if (err) {
                   throw err;
                 } else {
-                  console.log("Successfully split track into two stems");
+                  const successStatement =
+                    "Successfully split track into two stems";
+
+                  if (process.env.NODE_ENV === "production") {
+                    logger.log(successStatement);
+                  } else {
+                    console.log(successStatement);
+                  }
 
                   if (fs.existsSync(filePath)) {
                     fs.unlinkSync(filePath);
@@ -97,9 +158,14 @@ const getAudioStems = async (
 
                   if (fs.existsSync("pretrained_models")) {
                     fs.rmSync("pretrained_models", { recursive: true });
-                    console.log(
-                      "Removed pretrained_models directory and local audio file"
-                    );
+                    const removedStatement =
+                      "Removed pretrained_models directory and local audio file";
+
+                    if (process.env.NODE_ENV === "production") {
+                      logger.log(removedStatement);
+                    } else {
+                      console.log(removedStatement);
+                    }
                   }
 
                   // Get beat positions from accompaniment track
@@ -173,9 +239,15 @@ const getAudioStems = async (
                                       }),
                                   });
                                 } else {
-                                  console.log(
-                                    "Either vocals or accompaniment file does not exist! Moving on to next track."
-                                  );
+                                  const doesntExistStatement =
+                                    "Either vocals or accompaniment file does not exist! Moving on to next track.";
+
+                                  if (process.env.NODE_ENV === "production") {
+                                    logger.log(doesntExistStatement);
+                                  } else {
+                                    console.log(doesntExistStatement);
+                                  }
+
                                   return;
                                 }
                               } else {
@@ -190,39 +262,79 @@ const getAudioStems = async (
                                 );
                               }
                             } else {
-                              console.log(
-                                "No beat positions returned from analysis!"
-                              );
+                              const noBeatPositionsStatement =
+                                "No beat positions returned from analysis!";
+
+                              if (process.env.NODE_ENV === "production") {
+                                logger.log(noBeatPositionsStatement);
+                              } else {
+                                console.log(noBeatPositionsStatement);
+                              }
                               return;
                             }
                           } else {
-                            console.log(
-                              "No beat ticks returned from analysis!"
-                            );
+                            const noBeatTicksStatement =
+                              "No beat ticks returned from analysis!";
+
+                            if (process.env.NODE_ENV === "production") {
+                              logger.log(noBeatTicksStatement);
+                            } else {
+                              console.log(noBeatTicksStatement);
+                            }
                             return;
                           }
                         } else {
-                          console.log("No beats returned from analysis!");
+                          const noBeatsStatement =
+                            "No beats returned from analysis!";
+
+                          if (process.env.NODE_ENV === "production") {
+                            logger.log(noBeatsStatement);
+                          } else {
+                            console.log(noBeatsStatement);
+                          }
                           return;
                         }
                       } else {
-                        console.log(
-                          "No useful buffer provided to the Essentia beat matching function. Moving on to next track!"
-                        );
+                        const noUsefulBufferStatement =
+                          "No useful buffer provided to the Essentia beat matching function. Moving on to next track!";
+
+                        if (process.env.NODE_ENV === "production") {
+                          logger.log(noUsefulBufferStatement);
+                        } else {
+                          console.log(noUsefulBufferStatement);
+                        }
+
                         return;
                       }
                     } else {
-                      console.log(
-                        "Error with Essentia module. Cannot run beat matching function. Moving on to next track!"
-                      );
+                      const errorEssentiaStatement =
+                        "Error with Essentia module. Cannot run beat matching function. Moving on to next track!";
+
+                      if (process.env.NODE_ENV === "production") {
+                        logger.log(errorEssentiaStatement);
+                      } else {
+                        console.log(errorEssentiaStatement);
+                      }
                       return;
                     }
                   };
 
                   try {
                     return getBeatPositions(beatSuccessCallback);
-                  } catch (e) {
-                    console.error(e);
+                  } catch (err) {
+                    if (process.env.NODE_ENV === "production") {
+                      logger.error(
+                        "Error getting beat positions within 'getAudioStems.js' function!",
+                        {
+                          indexMeta: true,
+                          meta: {
+                            message: err.message,
+                          },
+                        }
+                      );
+                    } else {
+                      console.error(err);
+                    }
                     return;
                   }
                 }
@@ -233,7 +345,14 @@ const getAudioStems = async (
       );
     });
   } else {
-    console.log("No download video data was received!");
+    const noDataStatement = "No download video data was received!";
+
+    if (process.env.NODE_ENV === "production") {
+      logger.log(noDataStatement);
+    } else {
+      console.log(noDataStatement);
+    }
+
     if (youtubeAudioFileExists) {
       fs.rmSync("YouTubeAudio.mp3", {
         recursive: true,

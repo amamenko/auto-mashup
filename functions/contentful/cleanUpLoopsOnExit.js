@@ -1,6 +1,7 @@
 const process = require("process");
 const contentful = require("contentful");
 const contentfulManagement = require("contentful-management");
+const { logger } = require("../logger/initializeLogger");
 require("dotenv").config();
 
 const cleanUpLoopsOnExit = async () => {
@@ -66,9 +67,13 @@ const cleanUpLoopsOnExit = async () => {
                                 .getEntry(res.items[0].sys.id)
                                 .then((updatedEntry) => {
                                   updatedEntry.publish().then(() => {
-                                    console.log(
-                                      `Server killed. Songs loop for chart ${chartInProgress.fields.name} no longer in progress.`
-                                    );
+                                    const serverKilledStatement = `Server killed. Songs loop for chart ${chartInProgress.fields.name} no longer in progress.`;
+
+                                    if (process.env.NODE_ENV === "production") {
+                                      logger.log(serverKilledStatement);
+                                    } else {
+                                      console.log(serverKilledStatement);
+                                    }
                                     return;
                                   });
 
@@ -84,12 +89,32 @@ const cleanUpLoopsOnExit = async () => {
           }
         }
       }
-      console.log("Server killed. No song loops happening at the moment.");
+
+      const serverKilledNoLoopsStatement =
+        "Server killed. No song loops happening at the moment.";
+
+      if (process.env.NODE_ENV === "production") {
+        logger.log(serverKilledNoLoopsStatement);
+      } else {
+        console.log(serverKilledNoLoopsStatement);
+      }
 
       return;
     })
     .catch((err) => {
-      console.log(err);
+      if (process.env.NODE_ENV === "production") {
+        logger.error(
+          "Something went wrong when checking Contentful entry chart loops in progress in 'cleanUpLoopsOnExist.js' function.",
+          {
+            indexMeta: true,
+            meta: {
+              message: err.message,
+            },
+          }
+        );
+      } else {
+        console.log(err);
+      }
       return err;
     });
 };

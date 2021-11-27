@@ -1,12 +1,26 @@
 const { searchChannel, getChannelDesc } = require("usetube");
+const { logger } = require("../logger/initializeLogger");
+require("dotenv").config();
 
 const getChannelDescription = async (video) => {
   let description = "";
 
   if (video.channel_id) {
-    description = await getChannelDesc(exactMatch.channel_id).catch((err) =>
-      console.error(err)
-    );
+    description = await getChannelDesc(exactMatch.channel_id).catch((err) => {
+      if (process.env.NODE_ENV === "production") {
+        logger.error(
+          `Something went wrong when getting channel description for channel ID ${exactMatch.channel_id}.`,
+          {
+            indexMeta: true,
+            meta: {
+              message: err.message,
+            },
+          }
+        );
+      } else {
+        console.error(err);
+      }
+    });
   } else if (video.channel_name) {
     description = await searchChannel(video.channel_name)
       .then(async (channel_res) => {
@@ -19,7 +33,21 @@ const getChannelDescription = async (video) => {
             if (exactMatch) {
               if (exactMatch.channel_id) {
                 return await getChannelDesc(exactMatch.channel_id).catch(
-                  (err) => console.error(err)
+                  (err) => {
+                    if (process.env.NODE_ENV === "production") {
+                      logger.error(
+                        `Something went wrong when getting channel description for channel ID ${exactMatch.channel_id}.`,
+                        {
+                          indexMeta: true,
+                          meta: {
+                            message: err.message,
+                          },
+                        }
+                      );
+                    } else {
+                      console.error(err);
+                    }
+                  }
                 );
               }
             }
@@ -28,7 +56,21 @@ const getChannelDescription = async (video) => {
 
         return;
       })
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        if (process.env.NODE_ENV === "production") {
+          logger.error(
+            `Something went wrong when getting channel description for channel name ${video.channel_name}.`,
+            {
+              indexMeta: true,
+              meta: {
+                message: err.message,
+              },
+            }
+          );
+        } else {
+          console.error(err);
+        }
+      });
   } else {
     return;
   }

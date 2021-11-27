@@ -3,6 +3,8 @@ const contentfulManagement = require("contentful-management");
 const { getChart } = require("../billboard/getChart");
 const { format, startOfWeek, addDays } = require("date-fns");
 const deepEqual = require("deep-equal");
+const { logger } = require("../logger/initializeLogger");
+require("dotenv").config();
 
 const loopCurrentCharts = async (goat) => {
   // Access to Contentful Delivery API
@@ -25,7 +27,19 @@ const loopCurrentCharts = async (goat) => {
 
             getChart(fields.url, async (err, upcomingChart) => {
               if (err) {
-                console.log(err);
+                if (process.env.NODE_ENV === "production") {
+                  logger.error(
+                    `Something went wrong when getting chart with URL: ${fields.url}.`,
+                    {
+                      indexMeta: true,
+                      meta: {
+                        message: err.message,
+                      },
+                    }
+                  );
+                } else {
+                  console.error(err);
+                }
               }
 
               const mapApplicableFields = (list) => {
@@ -111,21 +125,51 @@ const loopCurrentCharts = async (goat) => {
                                       .then((updatedEntry) => {
                                         updatedEntry.publish();
 
-                                        console.log(
-                                          `Chart entry update for ${fields.name} was successful and has been published. Updated current song list.`
-                                        );
+                                        const successStatement = `Chart entry update for ${fields.name} was successful and has been published. Updated current song list.`;
+
+                                        if (
+                                          process.env.NODE_ENV === "production"
+                                        ) {
+                                          logger.log(successStatement);
+                                        } else {
+                                          console.log(successStatement);
+                                        }
                                       });
                                   })
-                                  .catch((e) => {
-                                    console.error(e);
+                                  .catch((err) => {
+                                    if (process.env.NODE_ENV === "production") {
+                                      logger.error(
+                                        `Something went wrong when updating the chart enty for ${fields.name}.`,
+                                        {
+                                          indexMeta: true,
+                                          meta: {
+                                            message: err.message,
+                                          },
+                                        }
+                                      );
+                                    } else {
+                                      console.error(err);
+                                    }
                                   });
                               }
                             }
                           });
                       });
                     })
-                    .catch((e) => {
-                      console.error(e);
+                    .catch((err) => {
+                      if (process.env.NODE_ENV === "production") {
+                        logger.error(
+                          `Something went wrong when getting chart with URL: ${fields.url}.`,
+                          {
+                            indexMeta: true,
+                            meta: {
+                              message: err.message,
+                            },
+                          }
+                        );
+                      } else {
+                        console.error(err);
+                      }
                     });
                 }
               }
@@ -134,8 +178,20 @@ const loopCurrentCharts = async (goat) => {
         }
       }
     })
-    .catch((e) => {
-      console.error(e);
+    .catch((err) => {
+      if (process.env.NODE_ENV === "production") {
+        logger.error(
+          "Something went wrong when getting the Contentful management space!",
+          {
+            indexMeta: true,
+            meta: {
+              message: err.message,
+            },
+          }
+        );
+      } else {
+        console.error(err);
+      }
     });
 };
 
