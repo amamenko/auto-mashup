@@ -4,13 +4,13 @@ const cron = require("node-cron");
 const loopCurrentCharts = require("./functions/search/loopCurrentCharts");
 const checkLoopProgress = require("./functions/search/checkLoopProgress");
 const loopSongs = require("./functions/search/loopSongs");
-const testSearch = require("./functions/search/testSearch");
 const isFirstSundayOfMonth = require("./functions/utils/isFirstSundayOfMonth");
-const findMixable = require("./functions/mix/findMixable");
 const SpotifyWebApi = require("spotify-web-api-node");
 const { format } = require("date-fns");
 const { logger } = require("./functions/logger/initializeLogger");
 const { onLoggerShutdown } = require("./functions/logger/onLoggerShutdown");
+const testSearch = require("./functions/search/testSearch");
+const findMixable = require("./functions/mix/findMixable");
 require("dotenv").config();
 
 const port = process.env.PORT || 4000;
@@ -117,7 +117,7 @@ cron.schedule("*/5 * * * *", () => {
 
 // findMixable();
 
-// testSearch("hot-100", 0)
+// testSearch("hot-100", 0);
 
 app.listen(port, () => {
   const portStatement = `Listening on port ${port}...`;
