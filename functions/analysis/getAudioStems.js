@@ -127,7 +127,7 @@ const getAudioStems = async (
           } else {
             // Split audio into stems and clean up
             const spleeterScript = exec(
-              `sh ./functions/analysis/spleeter-wrapper.sh -f ${filePath} --stems 2 --process_codec MP3`
+              `sh spleeter-wrapper.sh -f ${filePath} --stems 2 --process_codec MP3`
             );
 
             spleeterScript.on("spawn", () => {

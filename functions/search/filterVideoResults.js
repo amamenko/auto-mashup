@@ -48,7 +48,7 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
       ) &&
       formattedVideoTitle.includes(trackTitleWithoutAlias) &&
       artistArr.some((artist) => formattedVideoTitle.includes(artist)) &&
-      video.duration > 60 &&
+      video.duration >= 80 &&
       video.duration <= 990 &&
       video.views >= viewsMinimum
     );

@@ -38,6 +38,7 @@ const getBeatPositions = async (
   };
 
   if (accompanimentExists) {
+    // Lame encoding necessary due to 'Huffman data overrun' issue otherwise due to Spleeter FFMPEG concatenation
     const encoder = new Lame({
       output: "buffer",
       bitrate: 192,
