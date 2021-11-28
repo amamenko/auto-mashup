@@ -127,7 +127,7 @@ const getAudioStems = async (
           } else {
             // Split audio into stems and clean up
             const spleeterScript = exec(
-              `sh spleeter-wrapper.sh -f ${filePath} --stems 2 --process_codec MP3`
+              `bash spleeter-wrapper.sh -f ${filePath} --stems 2 --process_codec MP3`
             );
 
             spleeterScript.on("spawn", () => {
@@ -137,6 +137,22 @@ const getAudioStems = async (
                 logger.log(splittingStatement);
               } else {
                 console.log(splittingStatement);
+              }
+            });
+
+            spleeterScript.on("error", (err) => {
+              const errorStatement =
+                "Error received when splitting audio file!";
+
+              if (process.env.NODE_ENV === "production") {
+                logger.error(errorStatement, {
+                  indexMeta: true,
+                  meta: {
+                    err,
+                  },
+                });
+              } else {
+                console.error(errorStatement);
               }
             });
 

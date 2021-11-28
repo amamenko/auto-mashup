@@ -117,7 +117,7 @@ cron.schedule("*/5 * * * *", () => {
 
 // findMixable();
 
-// testSearch("hot-100", 0);
+testSearch("latin-songs", 9);
 
 app.listen(port, () => {
   const portStatement = `Listening on port ${port}...`;
