@@ -175,7 +175,7 @@ joinStem () {
 
   local STEM SPLITS LOCAL_EXT FILE_ARRAY fileArrayStem
   STEM="$1" # e.g. "vocals"
-  SPLITS="$2" # e.g. "-30" or "-offset"
+  SPLITS="$2" # e.g. "-15" or "-offset"
   LOCAL_EXT="$3" # e.g. "m4a"
   shift 3 # to remove the three first arguments, so that "$@" will refer to array content only
   FILE_ARRAY=( "$@" ) # e.g.: ("output/filename-000", "output/filename-001", "output/filename-002", ...)
@@ -187,7 +187,7 @@ joinStem () {
   # List all files to be joined in a file for ffmpeg to use as input list
   printf "file '%s'\n" "${fileArrayStem[@]}" > concat-orig.txt # where > will overwrite the file if it already exists.
 
-  # Concats the files in the list to destination file, e.g.: "output/filename/vocals-30.m4a"
+  # Concats the files in the list to destination file, e.g.: "output/filename/vocals-15.m4a"
   ffmpeg -f concat -safe 0 -i concat-orig.txt -c copy output/"$NAME"/$STEM$SPLITS.$LOCAL_EXT
 
   # Cleanup
@@ -202,8 +202,8 @@ joinAllStems () {
   # first param is name to append to the split parts
   SPLITS="$1"
   LOCAL_EXT="$2"
-  # Failsafe - set to 30 if no stem is provided as argument
-  [ "$SPLITS" == "" ] && SPLITS="30"
+  # Failsafe - set to 15 if no stem is provided as argument
+  [ "$SPLITS" == "" ] && SPLITS="15"
   SPLITS="-$SPLITS"
 
   # create output folder
@@ -223,7 +223,7 @@ joinAllStems () {
   # prepend output/ to each array element
   fileArray=( "${fileArray[@]/#/output/}" )
 
-  # Create vocals-30.m4a or vocals-offset.m4a, to be used in killCracksAndCreateOutput() later.
+  # Create vocals-15.m4a or vocals-offset.m4a, to be used in killCracksAndCreateOutput() later.
   for stem_name in "${STEM_NAMES[@]}"; do
     joinStem $stem_name "$SPLITS" $LOCAL_EXT "${fileArray[@]}"
   done
@@ -237,7 +237,7 @@ joinAllStems () {
 }
 
 
-# Split the full audio file to 30s parts, by utilising a 15s offset during processing.
+# Split the full audio file to 15s parts, by utilising a 15s offset during processing.
 offsetSplit () {
 
   local NAME LOCAL_EXT
@@ -248,7 +248,7 @@ offsetSplit () {
   ffmpeg -i "$NAME".$LOCAL_EXT -f segment -segment_time 15 -c copy -y "$NAME"-%03d.$LOCAL_EXT
 
   # Then leave the first 15s clip as is (000).
-  # Join the second (001) into the third clip (002), the fourth into the fifth, etc. so the resulting parts are 30s clips.
+  # Join the second (001) into the third clip (002), the fourth into the fifth, etc. so the resulting parts are 15s clips.
   local cur curPad prev prevPad
   cur=2 # the current clip index, 0-indexed
   curPad=$(printf "%03d" $cur) # 002, third clip
@@ -270,24 +270,24 @@ offsetSplit () {
 }
 
 
-# Split the file into 30s parts. Using the --process_codec, to avoid a bug with duplicated time segments (repeating seconds), which would otherwise occur when directly splitting audio files of certain codecs like WMA.
+# Split the file into 15s parts. Using the --process_codec, to avoid a bug with duplicated time segments (repeating seconds), which would otherwise occur when directly splitting audio files of certain codecs like WMA.
 if [[ "$EXT" != "$SPLEETER_OUT_EXT" ]]; then
   # Create a temp file if the orig. audio file is in a different codec.
   ffmpeg -i "$NAME".$EXT "$NAME".$SPLEETER_OUT_EXT
 fi
-ffmpeg -i "$NAME".$SPLEETER_OUT_EXT -f segment -segment_time 30 -c copy "$NAME"-%03d.$SPLEETER_OUT_EXT
+ffmpeg -i "$NAME".$SPLEETER_OUT_EXT -f segment -segment_time 15 -c copy "$NAME"-%03d.$SPLEETER_OUT_EXT
 
 
 # Do the separation on the parts.
 # 5x: The 5x space of orig. file in M4A comes from the 5 stems.
 nice -n 19 spleeter separate -p spleeter:$SPLEETER_STEMS -B tensorflow -o output "$NAME"-* -c $SPLEETER_OUT_EXT
 
-# Create output/"$NAME"/vocals-30.m4a, and similar for the other stems.
-# 5x2x: Temporarily uses 2x space of stems = $stems-30.m4a, before the joined stems are created, and orig. stems deleted, so back to 5x space of orig. file in M4A.
-joinAllStems 30 $SPLEETER_OUT_EXT
+# Create output/"$NAME"/vocals-15.m4a, and similar for the other stems.
+# 5x2x: Temporarily uses 2x space of stems = $stems-15.m4a, before the joined stems are created, and orig. stems deleted, so back to 5x space of orig. file in M4A.
+joinAllStems 15 $SPLEETER_OUT_EXT
 
 
-# Split the orig. audio file into 30s parts, via splitting to 15s parts and joining two and two (except the first).
+# Split the orig. audio file into 15s parts, via splitting to 15s parts and joining two and two (except the first).
 offsetSplit "$NAME" $SPLEETER_OUT_EXT
 
 # Clean up the potential temp file used as the base for splitting, since all the splits are produced, and we only need the splits further on.
@@ -296,7 +296,7 @@ if [[ "$EXT" != "$SPLEETER_OUT_EXT" ]]; then
 fi
 
 # Do the separation on the parts (which are now the split offsets of the orig. audio file).
-# 5x2x: 5x space of orig. file in M4A (old stems: vocals-30.m4a etc.) + 5x space of orig. file in M4A (new stems).
+# 5x2x: 5x space of orig. file in M4A (old stems: vocals-15.m4a etc.) + 5x space of orig. file in M4A (new stems).
 nice -n 19 spleeter separate -p spleeter:$SPLEETER_STEMS -B tensorflow -o output "$NAME"-* -c $SPLEETER_OUT_EXT
 
 # Create `output/"$NAME"/vocals-offset.m4a`, and similar for the other stems.
@@ -307,7 +307,7 @@ joinAllStems offset $SPLEETER_OUT_EXT
 cd output/"$NAME" || exit
 
 
-# 5x2x2x: since 5x2x from before, plus both the 30-stems and the offset-stems are split into 1s fragments. After replacing, the offset-stems are deleted, so it's back to 5x2x
+# 5x2x2x: since 5x2x from before, plus both the 15-stems and the offset-stems are split into 1s fragments. After replacing, the offset-stems are deleted, so it's back to 5x2x
 killCracksAndCreateOutput () {
 
   local STEM LOCAL_EXT
@@ -318,15 +318,15 @@ killCracksAndCreateOutput () {
   [ "$STEM" == "" ] && STEM="vocals"
 
   # Create temporary folders
-  mkdir parts-30
+  mkdir parts-15
   mkdir parts-offset
 
   # Split the stem into 1s parts.
-  # Logs: [segment @ 0x7ff0d0815200] Opening 'parts-30/vocals-30-000000.m4a' for writing
-  ffmpeg -i $STEM-30.$LOCAL_EXT -f segment -segment_time 1 -c copy parts-30/$STEM-30-%06d.$LOCAL_EXT
+  # Logs: [segment @ 0x7ff0d0815200] Opening 'parts-15/vocals-15-000000.m4a' for writing
+  ffmpeg -i $STEM-15.$LOCAL_EXT -f segment -segment_time 1 -c copy parts-15/$STEM-15-%06d.$LOCAL_EXT
   # 5x2x2x: The space consumption will be at its highest at this point.
   # clean up early
-  rm $STEM-30.$LOCAL_EXT
+  rm $STEM-15.$LOCAL_EXT
 
   # Logs: [segment @ 0x7fe6c4008200] Opening 'parts-offset/vocals-offset-000000.m4a' for writing
   ffmpeg -i $STEM-offset.$LOCAL_EXT -f segment -segment_time 1 -c copy parts-offset/$STEM-offset-%06d.$LOCAL_EXT
@@ -334,33 +334,33 @@ killCracksAndCreateOutput () {
 
   # Replace the 3 seconds around the cracks with the parts from the offset.
   local cur curPad prev prevPad next nextPad
-  cur=30 # the current second, since first clip ends at 30 sec
+  cur=15 # the current second, since first clip ends at 15 sec
   curPad=$(printf "%06d" $cur)
   # In the output/"$NAME"/ folder:
   while [ -f "parts-offset/$STEM-offset-$curPad.$LOCAL_EXT" ]; do
-    mv parts-offset/$STEM-offset-$curPad.$LOCAL_EXT parts-30/$STEM-30-$curPad.$LOCAL_EXT
+    mv parts-offset/$STEM-offset-$curPad.$LOCAL_EXT parts-15/$STEM-15-$curPad.$LOCAL_EXT
     prev=$(( $cur - 1 ))
     prevPad=$(printf "%06d" $prev)
-    mv parts-offset/$STEM-offset-$prevPad.$LOCAL_EXT parts-30/$STEM-30-$prevPad.$LOCAL_EXT
+    mv parts-offset/$STEM-offset-$prevPad.$LOCAL_EXT parts-15/$STEM-15-$prevPad.$LOCAL_EXT
     next=$(( $cur + 1 ))
     nextPad=$(printf "%06d" $next)
-    mv parts-offset/$STEM-offset-$nextPad.$LOCAL_EXT parts-30/$STEM-30-$nextPad.$LOCAL_EXT
-    cur=$(( $cur + 30 ))
+    mv parts-offset/$STEM-offset-$nextPad.$LOCAL_EXT parts-15/$STEM-15-$nextPad.$LOCAL_EXT
+    cur=$(( $cur + 15 ))
     curPad=$(printf "%06d" $cur)
   done
 
   # Free up some space early
   rm -r parts-offset
 
-  # Create list of the parts, with lines like: `file 'parts-30/vocals-30-000000.m4a'` etc.
-  find parts-30 -name "$STEM*" | sort -n | sed 's:\ :\\\ :g' | sed "s/^/file '/" | sed "s/$/'/" > concat-seconds.txt
+  # Create list of the parts, with lines like: `file 'parts-15/vocals-15-000000.m4a'` etc.
+  find parts-15 -name "$STEM*" | sort -n | sed 's:\ :\\\ :g' | sed "s/^/file '/" | sed "s/$/'/" > concat-seconds.txt
 
   # Reassemble the full stem / create output.
   # Result placed in: `output/"$NAME"/$STEM.$LOCAL_EXT`
   ffmpeg -f concat -safe 0 -i concat-seconds.txt -c copy $STEM.$LOCAL_EXT
 
   # Clean up rest
-  rm -r parts-30 # just the folder, at this point, since content cleaned up in concat() underway.
+  rm -r parts-15 # just the folder, at this point, since content cleaned up in concat() underway.
   rm concat-seconds.txt
 
 }

@@ -22,98 +22,98 @@ const spotifyCredentials = {
 
 const spotifyApi = new SpotifyWebApi(spotifyCredentials);
 
-onLoggerShutdown();
+// onLoggerShutdown();
 
-// Run on Tuesdays/Wednesdays starting at noon and then every two minutes until 1 o'clock (for non-GOAT charts)
-cron.schedule("0,*/2 12-12 * * 2,3", () => {
-  // Get state of previous week's charts
-  loopCurrentCharts();
-});
+// // Run on Tuesdays/Wednesdays starting at noon and then every two minutes until 1 o'clock (for non-GOAT charts)
+// cron.schedule("0,*/2 12-12 * * 2,3", () => {
+//   // Get state of previous week's charts
+//   loopCurrentCharts();
+// });
 
-// Run every Sunday at midnight, check if it's the first Sunday of the month - if so, update GOAT charts every two minutes until 1 o'clock
-cron.schedule("0,*/2 0-0 * * 0", () => {
-  if (isFirstSundayOfMonth()) {
-    loopCurrentCharts("goat");
-  }
-});
+// // Run every Sunday at midnight, check if it's the first Sunday of the month - if so, update GOAT charts every two minutes until 1 o'clock
+// cron.schedule("0,*/2 0-0 * * 0", () => {
+//   if (isFirstSundayOfMonth()) {
+//     loopCurrentCharts("goat");
+//   }
+// });
 
-// Check for or update current loop progression every 30 minutes
-cron.schedule("0,30 * * * *", () => {
-  checkLoopProgress();
-});
+// // Check for or update current loop progression every 30 minutes
+// cron.schedule("0,30 * * * *", () => {
+//   checkLoopProgress();
+// });
 
-// Loop next song position of current in-progress chart (if any) every 5 minutes
-cron.schedule("*/5 * * * *", () => {
-  const currentMinutes = format(Date.now(), "mm");
+// // Loop next song position of current in-progress chart (if any) every 5 minutes
+// cron.schedule("*/5 * * * *", () => {
+//   const currentMinutes = format(Date.now(), "mm");
 
-  if (
-    spotifyApi.getAccessToken() &&
-    currentMinutes !== "00" &&
-    currentMinutes !== "20" &&
-    currentMinutes !== "40"
-  ) {
-    loopSongs(spotifyApi);
-  } else {
-    // Retrieve an access token
-    spotifyApi
-      .clientCredentialsGrant()
-      .then(
-        (data) => {
-          if (process.env.NODE_ENV === "production") {
-            logger.log("Retrieved new access token:", {
-              indexMeta: true,
-              meta: {
-                access_token: data.body["access_token"],
-              },
-            });
-          } else {
-            console.log(
-              "Retrieved new access token: " + data.body["access_token"]
-            );
-          }
+//   if (
+//     spotifyApi.getAccessToken() &&
+//     currentMinutes !== "00" &&
+//     currentMinutes !== "20" &&
+//     currentMinutes !== "40"
+//   ) {
+//     loopSongs(spotifyApi);
+//   } else {
+//     // Retrieve an access token
+//     spotifyApi
+//       .clientCredentialsGrant()
+//       .then(
+//         (data) => {
+//           if (process.env.NODE_ENV === "production") {
+//             logger.log("Retrieved new access token:", {
+//               indexMeta: true,
+//               meta: {
+//                 access_token: data.body["access_token"],
+//               },
+//             });
+//           } else {
+//             console.log(
+//               "Retrieved new access token: " + data.body["access_token"]
+//             );
+//           }
 
-          // Save the access token so that it's used in future calls
-          spotifyApi.setAccessToken(data.body["access_token"]);
-        },
-        (err) => {
-          if (process.env.NODE_ENV === "production") {
-            logger.error(
-              "Something went wrong when retrieving an access token",
-              {
-                indexMeta: true,
-                meta: {
-                  message: err.message,
-                },
-              }
-            );
-          } else {
-            console.error(
-              "Something went wrong when retrieving an access token",
-              err.message
-            );
-          }
-        }
-      )
-      .then(() => loopSongs(spotifyApi))
-      .catch((error) => {
-        if (process.env.NODE_ENV === "production") {
-          logger.error(
-            "Something went wrong when granting Spotify client credentials.",
-            {
-              indexMeta: true,
-              meta: {
-                message: error.message,
-              },
-            }
-          );
-        } else {
-          console.error(error);
-        }
+//           // Save the access token so that it's used in future calls
+//           spotifyApi.setAccessToken(data.body["access_token"]);
+//         },
+//         (err) => {
+//           if (process.env.NODE_ENV === "production") {
+//             logger.error(
+//               "Something went wrong when retrieving an access token",
+//               {
+//                 indexMeta: true,
+//                 meta: {
+//                   message: err.message,
+//                 },
+//               }
+//             );
+//           } else {
+//             console.error(
+//               "Something went wrong when retrieving an access token",
+//               err.message
+//             );
+//           }
+//         }
+//       )
+//       .then(() => loopSongs(spotifyApi))
+//       .catch((error) => {
+//         if (process.env.NODE_ENV === "production") {
+//           logger.error(
+//             "Something went wrong when granting Spotify client credentials.",
+//             {
+//               indexMeta: true,
+//               meta: {
+//                 message: error.message,
+//               },
+//             }
+//           );
+//         } else {
+//           console.error(error);
+//         }
 
-        return;
-      });
-  }
-});
+//         return;
+//       });
+//   }
+// });
 
 // findMixable();
 
