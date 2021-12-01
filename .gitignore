@@ -9,6 +9,7 @@
 /build
 
 /output
+/pretrained_models
 YouTubeSubtitles.vtt
 YouTubeSubtitles.json
 *.mp3
