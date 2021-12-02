@@ -2,11 +2,12 @@ const fs = require("fs");
 const contentful = require("contentful");
 const contentfulManagement = require("contentful-management");
 const filterOutArr = require("../arrays/filterOutArr");
-const getAudioStems = require("../analysis/getAudioStems");
+const getAudioInputSource = require("../analysis/getAudioInputSource");
 const searchYouTube = require("./searchYouTube");
 const updatePreviousEntries = require("../contentful/updatePreviousEntries");
 const checkFileExists = require("../utils/checkFileExists");
 const { logger } = require("../logger/initializeLogger");
+const timeStampToSeconds = require("../utils/timeStampToSeconds");
 require("dotenv").config();
 
 const getTrack = async (
@@ -253,23 +254,68 @@ const getTrack = async (
                                 const matchTitle = match.videoTitle;
                                 const matchDuration = match.duration;
                                 const matchExpected = match.expectedArr;
-                                const matchArr = match.arr.map((item) => {
-                                  return {
-                                    sectionName: item.sectionName,
-                                    start: item.start,
-                                  };
-                                });
+                                const matchArr = match.arr
+                                  .map((item) => {
+                                    return {
+                                      sectionName: item.sectionName,
+                                      start: item.start,
+                                    };
+                                  })
+                                  .filter(
+                                    (item) => item.sectionName !== "intro 1"
+                                  );
+
+                                let audioStart = timeStampToSeconds(
+                                  matchArr[0].start
+                                );
+
+                                audioStart =
+                                  audioStart - 5 >= 0
+                                    ? audioStart - 5
+                                    : audioStart;
+
+                                // Cut off of audio will be at 2 minute and 10 second mark, at most
+                                const audioEnd = audioStart + 130;
+
+                                // TODO: Update new array timestamps to match trimmed audio
+                                const filteredMatchArr = matchArr.filter(
+                                  (item) =>
+                                    timeStampToSeconds(item.start) + 9 <=
+                                    audioEnd
+                                );
 
                                 const youtubeAudioFileExists =
                                   await checkFileExists("YouTubeAudio.mp3");
 
+                                const youtubeTrimmedAudioFileExists =
+                                  await checkFileExists(
+                                    "YouTubeAudioTrimmed.mp3"
+                                  );
+
                                 const runAudioAnalysis = async () => {
-                                  await getAudioStems(
+                                  // Clean up leftover audio input just in case
+                                  if (youtubeAudioFileExists) {
+                                    fs.rmSync("YouTubeAudio.mp3", {
+                                      recursive: true,
+                                      force: true,
+                                    });
+                                  }
+
+                                  // Clean up leftover trimmed audio input just in case
+                                  if (youtubeTrimmedAudioFileExists) {
+                                    fs.rmSync("YouTubeAudioTrimmed.mp3", {
+                                      recursive: true,
+                                      force: true,
+                                    });
+                                  }
+
+                                  await getAudioInputSource(
+                                    audioStart,
                                     matchID,
                                     matchTitle,
                                     matchDuration,
                                     matchExpected,
-                                    matchArr,
+                                    filteredMatchArr,
                                     trackDataJSON
                                   ).catch((err) => {
                                     if (process.env.NODE_ENV === "production") {
@@ -283,7 +329,7 @@ const getTrack = async (
                                         }
                                       );
                                     } else {
-                                      console.log(err);
+                                      console.error(err);
                                     }
 
                                     if (youtubeAudioFileExists) {
@@ -296,7 +342,10 @@ const getTrack = async (
                                   });
                                 };
 
-                                if (youtubeAudioFileExists) {
+                                if (
+                                  youtubeAudioFileExists ||
+                                  youtubeTrimmedAudioFileExists
+                                ) {
                                   const stillRunningStatement = `Whoops, a different song loop is still running! Delaying for one minute and then analyzing audio for track "${topSong.title}" by ${topSong.artist}.`;
                                   if (process.env.NODE_ENV === "production") {
                                     logger.log(stillRunningStatement);

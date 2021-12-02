@@ -1,4 +1,3 @@
-const MP3Cutter = require("../mp3Cutter/cutter");
 const sendDataToContentful = require("../contentful/sendDataToContentful");
 const { logger } = require("../logger/initializeLogger");
 require("dotenv").config();
@@ -38,64 +37,14 @@ const beatSuccessCallback = async (
               Number(item.toFixed(4))
             );
 
-            if (matchDuration > 360) {
-              const accompanimentFileExists = await checkFileExists(
-                "output/YouTubeAudio/accompaniment.mp3"
-              );
-
-              const vocalsFileExists = await checkFileExists(
-                "output/YouTubeAudio/vocals.mp3"
-              );
-
-              if (accompanimentFileExists && vocalsFileExists) {
-                MP3Cutter.cut({
-                  src: "output/YouTubeAudio/accompaniment.mp3",
-                  target: "output/YouTubeAudio/accompaniment_trimmed.mp3",
-                  start: 0,
-                  // Keep total track time at 6 minutes maximum to keep file at ~6 MB
-                  end: 360,
-                  callback: () =>
-                    MP3Cutter.cut({
-                      src: "output/YouTubeAudio/vocals.mp3",
-                      target: "output/YouTubeAudio/vocals_trimmed.mp3",
-                      start: 0,
-                      // Keep total track time at 6 minutes maximum to keep file at ~6 MB
-                      end: 360,
-                      callback: () =>
-                        sendDataToContentful(
-                          trackDataJSON,
-                          360,
-                          matchArr,
-                          roundedBeatPositions,
-                          "trimmed",
-                          matchExpected,
-                          videoID
-                        ),
-                    }),
-                });
-              } else {
-                const doesntExistStatement =
-                  "Either vocals or accompaniment file does not exist! Moving on to next track.";
-
-                if (process.env.NODE_ENV === "production") {
-                  logger.log(doesntExistStatement);
-                } else {
-                  console.log(doesntExistStatement);
-                }
-
-                return;
-              }
-            } else {
-              sendDataToContentful(
-                trackDataJSON,
-                matchDuration,
-                matchArr,
-                roundedBeatPositions,
-                "",
-                matchExpected,
-                videoID
-              );
-            }
+            sendDataToContentful(
+              trackDataJSON,
+              matchDuration,
+              matchArr,
+              roundedBeatPositions,
+              matchExpected,
+              videoID
+            );
           } else {
             const noBeatPositionsStatement =
               "No beat positions returned from analysis!";

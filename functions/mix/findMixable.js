@@ -11,7 +11,7 @@ const findMixable = async () => {
   await client
     .getEntries({
       "fields.mode": "major",
-      // "fields.goat": "no" || "both",
+      "fields.goat": "no" || "both",
       select:
         "fields.title,fields.artist,fields.tempo,fields.key,fields.duration,fields.expectedSections,fields.sections,fields.beats,fields.accompaniment,fields.vocals",
       content_type: "song",
@@ -49,26 +49,8 @@ const findMixable = async () => {
           matchArr = Array.from(uniqueList).map((item) => JSON.parse(item));
           console.log(matchArr.length);
           if (matchArr && matchArr.length > 0) {
-            // const foundMatch = matchArr.find(
-            //   (item) =>
-            //     item.accompaniment.title === "Without Me" &&
-            //     item.vocals.title === "Kiss Me More"
-            // );
-
-            // console.log({
-            //   accompanimentSections: foundMatch.accompaniment.sections,
-            // });
-            // // const important = matchArr.filter(
-            //   (item) => item.accompaniment.title === "Without Me"
-            // );
-
-            // console.log(important);
-
             console.log(matchArr.length);
-
-            // normalizeInputsAndMix(foundMatch.accompaniment, foundMatch.vocals);
-            // matchArr[55].accompaniment,
-            // matchArr[55].vocals
+            // normalizeInputsAndMix(matchArr[0].accompaniment, matchArr[0].vocals);
           }
         }
       }

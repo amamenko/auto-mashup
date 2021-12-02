@@ -35,6 +35,21 @@ const getBeatPositions = async (
         console.log(outputDeletedStatement);
       }
     }
+
+    if (await checkFileExists("YouTubeAudio.mp3")) {
+      fs.rmSync(path.resolve("YouTubeAudio.mp3"), {
+        recursive: true,
+        force: true,
+      });
+
+      const localFileDeletedStatement = "Deleted local YouTube audio MP3 file!";
+
+      if (process.env.NODE_ENV === "production") {
+        logger.log(localFileDeletedStatement);
+      } else {
+        console.log(localFileDeletedStatement);
+      }
+    }
   };
 
   if (accompanimentExists) {

@@ -10,7 +10,6 @@ const sendDataToContentful = async (
   matchDuration,
   matchArr,
   roundedBeatPositions,
-  trimmed,
   matchExpected,
   videoID
 ) => {
@@ -48,13 +47,13 @@ const sendDataToContentful = async (
     }
   };
 
-  const accompanimentFileExists =
-    (await checkFileExists("output/YouTubeAudio/accompaniment.mp3")) ||
-    (await checkFileExists("output/YouTubeAudio/accompaniment_trimmed.mp3"));
+  const accompanimentFileExists = await checkFileExists(
+    "output/YouTubeAudio/accompaniment.mp3"
+  );
 
-  const vocalsFileExists =
-    (await checkFileExists("output/YouTubeAudio/vocals.mp3")) ||
-    (await checkFileExists("output/YouTubeAudio/vocals_trimmed.mp3"));
+  const vocalsFileExists = await checkFileExists(
+    "output/YouTubeAudio/vocals.mp3"
+  );
 
   if (accompanimentFileExists && vocalsFileExists) {
     const getErrorLogs = (err) => {
@@ -91,9 +90,7 @@ const sendDataToContentful = async (
                       .toLowerCase()
                       .replace(/ /g, "_"),
                     file: fs.readFileSync(
-                      trimmed === "trimmed"
-                        ? "output/YouTubeAudio/accompaniment_trimmed.mp3"
-                        : "output/YouTubeAudio/accompaniment.mp3"
+                      "output/YouTubeAudio/accompaniment.mp3"
                     ),
                   },
                 },
@@ -118,11 +115,7 @@ const sendDataToContentful = async (
                         fileName: `${title} ${artist} vocals.mp3`
                           .toLowerCase()
                           .replace(/ /g, "_"),
-                        file: fs.readFileSync(
-                          trimmed === "trimmed"
-                            ? "output/YouTubeAudio/vocals_trimmed.mp3"
-                            : "output/YouTubeAudio/vocals.mp3"
-                        ),
+                        file: fs.readFileSync("output/YouTubeAudio/vocals.mp3"),
                       },
                     },
                   },
