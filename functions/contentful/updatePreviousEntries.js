@@ -3,12 +3,25 @@ const contentfulManagement = require("contentful-management");
 const { logger } = require("../logger/initializeLogger");
 require("dotenv").config();
 
-const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
+const updatePreviousEntries = async (
+  topSong,
+  songRank,
+  currentChart,
+  goat,
+  currentSongs
+) => {
+  const title = topSong.title;
+  const artist = topSong.artist;
+
   // Access to Contentful Delivery API
   const client = contentful.createClient({
     space: process.env.CONTENTFUL_SPACE_ID,
     accessToken: process.env.CONTENTFUL_ACCESS_TOKEN,
   });
+
+  const appearsAnywhereInCurrentChart = currentSongs.find(
+    (item) => item.title === title && item.artist === artist
+  );
 
   return await client
     .getEntries({
@@ -28,9 +41,6 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
         if (matchedEntry) {
           if (matchedEntry.fields) {
             const fields = matchedEntry.fields;
-
-            const title = topSong.title;
-            const artist = topSong.artist;
 
             // If old match does not have the same ranking now
             if (fields.title !== title || fields.artist !== artist) {
@@ -61,8 +71,11 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
                             environment.getEntry(entryID).then((entry) => {
                               charts.splice(indexCurrentChart, 1);
                               // If entry appears on more charts
-                              // -> leave entry, just update charts it appears on
-                              if (charts.length > 0) {
+                              // -> Leave entry, just update charts it appears on
+                              if (
+                                charts.length > 0 ||
+                                appearsAnywhereInCurrentChart
+                              ) {
                                 entry.fields.charts = {
                                   "en-US": charts,
                                 };
@@ -86,6 +99,7 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
                                 });
                               } else {
                                 // If entry does NOT appear in any other charts
+                                // AND entry does not appear in any other position on the CURRENT chart
                                 // -> Unpublish and delete entry assets and entry itself
                                 if (fields) {
                                   const accompaniment = fields.accompaniment;
@@ -94,10 +108,15 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
                                   const accompanimentID = accompaniment.sys.id;
                                   const vocalsID = vocals.sys.id;
 
+                                  const delayExecution = (ms) =>
+                                    new Promise((resolve, reject) => {
+                                      setTimeout((item) => resolve(), ms);
+                                    });
+
                                   // Unpublish and delete entry itself
                                   entry
                                     .unpublish()
-                                    .then((unpublishedEntry) => {
+                                    .then(async (unpublishedEntry) => {
                                       const unpublishedStatement = `Entry for track "${fields.title}" by ${fields.artist} has been unpublished. Deleting now...`;
 
                                       if (
@@ -108,9 +127,11 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
                                         console.log(unpublishedStatement);
                                       }
 
+                                      await delayExecution(1500);
+
                                       unpublishedEntry.delete();
                                     })
-                                    .then(() => {
+                                    .then(async () => {
                                       const deletedStatement = `Entry for track "${fields.title}" by ${fields.artist} has been deleted.`;
 
                                       if (
@@ -121,6 +142,8 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
                                         console.log(deletedStatement);
                                       }
 
+                                      await delayExecution(1500);
+
                                       // Delete accompaniment asset
                                       if (accompanimentID) {
                                         environment
@@ -129,7 +152,9 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
                                             accompanimentAsset
                                               .unpublish()
                                               .then(
-                                                (unpublishedAccompaniment) => {
+                                                async (
+                                                  unpublishedAccompaniment
+                                                ) => {
                                                   const accompanimentUnpublishedStatement = `Accompaniment asset for track "${fields.title}" by ${fields.artist} has been unpublished. Deleting now...`;
 
                                                   if (
@@ -145,10 +170,12 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
                                                     );
                                                   }
 
+                                                  await delayExecution(1500);
+
                                                   unpublishedAccompaniment.delete();
                                                 }
                                               )
-                                              .then(() => {
+                                              .then(async () => {
                                                 const accompanimentDeletedStatement = `Accompaniment asset for track "${fields.title}" by ${fields.artist} has been deleted.`;
 
                                                 if (
@@ -164,6 +191,8 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
                                                   );
                                                 }
 
+                                                await delayExecution(1500);
+
                                                 // Delete vocals asset
                                                 if (vocalsID) {
                                                   environment
@@ -172,7 +201,7 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
                                                       vocalsAsset
                                                         .unpublish()
                                                         .then(
-                                                          (
+                                                          async (
                                                             unpublishedVocalsAsset
                                                           ) => {
                                                             const voxUnpublishedStatement = `Vocals asset for track "${fields.title}" by ${fields.artist} has been unpublished. Deleting now...`;
@@ -190,6 +219,10 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
                                                                 voxUnpublishedStatement
                                                               );
                                                             }
+
+                                                            await delayExecution(
+                                                              1500
+                                                            );
 
                                                             unpublishedVocalsAsset.delete();
                                                           }

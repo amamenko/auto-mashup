@@ -8,6 +8,7 @@ const updatePreviousEntries = require("../contentful/updatePreviousEntries");
 const checkFileExists = require("../utils/checkFileExists");
 const { logger } = require("../logger/initializeLogger");
 const timeStampToSeconds = require("../utils/timeStampToSeconds");
+const secondsToTimestamp = require("../utils/secondsToTimestamp");
 require("dotenv").config();
 
 const getTrack = async (
@@ -22,7 +23,7 @@ const getTrack = async (
   const songRank = currentSongs[index].rank;
   let songCover = currentSongs[index].cover;
 
-  updatePreviousEntries(topSong, songRank, currentChart, goat);
+  updatePreviousEntries(topSong, songRank, currentChart, goat, currentSongs);
 
   // Access to Contentful Delivery API
   const client = contentful.createClient({
@@ -43,7 +44,7 @@ const getTrack = async (
             const charts = res.items[0].fields.charts;
 
             const containsCurrentChart = charts.find(
-              (item) => item.chartName === currentChartName
+              (item) => item && item.chartName === currentChartName
             );
 
             const newChart = {
@@ -70,6 +71,7 @@ const getTrack = async (
                       const regNames = allChartNames.filter(
                         (item) =>
                           !item.includes("greatest") &&
+                          !item.includes("goat") &&
                           !item.includes("80s") &&
                           !item.includes("90s")
                       );
@@ -77,6 +79,7 @@ const getTrack = async (
                       const goatNames = allChartNames.filter(
                         (item) =>
                           item.includes("greatest") ||
+                          item.includes("goat") ||
                           item.includes("80s") ||
                           item.includes("90s")
                       );
@@ -265,24 +268,44 @@ const getTrack = async (
                                     (item) => item.sectionName !== "intro 1"
                                   );
 
-                                let audioStart = timeStampToSeconds(
+                                const firstSectionStart = timeStampToSeconds(
                                   matchArr[0].start
                                 );
 
-                                audioStart =
-                                  audioStart - 5 >= 0
-                                    ? audioStart - 5
-                                    : audioStart;
+                                let audioStart =
+                                  firstSectionStart - 5 >= 0
+                                    ? firstSectionStart - 5
+                                    : firstSectionStart;
 
                                 // Cut off of audio will be at 2 minute and 10 second mark, at most
                                 const audioEnd = audioStart + 130;
 
-                                // TODO: Update new array timestamps to match trimmed audio
-                                const filteredMatchArr = matchArr.filter(
-                                  (item) =>
-                                    timeStampToSeconds(item.start) + 9 <=
-                                    audioEnd
-                                );
+                                // Update new array timestamps to match trimmed audio
+                                const filteredMatchArr = matchArr
+                                  .filter(
+                                    (item) =>
+                                      timeStampToSeconds(item.start) + 5 <=
+                                      audioEnd
+                                  )
+                                  .map((item) => {
+                                    let startTime = 0;
+
+                                    if (firstSectionStart - 5 >= 0) {
+                                      startTime = secondsToTimestamp(
+                                        timeStampToSeconds(item.start) - 5
+                                      );
+                                    } else {
+                                      startTime = secondsToTimestamp(
+                                        timeStampToSeconds(item.start) -
+                                          firstSectionStart
+                                      );
+                                    }
+
+                                    return {
+                                      sectionName: item.sectionName,
+                                      start: startTime,
+                                    };
+                                  });
 
                                 const youtubeAudioFileExists =
                                   await checkFileExists("YouTubeAudio.mp3");

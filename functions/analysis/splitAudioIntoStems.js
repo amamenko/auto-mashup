@@ -71,6 +71,40 @@ const splitAudioIntoStems = (
               });
             }
 
+            fs.readdir(path.resolve(__dirname), (err, fileNames) => {
+              if (err) throw err;
+
+              // Iterate through the found file names
+              for (const name of fileNames) {
+                const pattern = /(\.m4a)/gim;
+
+                // If file has a .m4a extension
+                if (pattern.test(name)) {
+                  // Try to remove the file
+                  try {
+                    fs.rmSync(path.resolve(__dirname, name), {
+                      recursive: true,
+                      force: true,
+                    });
+                  } catch (err) {
+                    const couldntRemoveStatement = `Couldn't remove the file ${name}!`;
+
+                    if (process.env.NODE_ENV === "production") {
+                      logger.error(couldntRemoveStatement, {
+                        indexMeta: true,
+                        meta: {
+                          err,
+                        },
+                      });
+                    } else {
+                      console.error(couldntRemoveStatement);
+                      console.error(err);
+                    }
+                  }
+                }
+              }
+            });
+
             return;
           }
         }, 210000);
