@@ -179,7 +179,6 @@ const descriptionFilterArray = [
   "south by south west",
   "electric daisy carnival",
   "good morning america",
-  "gma",
   "edc",
   "austin city limits",
   "governors ball",
