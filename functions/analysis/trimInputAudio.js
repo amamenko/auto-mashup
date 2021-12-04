@@ -33,8 +33,8 @@ const trimInputAudio = async (
 
     ffmpeg()
       .input("YouTubeAudioInitial.mp3")
-      // Cap input audio to 2 minutes and 10 seconds due to Spleeter RAM limitations
-      .audioFilters(`atrim=start=${audioStart}:duration=130`)
+      // Cap input audio to 1 minute and 30 seconds due to Spleeter RAM limitations
+      .audioFilters(`atrim=start=${audioStart}:duration=90`)
       .output("YouTubeAudio.mp3")
       .on("error", async (err, stdout, stderr) => {
         const errorStatement =

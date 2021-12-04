@@ -277,8 +277,8 @@ const getTrack = async (
                                     ? firstSectionStart - 5
                                     : firstSectionStart;
 
-                                // Cut off of audio will be at 2 minute and 10 second mark, at most
-                                const audioEnd = audioStart + 130;
+                                // Cut off of audio will be at 1 minute and 30 second mark, at most
+                                const audioEnd = audioStart + 90;
 
                                 // Update new array timestamps to match trimmed audio
                                 const filteredMatchArr = matchArr
