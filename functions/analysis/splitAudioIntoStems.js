@@ -22,7 +22,9 @@ const splitAudioIntoStems = async (
   trackDataJSON
 ) => {
   const fileName = "YouTubeAudio";
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({
+    args: ["--disable-setuid-sandbox", "--no-sandbox"],
+  });
   const page = await browser.newPage();
   await page.setRequestInterception(true);
   page.on("request", async (request) => {
@@ -48,21 +50,7 @@ const splitAudioIntoStems = async (
               url,
               method: "GET",
               responseType: "stream",
-            }).catch(async (err) => {
-              if (process.env.NODE_ENV === "production") {
-                logger.error(
-                  `Something went wrong when performing a GET request to the URL "${url}"`,
-                  {
-                    indexMeta: true,
-                    meta: {
-                      message: err.message,
-                    },
-                  }
-                );
-              } else {
-                console.error(err);
-              }
-            });
+            }).catch((err) => err);
 
             if (downloadStream) {
               const filePath = path.resolve(
@@ -98,14 +86,6 @@ const splitAudioIntoStems = async (
                   console.log(doneStatement);
                 }
               });
-            } else {
-              const noDataStatement = `No download stream data was received for url ${url}!`;
-
-              if (process.env.NODE_ENV === "production") {
-                logger.log(noDataStatement);
-              } else {
-                console.log(noDataStatement);
-              }
             }
           };
 

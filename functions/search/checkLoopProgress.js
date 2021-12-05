@@ -30,7 +30,8 @@ const checkLoopProgress = async () => {
               .getEntries({
                 "fields.updatedThisWeek": true,
                 "fields.loopedThisWeek": false,
-                select: "fields.name",
+                order: "fields.goat",
+                select: "fields.name,fields.goat",
                 content_type: "chart",
               })
               .then(async (res) => {
