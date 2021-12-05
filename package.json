@@ -36,6 +36,7 @@
     "string-similarity": "^4.0.4",
     "usetube": "^2.1.4",
     "web-audio-api": "^0.2.2",
+    "wget-improved": "^3.2.1",
     "youtube-api": "^3.0.1"
   }
 }
