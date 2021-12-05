@@ -33,8 +33,8 @@ const trimInputAudio = async (
 
     ffmpeg()
       .input("YouTubeAudioInitial.mp3")
-      // Cap input audio to 1 minute and 30 seconds due to Spleeter RAM limitations
-      .audioFilters(`atrim=start=${audioStart}:duration=90`)
+      // Cap input audio to 4 minutes
+      .audioFilters(`atrim=start=${audioStart}:duration=240`)
       .output("YouTubeAudio.mp3")
       .on("error", async (err, stdout, stderr) => {
         const errorStatement =
@@ -81,13 +81,30 @@ const trimInputAudio = async (
           force: true,
         });
 
-        splitAudioIntoStems(
-          matchID,
-          matchDuration,
-          matchExpected,
-          matchArr,
-          trackDataJSON
-        );
+        try {
+          splitAudioIntoStems(
+            matchID,
+            matchDuration,
+            matchExpected,
+            matchArr,
+            trackDataJSON
+          );
+        } catch (err) {
+          const errorLog =
+            "Something went wrong with the song splitting function in splitAudioStems.js! Moving on to next song.";
+
+          if (process.env.NODE_ENV === "production") {
+            logger.error(errorLog, {
+              indexMeta: true,
+              meta: {
+                err,
+              },
+            });
+          } else {
+            console.error(errorLog);
+            console.error(err);
+          }
+        }
 
         return;
       })

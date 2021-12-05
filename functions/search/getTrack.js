@@ -272,40 +272,56 @@ const getTrack = async (
                                   matchArr[0].start
                                 );
 
+                                // If entire track length is less than 4 minutes, start at beginning, otherwise start with respect to first section
                                 let audioStart =
-                                  firstSectionStart - 5 >= 0
+                                  matchDuration <= 240
+                                    ? 0
+                                    : firstSectionStart - 9 >= 0
+                                    ? firstSectionStart - 9
+                                    : firstSectionStart - 5 >= 0
                                     ? firstSectionStart - 5
                                     : firstSectionStart;
 
-                                // Cut off of audio will be at 1 minute and 30 second mark, at most
-                                const audioEnd = audioStart + 90;
+                                // Cut off of audio will be at 4 minute mark
+                                const audioEnd = audioStart + 240;
 
                                 // Update new array timestamps to match trimmed audio
-                                const filteredMatchArr = matchArr
-                                  .filter(
-                                    (item) =>
-                                      timeStampToSeconds(item.start) + 5 <=
-                                      audioEnd
-                                  )
-                                  .map((item) => {
-                                    let startTime = 0;
+                                const filteredMatchArr =
+                                  matchDuration <= 240
+                                    ? matchArr
+                                    : matchArr
+                                        .filter(
+                                          (item) =>
+                                            timeStampToSeconds(item.start) +
+                                              9 <=
+                                            audioEnd
+                                        )
+                                        .map((item) => {
+                                          let startTime = 0;
 
-                                    if (firstSectionStart - 5 >= 0) {
-                                      startTime = secondsToTimestamp(
-                                        timeStampToSeconds(item.start) - 5
-                                      );
-                                    } else {
-                                      startTime = secondsToTimestamp(
-                                        timeStampToSeconds(item.start) -
-                                          firstSectionStart
-                                      );
-                                    }
+                                          if (firstSectionStart - 9 >= 0) {
+                                            startTime = secondsToTimestamp(
+                                              timeStampToSeconds(item.start) - 9
+                                            );
+                                          } else if (
+                                            firstSectionStart - 5 >=
+                                            0
+                                          ) {
+                                            startTime = secondsToTimestamp(
+                                              timeStampToSeconds(item.start) - 5
+                                            );
+                                          } else {
+                                            startTime = secondsToTimestamp(
+                                              timeStampToSeconds(item.start) -
+                                                firstSectionStart
+                                            );
+                                          }
 
-                                    return {
-                                      sectionName: item.sectionName,
-                                      start: startTime,
-                                    };
-                                  });
+                                          return {
+                                            sectionName: item.sectionName,
+                                            start: startTime,
+                                          };
+                                        });
 
                                 const youtubeAudioFileExists =
                                   await checkFileExists("YouTubeAudio.mp3");

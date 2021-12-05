@@ -1,13 +1,12 @@
 const fs = require("fs");
-const { PythonShell } = require("python-shell");
-const getBeatPositions = require("./getBeatPositions");
-const esPkg = require("essentia.js");
-const exec = require("child_process").exec;
-const kill = require("tree-kill");
-const { beatSuccessCallback } = require("./beatSuccessCallback");
-const { logger } = require("../logger/initializeLogger");
+const puppeteer = require("puppeteer");
 const path = require("path");
+const axios = require("axios");
 const checkFileExists = require("../utils/checkFileExists");
+const { logger } = require("../logger/initializeLogger");
+const getBeatPositions = require("./getBeatPositions");
+const { beatSuccessCallback } = require("./beatSuccessCallback");
+const esPkg = require("essentia.js");
 require("dotenv").config();
 let essentia;
 
@@ -22,200 +21,193 @@ const splitAudioIntoStems = async (
   matchArr,
   trackDataJSON
 ) => {
-  const filePath = "YouTubeAudio.mp3";
+  const fileName = "YouTubeAudio";
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+  await page.setRequestInterception(true);
+  page.on("request", async (request) => {
+    if (request.url()) {
+      if (/\.mp3$/i.test(request.url())) {
+        if (request.url().includes("output")) {
+          if (!fs.existsSync("output")) {
+            fs.mkdirSync(path.resolve(`output/${fileName}`), {
+              recursive: true,
+            });
+          }
 
-  const youtubeAudioFileExists = await checkFileExists(filePath);
-
-  if (youtubeAudioFileExists) {
-    // Make sure Spleeter is installed
-    PythonShell.run(
-      "./python_scripts/install_package.py",
-      { args: ["spleeter"] },
-      (err) => {
-        if (err) {
-          throw err;
-        } else {
-          // Split audio into stems and clean up
-          const spleeterScript = exec(
-            `bash ./functions/analysis/spleeter-wrapper.sh -f ${filePath} --stems 2 --process_codec M4A`
+          const vocalsExist = await checkFileExists(
+            path.resolve(`output/${fileName}/vocals.mp3`)
           );
 
-          // If spleeter script isn't done splitting in 3 minutes and 30 seconds, kill process and clean up
-          const killSpleeter = setTimeout(async () => {
-            if (spleeterScript.pid) {
-              kill(spleeterScript.pid);
-              const tooLongStatement =
-                "Spleeter bash script ran over 3 minutes and 30 seconds. Process killed. Moving on to next song!";
+          const accompanimentExists = await checkFileExists(
+            path.resolve(`output/${fileName}/accompaniment.mp3`)
+          );
 
-              if (process.env.NODE_ENV === "production") {
-                logger.log(tooLongStatement);
-              } else {
-                console.log(tooLongStatement);
-              }
-
-              const youtubeTrimmedAudioFileExists = await checkFileExists(
-                filePath
-              );
-
-              if (youtubeTrimmedAudioFileExists) {
-                fs.rmSync(filePath, {
-                  recursive: true,
-                  force: true,
-                });
-              }
-
-              const outputDirectoryExists = await checkFileExists(
-                path.resolve(__dirname, "../../output")
-              );
-
-              if (outputDirectoryExists) {
-                fs.rmSync(path.resolve(__dirname, "../../output"), {
-                  recursive: true,
-                  force: true,
-                });
-              }
-
-              fs.readdir(
-                path.resolve(__dirname, "..", ".."),
-                (err, fileNames) => {
-                  if (err) throw err;
-
-                  // Iterate through the found file names
-                  for (const name of fileNames) {
-                    const pattern = /(\.m4a)/gim;
-
-                    // If file has a .m4a extension
-                    if (pattern.test(name)) {
-                      // Try to remove the file
-                      try {
-                        fs.rmSync(path.resolve(__dirname, name), {
-                          recursive: true,
-                          force: true,
-                        });
-                      } catch (err) {
-                        const couldntRemoveStatement = `Couldn't remove the file ${name}!`;
-
-                        if (process.env.NODE_ENV === "production") {
-                          logger.error(couldntRemoveStatement, {
-                            indexMeta: true,
-                            meta: {
-                              err,
-                            },
-                          });
-                        } else {
-                          console.error(couldntRemoveStatement);
-                          console.error(err);
-                        }
-                      }
-                    }
-                  }
-                }
-              );
-
-              return;
-            }
-          }, 210000);
-
-          spleeterScript.on("spawn", () => {
-            const splittingStatement = "Splitting audio file.";
-
-            if (process.env.NODE_ENV === "production") {
-              logger.log(splittingStatement);
-            } else {
-              console.log(splittingStatement);
-            }
-          });
-
-          spleeterScript.on("error", (err) => {
-            clearTimeout(killSpleeter);
-
-            const errorStatement = "Error received when splitting audio file!";
-
-            if (process.env.NODE_ENV === "production") {
-              logger.error(errorStatement, {
-                indexMeta: true,
-                meta: {
-                  err,
-                },
-              });
-            } else {
-              console.error(errorStatement);
-            }
-          });
-
-          spleeterScript.on("exit", (code) => {
-            clearTimeout(killSpleeter);
-
-            if (code !== 0) {
+          const downloadViaStream = async (url, section) => {
+            const downloadStream = await axios({
+              url,
+              method: "GET",
+              responseType: "stream",
+            }).catch(async (err) => {
               if (process.env.NODE_ENV === "production") {
                 logger.error(
-                  "Received error when attempting to split MP3 audio with Spleeter bash command!",
+                  `Something went wrong when performing a GET request to the URL "${url}"`,
                   {
                     indexMeta: true,
                     meta: {
-                      code: code,
+                      message: err.message,
                     },
                   }
                 );
               } else {
-                console.error(
-                  `Received error code ${code} when attempting to split MP3 audio with Spleeter bash command!`
-                );
+                console.error(err);
               }
-            } else {
-              const successStatement =
-                "Successfully split track into two stems";
+            });
 
-              if (process.env.NODE_ENV === "production") {
-                logger.log(successStatement);
-              } else {
-                console.log(successStatement);
-              }
+            if (downloadStream) {
+              const filePath = path.resolve(
+                `output/${fileName}/${section}.mp3`
+              );
 
-              if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath);
-              }
+              const writer = fs.createWriteStream(filePath);
 
-              try {
-                return getBeatPositions(
-                  essentia,
-                  beatSuccessCallback,
-                  matchID,
-                  matchDuration,
-                  matchExpected,
-                  matchArr,
-                  trackDataJSON
-                );
-              } catch (err) {
+              downloadStream.data.pipe(writer);
+
+              downloadStream.data.on("error", (err) => {
+                const errorStatement = `Received an error when attempting to download from the URL "${url}"`;
+
                 if (process.env.NODE_ENV === "production") {
-                  logger.error(
-                    "Error getting beat positions within 'splitAudioIntoStems.js' function!",
-                    {
-                      indexMeta: true,
-                      meta: {
-                        message: err.message,
-                      },
-                    }
-                  );
+                  logger.error(errorStatement, {
+                    indexMeta: true,
+                    meta: {
+                      message: err.message,
+                    },
+                  });
                 } else {
-                  console.error(err);
+                  console.error(errorStatement + err);
                 }
                 return;
+              });
+
+              downloadStream.data.on("end", () => {
+                const doneStatement = `Saved the ${section} section to ${filePath}.`;
+
+                if (process.env.NODE_ENV === "production") {
+                  logger.log(doneStatement);
+                } else {
+                  console.log(doneStatement);
+                }
+              });
+            } else {
+              const noDataStatement = `No download stream data was received for url ${url}!`;
+
+              if (process.env.NODE_ENV === "production") {
+                logger.log(noDataStatement);
+              } else {
+                console.log(noDataStatement);
               }
             }
-          });
+          };
+
+          if (request.url().includes("vocals")) {
+            if (!vocalsExist) {
+              downloadViaStream(request.url(), "vocals");
+            }
+          }
+
+          if (request.url().includes("accompaniment")) {
+            if (!accompanimentExists) {
+              downloadViaStream(request.url(), "accompaniment");
+            }
+          }
         }
       }
-    );
-  } else {
-    const movingOnStatement =
-      "YouTube MP3 audio file not available for splitting with Spleeter! Moving on to next song.";
+    }
+    request.continue();
+  });
+
+  await page.goto(process.env.SONG_SPLITTING_SOURCE, {
+    waitUntil: "networkidle2",
+  });
+
+  const uploadEl = await page.$("input[type=file]");
+  await uploadEl.uploadFile(`${fileName}.mp3`);
+  await page.waitForTimeout(5000);
+  await page.evaluate(() => {
+    document.querySelector("input[id=formSubmit]").click();
+  });
+  // Wait a minute and a half before closing just in case
+  await page.waitForTimeout(90000);
+
+  await browser.close();
+
+  if (fs.existsSync(`${fileName}.mp3`)) {
+    fs.unlinkSync(`${fileName}.mp3`);
+  }
+
+  const checkIfVocalsSplitSuccessfully = await checkFileExists(
+    path.resolve(`output/${fileName}/vocals.mp3`)
+  );
+
+  const checkIfAccompanimentSplitSuccessfully = await checkFileExists(
+    path.resolve(`output/${fileName}/accompaniment.mp3`)
+  );
+
+  if (checkIfVocalsSplitSuccessfully && checkIfAccompanimentSplitSuccessfully) {
+    const successStatement = "Successfully split track into two stems";
 
     if (process.env.NODE_ENV === "production") {
-      logger.log(movingOnStatement);
+      logger.log(successStatement);
     } else {
-      console.log(movingOnStatement);
+      console.log(successStatement);
     }
+
+    try {
+      return getBeatPositions(
+        essentia,
+        beatSuccessCallback,
+        matchID,
+        matchDuration,
+        matchExpected,
+        matchArr,
+        trackDataJSON
+      );
+    } catch (err) {
+      if (process.env.NODE_ENV === "production") {
+        logger.error(
+          "Error getting beat positions within 'splitAudioIntoStems.js' function!",
+          {
+            indexMeta: true,
+            meta: {
+              message: err.message,
+            },
+          }
+        );
+      } else {
+        console.error(err);
+      }
+      return;
+    }
+  } else {
+    const unsuccessfulSplitStatement =
+      "Either vocals or accompaniment did not get split successfully. Cannot get beat positions. Moving on to next song!";
+
+    if (process.env.NODE_ENV === "production") {
+      logger.log(unsuccessfulSplitStatement);
+    } else {
+      console.log(unsuccessfulSplitStatement);
+    }
+
+    const outputDirectoryExists = await checkFileExists(path.resolve("output"));
+
+    if (outputDirectoryExists) {
+      fs.rmSync(path.resolve("output"), {
+        recursive: true,
+        force: true,
+      });
+    }
+
+    return;
   }
 };
 

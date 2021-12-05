@@ -49,10 +49,6 @@ const getAudioInputSource = async (
 
   const writer = fs.createWriteStream(filePath);
 
-  const youtubeAudioFileExists = await checkFileExists(
-    "YouTubeAudioInitial.mp3"
-  );
-
   const response = await axios({
     url: mp3Link ? mp3Link : "",
     method: "GET",
@@ -64,15 +60,15 @@ const getAudioInputSource = async (
         {
           indexMeta: true,
           meta: {
-            message: err.message,
+            message: err.response.data,
           },
         }
       );
     } else {
-      console.error(err);
+      console.error(err.response.data);
     }
 
-    if (youtubeAudioFileExists) {
+    if (await checkFileExists("YouTubeAudioInitial.mp3")) {
       fs.rmSync("YouTubeAudioInitial.mp3", {
         recursive: true,
         force: true,
@@ -129,7 +125,7 @@ const getAudioInputSource = async (
       console.log(noDataStatement);
     }
 
-    if (youtubeAudioFileExists) {
+    if (await checkFileExists("YouTubeAudioInitial.mp3")) {
       fs.rmSync("YouTubeAudioInitial.mp3", {
         recursive: true,
         force: true,

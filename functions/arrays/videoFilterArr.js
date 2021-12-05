@@ -13,6 +13,8 @@ const filterArray = [
   "blog",
   "tutorial",
   "ucla",
+  "commentator",
+  "commentary",
   "interview",
   "playlist",
   "free for profit",
