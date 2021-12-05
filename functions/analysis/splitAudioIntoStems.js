@@ -116,8 +116,8 @@ const splitAudioIntoStems = async (
   await page.evaluate(() => {
     document.querySelector("input[id=formSubmit]").click();
   });
-  // Wait a minute and a half before closing just in case
-  await page.waitForTimeout(90000);
+  // Wait 2 minutes before closing just in case
+  await page.waitForTimeout(120000);
 
   await browser.close();
 
