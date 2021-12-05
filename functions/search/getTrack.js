@@ -297,25 +297,10 @@ const getTrack = async (
                                             audioEnd
                                         )
                                         .map((item) => {
-                                          let startTime = 0;
-
-                                          if (firstSectionStart - 9 >= 0) {
-                                            startTime = secondsToTimestamp(
-                                              timeStampToSeconds(item.start) - 9
-                                            );
-                                          } else if (
-                                            firstSectionStart - 5 >=
-                                            0
-                                          ) {
-                                            startTime = secondsToTimestamp(
-                                              timeStampToSeconds(item.start) - 5
-                                            );
-                                          } else {
-                                            startTime = secondsToTimestamp(
-                                              timeStampToSeconds(item.start) -
-                                                firstSectionStart
-                                            );
-                                          }
+                                          let startTime = secondsToTimestamp(
+                                            timeStampToSeconds(item.start) -
+                                              audioStart
+                                          );
 
                                           return {
                                             sectionName: item.sectionName,

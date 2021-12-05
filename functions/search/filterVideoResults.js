@@ -103,13 +103,24 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
 
                   if (
                     channelAboutFilterArray.some((item) => {
-                      if (
-                        !formattedTrackTitle.includes(item) &&
-                        !formattedTrackArtist.includes(item)
-                      ) {
-                        return channelDescription.includes(item);
+                      if (item instanceof RegExp) {
+                        if (
+                          !item.test(formattedTrackTitle) &&
+                          !item.test(formattedTrackArtist)
+                        ) {
+                          return item.test(channelDescription);
+                        } else {
+                          return false;
+                        }
                       } else {
-                        return false;
+                        if (
+                          !formattedTrackTitle.includes(item) &&
+                          !formattedTrackArtist.includes(item)
+                        ) {
+                          return channelDescription.includes(item);
+                        } else {
+                          return false;
+                        }
                       }
                     })
                   ) {
@@ -150,13 +161,24 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
 
                 if (
                   descriptionFilterArray.some((item) => {
-                    if (
-                      !formattedTrackTitle.includes(item) &&
-                      !formattedTrackArtist.includes(item)
-                    ) {
-                      return videoDescription.includes(item);
+                    if (item instanceof RegExp) {
+                      if (
+                        !item.test(formattedTrackTitle) &&
+                        !item.test(formattedTrackArtist)
+                      ) {
+                        return item.test(videoDescription);
+                      } else {
+                        return false;
+                      }
                     } else {
-                      return false;
+                      if (
+                        !formattedTrackTitle.includes(item) &&
+                        !formattedTrackArtist.includes(item)
+                      ) {
+                        return videoDescription.includes(item);
+                      } else {
+                        return false;
+                      }
                     }
                   })
                 ) {

@@ -48,7 +48,7 @@ const getAudioInputSource = async (
   const filePath = "YouTubeAudioInitial.mp3";
 
   const writer = fs.createWriteStream(filePath, {
-    highWaterMark: 75000,
+    highWaterMark: 90000,
   });
 
   const response = await axios({

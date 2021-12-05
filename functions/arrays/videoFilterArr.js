@@ -2,9 +2,9 @@
 const foreignChar = /([^\x00-\x7F]+)/gim;
 const cleanMatch = /(?<!so)((^clean)|(clean$)|\W+clean\W+)(?!\W*bandit)/gim;
 const styleMatch = /(?<!(gangnam)\s*)(?<!(harry)\s*)(style)/gim;
+const coverMatch = /(?<![^\s_-])(cover)(?![^\s_-])/gim;
 
 const filterArray = [
-  "cover",
   "piano",
   "live",
   "demo",
@@ -155,10 +155,11 @@ const filterArray = [
   cleanMatch,
   styleMatch,
   foreignChar,
+  coverMatch,
 ];
 
 const descriptionFilterArray = [
-  "cover",
+  coverMatch,
   "karaoke",
   "acapella",
   "parody",
@@ -170,7 +171,6 @@ const descriptionFilterArray = [
   "christmas special",
   "halloween special",
   "thanksgiving special",
-  "performance",
   "hall of fame",
   "playing for change",
   "song around the world",
@@ -218,7 +218,13 @@ const descriptionFilterArray = [
   "colbert",
 ];
 
-const channelAboutFilterArray = ["cover", "karaoke", "acapella", "parody"];
+const channelAboutFilterArray = [
+  coverMatch,
+  "karaoke",
+  "acapella",
+  "parody",
+  "parodia",
+];
 
 const mustContainArray = [
   "video",
