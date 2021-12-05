@@ -76,7 +76,7 @@ const getAudioInputSource = async (
       return;
     });
 
-    download.on("end", () => {
+    download.on("end", async () => {
       const doneTimestampStatement = `\nDone in ${
         (Date.now() - start) / 1000
       }s\nSaved to ${filePath}.`;
