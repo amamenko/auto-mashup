@@ -90,7 +90,7 @@ const getAudioInputSource = async (
       if (matchDuration <= 240) {
         try {
           splitAudioIntoStems(
-            matchID,
+            videoID,
             matchDuration,
             matchExpected,
             matchArr,
@@ -99,6 +99,13 @@ const getAudioInputSource = async (
         } catch (err) {
           const errorLog =
             "Something went wrong with the song splitting function in splitAudioStems.js! Moving on to next song.";
+
+          if (await checkFileExists(filePath)) {
+            fs.rmSync(filePath, {
+              recursive: true,
+              force: true,
+            });
+          }
 
           if (process.env.NODE_ENV === "production") {
             logger.error(errorLog, {
