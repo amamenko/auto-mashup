@@ -28,78 +28,79 @@ const splitAudioIntoStems = async (
   const page = await browser.newPage();
   await page.setRequestInterception(true);
   page.on("request", async (request) => {
-    if (request.url()) {
-      if (/\.mp3$/i.test(request.url())) {
-        if (request.url().includes("output")) {
-          if (!fs.existsSync("output")) {
-            fs.mkdirSync(path.resolve(`output/${fileName}`), {
-              recursive: true,
-            });
-          }
+    const reqStatus = request.status();
 
-          const vocalsExist = await checkFileExists(
-            path.resolve(`output/${fileName}/vocals.mp3`)
-          );
+    if (request.url() && reqStatus) {
+      if (reqStatus) {
+        const reqStatusStr = reqStatus.toString();
 
-          const accompanimentExists = await checkFileExists(
-            path.resolve(`output/${fileName}/accompaniment.mp3`)
-          );
-
-          const downloadViaStream = async (url, section) => {
-            const filePath = `output/${fileName}/${section}.mp3`;
-
-            const download = wget.download(url, filePath);
-
-            if (download) {
-              const start = Date.now();
-
-              const startingDownloadStatement = `Now downloading the ${section} section with wget from the URL "${url}"...`;
-
-              if (process.env.NODE_ENV === "production") {
-                logger.log(startingDownloadStatement);
-              } else {
-                console.log(startingDownloadStatement);
+        // Make sure status code is not 4xx
+        if (reqStatusStr.length === 3 && reqStatusStr[0] !== 4) {
+          if (/\.mp3$/i.test(request.url())) {
+            if (request.url().includes("output")) {
+              if (!fs.existsSync("output")) {
+                fs.mkdirSync(path.resolve(`output/${fileName}`), {
+                  recursive: true,
+                });
               }
 
-              download.on("error", (err) => {
-                const errorStatement = `Received an error when attempting to wget from the URL "${url}"`;
+              const vocalsExist = await checkFileExists(
+                path.resolve(`output/${fileName}/vocals.mp3`)
+              );
 
-                if (process.env.NODE_ENV === "production") {
-                  logger.error(errorStatement, {
-                    indexMeta: true,
-                    meta: {
-                      message: err.message,
-                    },
+              const accompanimentExists = await checkFileExists(
+                path.resolve(`output/${fileName}/accompaniment.mp3`)
+              );
+
+              const downloadViaStream = async (url, section) => {
+                const filePath = `output/${fileName}/${section}.mp3`;
+
+                const download = wget.download(url, filePath);
+
+                if (download) {
+                  const start = Date.now();
+
+                  download.on("error", (err) => {
+                    const errorStatement = `Received an error when attempting to wget from the URL "${url}"`;
+
+                    if (process.env.NODE_ENV === "production") {
+                      logger.error(errorStatement, {
+                        indexMeta: true,
+                        meta: {
+                          message: err.message,
+                        },
+                      });
+                    } else {
+                      console.error(errorStatement + err);
+                    }
+                    return;
                   });
-                } else {
-                  console.error(errorStatement + err);
+
+                  download.on("end", async () => {
+                    const doneTimestampStatement = `\nDone in ${
+                      (Date.now() - start) / 1000
+                    }s\nSaved the ${section} section to ${filePath}.`;
+
+                    if (process.env.NODE_ENV === "production") {
+                      logger.log(doneTimestampStatement);
+                    } else {
+                      console.log(doneTimestampStatement);
+                    }
+                  });
                 }
-                return;
-              });
+              };
 
-              download.on("end", async () => {
-                const doneTimestampStatement = `\nDone in ${
-                  (Date.now() - start) / 1000
-                }s\nSaved the ${section} section to ${filePath}.`;
-
-                if (process.env.NODE_ENV === "production") {
-                  logger.log(doneTimestampStatement);
-                } else {
-                  console.log(doneTimestampStatement);
+              if (request.url().includes("vocals")) {
+                if (!vocalsExist) {
+                  downloadViaStream(request.url(), "vocals");
                 }
-              });
-            }
-          };
+              }
 
-          if (request.url().includes("vocals")) {
-            if (!vocalsExist) {
-              downloadViaStream(request.url(), "vocals");
-            }
-          }
-
-          if (request.url().includes("accompaniment")) {
-            if (!accompanimentExists) {
-              downloadViaStream(request.url(), "accompaniment");
+              if (request.url().includes("accompaniment")) {
+                if (!accompanimentExists) {
+                  downloadViaStream(request.url(), "accompaniment");
+                }
+              }
             }
           }
         }
@@ -112,14 +113,52 @@ const splitAudioIntoStems = async (
     waitUntil: "networkidle2",
   });
 
+  const startingSplitAttemptStatement =
+    "Now attempting to split audio into vocal and accompaniment sections...";
+
+  if (process.env.NODE_ENV === "production") {
+    logger.log(startingSplitAttemptStatement);
+  } else {
+    console.log(startingSplitAttemptStatement);
+  }
+
   const uploadEl = await page.$("input[type=file]");
   await uploadEl.uploadFile(`${fileName}.mp3`);
   await page.waitForTimeout(5000);
   await page.evaluate(() => {
-    document.querySelector("input[id=formSubmit]").click();
+    const inputEl = document.querySelector("input[id=formSubmit]");
+
+    if (inputEl) {
+      inputEl.click();
+    }
   });
-  // Wait 2 minutes before closing just in case
-  await page.waitForTimeout(120000);
+
+  // Wait ~ a minute and a half for split to finish
+  await page.waitForTimeout(90000);
+
+  // Try clicking on media playback elements
+  await page.evaluate(() => {
+    const vocalEl = document.querySelector("vm-player[id=vm-player-1]");
+
+    if (vocalEl) {
+      vocalEl.play();
+    }
+  });
+
+  await page.waitForTimeout(10000);
+
+  await page.evaluate(() => {
+    const accompanimentEl = document.querySelector(
+      "vm-player[id=playerAccompaniment]"
+    );
+
+    if (accompanimentEl) {
+      accompanimentEl.play();
+    }
+  });
+
+  // Wait another 20 seconds
+  await page.waitForTimeout(20000);
 
   await browser.close();
 
@@ -136,7 +175,7 @@ const splitAudioIntoStems = async (
   );
 
   if (checkIfVocalsSplitSuccessfully && checkIfAccompanimentSplitSuccessfully) {
-    const successStatement = "Successfully split track into two stems";
+    const successStatement = "Successfully split track into two stems!";
 
     if (process.env.NODE_ENV === "production") {
       logger.log(successStatement);
