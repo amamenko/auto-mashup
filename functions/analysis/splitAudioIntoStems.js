@@ -32,7 +32,7 @@ const splitAudioIntoStems = async (
 
   const fileName = "YouTubeAudio";
   const browser = await puppeteer.launch({
-    args: ["--disable-setuid-sandbox", "--no-sandbox"],
+    args: ["--disable-setuid-sandbox", "--no-sandbox", "--no-zygote"],
   });
   const page = await browser.newPage();
   page.setDefaultNavigationTimeout(0);
