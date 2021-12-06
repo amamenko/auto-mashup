@@ -90,7 +90,7 @@ const splitAudioIntoStems = async (
                   download.on("end", async () => {
                     const doneTimestampStatement = `Saved the ${section} section to ${filePath}. The process took ${
                       (Date.now() - start) / 1000
-                    }.`;
+                    } seconds.`;
 
                     if (process.env.NODE_ENV === "production") {
                       logger.log(doneTimestampStatement);
@@ -139,27 +139,17 @@ const splitAudioIntoStems = async (
 
   // Try clicking on media playback elements
   await page.evaluate(() => {
-    const vocalEl = document.querySelector("vm-player[id=vm-player-1]");
+    const allReadyEl = document.querySelectorAll("vm-player[audio][ready]");
 
-    if (vocalEl) {
-      vocalEl.play();
+    for (let i = 0; i < allReadyEl.length; i++) {
+      setTimeout(() => {
+        allReadyEl[i].play();
+      }, i * 3000);
     }
   });
 
-  await page.waitForTimeout(10000);
-
-  await page.evaluate(() => {
-    const accompanimentEl = document.querySelector(
-      "vm-player[id=playerAccompaniment]"
-    );
-
-    if (accompanimentEl) {
-      accompanimentEl.play();
-    }
-  });
-
-  // Wait another 20 seconds
-  await page.waitForTimeout(20000);
+  // Wait another 35 seconds
+  await page.waitForTimeout(35000);
 
   await browser.close();
 
