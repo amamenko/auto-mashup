@@ -1,7 +1,7 @@
 const fs = require("fs");
 const puppeteer = require("puppeteer");
 const path = require("path");
-const axios = require("axios");
+const wget = require("wget-improved");
 const checkFileExists = require("../utils/checkFileExists");
 const { logger } = require("../logger/initializeLogger");
 const getBeatPositions = require("./getBeatPositions");
@@ -46,23 +46,23 @@ const splitAudioIntoStems = async (
           );
 
           const downloadViaStream = async (url, section) => {
-            const downloadStream = await axios({
-              url,
-              method: "GET",
-              responseType: "stream",
-            }).catch((err) => err);
+            const filePath = `output/${fileName}/${section}.mp3`;
 
-            if (downloadStream) {
-              const filePath = path.resolve(
-                `output/${fileName}/${section}.mp3`
-              );
+            const download = wget.download(url, filePath);
 
-              const writer = fs.createWriteStream(filePath);
+            if (download) {
+              const start = Date.now();
 
-              downloadStream.data.pipe(writer);
+              const startingDownloadStatement = `Now downloading the ${section} section with wget from the URL "${url}"...`;
 
-              downloadStream.data.on("error", (err) => {
-                const errorStatement = `Received an error when attempting to download from the URL "${url}"`;
+              if (process.env.NODE_ENV === "production") {
+                logger.log(startingDownloadStatement);
+              } else {
+                console.log(startingDownloadStatement);
+              }
+
+              download.on("error", (err) => {
+                const errorStatement = `Received an error when attempting to wget from the URL "${url}"`;
 
                 if (process.env.NODE_ENV === "production") {
                   logger.error(errorStatement, {
@@ -77,13 +77,15 @@ const splitAudioIntoStems = async (
                 return;
               });
 
-              downloadStream.data.on("end", () => {
-                const doneStatement = `Saved the ${section} section to ${filePath}.`;
+              download.on("end", async () => {
+                const doneTimestampStatement = `\nDone in ${
+                  (Date.now() - start) / 1000
+                }s\nSaved the ${section} section to ${filePath}.`;
 
                 if (process.env.NODE_ENV === "production") {
-                  logger.log(doneStatement);
+                  logger.log(doneTimestampStatement);
                 } else {
-                  console.log(doneStatement);
+                  console.log(doneTimestampStatement);
                 }
               });
             }
