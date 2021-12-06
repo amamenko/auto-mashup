@@ -21,21 +21,32 @@ const splitAudioIntoStems = async (
   matchArr,
   trackDataJSON
 ) => {
+  const startingSplitAttemptStatement =
+    "Now attempting to split audio into vocal and accompaniment sections...";
+
+  if (process.env.NODE_ENV === "production") {
+    logger.log(startingSplitAttemptStatement);
+  } else {
+    console.log(startingSplitAttemptStatement);
+  }
+
   const fileName = "YouTubeAudio";
   const browser = await puppeteer.launch({
     args: ["--disable-setuid-sandbox", "--no-sandbox"],
   });
   const page = await browser.newPage();
-  await page.setRequestInterception(true);
-  page.on("request", async (request) => {
-    const reqStatus = request.status();
+  page.setDefaultNavigationTimeout(0);
 
-    if (request.url() && reqStatus) {
-      if (reqStatus) {
-        const reqStatusStr = reqStatus.toString();
+  page.on("requestfinished", async (request) => {
+    const response = request.response();
+    const resStatus = response.status();
+
+    if (request.url() && resStatus) {
+      if (resStatus) {
+        const resStatusStr = resStatus.toString();
 
         // Make sure status code is not 4xx
-        if (reqStatusStr.length === 3 && reqStatusStr[0] !== 4) {
+        if (resStatusStr.length === 3 && resStatusStr[0] !== 4) {
           if (/\.mp3$/i.test(request.url())) {
             if (request.url().includes("output")) {
               if (!fs.existsSync("output")) {
@@ -77,9 +88,9 @@ const splitAudioIntoStems = async (
                   });
 
                   download.on("end", async () => {
-                    const doneTimestampStatement = `\nDone in ${
+                    const doneTimestampStatement = `Saved the ${section} section to ${filePath}. The process took ${
                       (Date.now() - start) / 1000
-                    }s\nSaved the ${section} section to ${filePath}.`;
+                    }.`;
 
                     if (process.env.NODE_ENV === "production") {
                       logger.log(doneTimestampStatement);
@@ -106,30 +117,20 @@ const splitAudioIntoStems = async (
         }
       }
     }
-    request.continue();
   });
 
   await page.goto(process.env.SONG_SPLITTING_SOURCE, {
     waitUntil: "networkidle2",
   });
 
-  const startingSplitAttemptStatement =
-    "Now attempting to split audio into vocal and accompaniment sections...";
-
-  if (process.env.NODE_ENV === "production") {
-    logger.log(startingSplitAttemptStatement);
-  } else {
-    console.log(startingSplitAttemptStatement);
-  }
-
   const uploadEl = await page.$("input[type=file]");
   await uploadEl.uploadFile(`${fileName}.mp3`);
   await page.waitForTimeout(5000);
   await page.evaluate(() => {
-    const inputEl = document.querySelector("input[id=formSubmit]");
+    const submitEl = document.querySelector("input[id=formSubmit]");
 
-    if (inputEl) {
-      inputEl.click();
+    if (submitEl) {
+      submitEl.click();
     }
   });
 
