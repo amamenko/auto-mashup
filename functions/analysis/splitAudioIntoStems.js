@@ -51,7 +51,11 @@ const splitAudioIntoStems = async (
         const resStatusStr = resStatus.toString();
 
         // Make sure status code is not 4xx
-        if (resStatusStr.length === 3 && resStatusStr[0] !== 4) {
+        if (
+          resStatusStr.length === 3 &&
+          resStatusStr[0] !== "4" &&
+          resStatusStr[0] !== "5"
+        ) {
           if (/\.mp3$/i.test(request.url())) {
             if (request.url().includes("output")) {
               if (!fs.existsSync("output")) {
@@ -68,6 +72,8 @@ const splitAudioIntoStems = async (
                 if (download) {
                   const start = Date.now();
 
+                  download.req.abort();
+
                   download.on("error", (err) => {
                     const errorStatement = `Received an error when attempting to wget from the URL "${url}"`;
 
@@ -75,13 +81,42 @@ const splitAudioIntoStems = async (
                       logger.error(errorStatement, {
                         indexMeta: true,
                         meta: {
+                          code: resStatusStr,
                           message: err.message,
                         },
                       });
                     } else {
                       console.error(errorStatement + err);
+                      console.error(`Received status code ${resStatusStr}.`);
                     }
+
                     return;
+                  });
+
+                  download.on("progress", async (progress) => {
+                    const timeElapsed = (Date.now() - start) / 1000;
+
+                    // Bail out of download if it takes longer than a minute
+                    if (timeElapsed >= 60) {
+                      if (download.req) {
+                        download.req.abort();
+
+                        const abortStatement = `Aborted wget download from the URL "${url}". Download took more than a minute!`;
+
+                        if (process.env.NODE_ENV === "production") {
+                          logger.log(abortStatement);
+                        } else {
+                          console.log(abortStatement);
+                        }
+
+                        if (await checkFileExists(filePath)) {
+                          fs.rmSync(filePath, {
+                            recursive: true,
+                            force: true,
+                          });
+                        }
+                      }
+                    }
                   });
 
                   download.on("end", async () => {
@@ -153,8 +188,8 @@ const splitAudioIntoStems = async (
     }
   });
 
-  // Wait ~ a minute and a half for split to finish
-  await page.waitForTimeout(90000);
+  // Wait a minute split to finish
+  await page.waitForTimeout(60000);
 
   // Try clicking on media playback elements
   await page.evaluate(() => {
@@ -163,12 +198,12 @@ const splitAudioIntoStems = async (
     for (let i = 0; i < allReadyEl.length; i++) {
       setTimeout(() => {
         allReadyEl[i].play();
-      }, i * 3000);
+      }, i * 1500);
     }
   });
 
-  // Wait another 35 seconds
-  await page.waitForTimeout(35000);
+  // Wait another 5 seconds
+  await page.waitForTimeout(5000);
 
   await browser.close();
 

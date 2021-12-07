@@ -76,6 +76,32 @@ const getAudioInputSource = async (
       return;
     });
 
+    download.on("progress", async (progress) => {
+      const timeElapsed = (Date.now() - start) / 1000;
+
+      // Bail out of download if it takes longer than a minute
+      if (timeElapsed >= 60) {
+        if (download.req) {
+          download.req.abort();
+
+          const abortStatement = `Aborted wget download from the URL "${url}". Download took more than a minute!`;
+
+          if (process.env.NODE_ENV === "production") {
+            logger.log(abortStatement);
+          } else {
+            console.log(abortStatement);
+          }
+
+          if (await checkFileExists(filePath)) {
+            fs.rmSync(filePath, {
+              recursive: true,
+              force: true,
+            });
+          }
+        }
+      }
+    });
+
     download.on("end", async () => {
       const doneTimestampStatement = `\nDone in ${
         (Date.now() - start) / 1000
