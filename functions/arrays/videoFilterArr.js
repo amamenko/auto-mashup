@@ -2,7 +2,7 @@
 const foreignChar = /([^\x00-\x7F]+)/gim;
 const cleanMatch = /(?<!so)((^clean)|(clean$)|\W+clean\W+)(?!\W*bandit)/gim;
 const styleMatch = /(?<!(gangnam)\s*)(?<!(harry)\s*)(style)/gim;
-const coverMatch = /(?<![^\s_-])(cover)(?![^\s_-])/gim;
+const coverMatch = /\b(cover)\b/gim;
 
 const filterArray = [
   "piano",
