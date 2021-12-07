@@ -32,7 +32,12 @@ const splitAudioIntoStems = async (
 
   const fileName = "YouTubeAudio";
   const browser = await puppeteer.launch({
-    args: ["--disable-setuid-sandbox", "--no-sandbox", "--no-zygote"],
+    args: [
+      "--disable-setuid-sandbox",
+      "--single-process",
+      "--no-sandbox",
+      "--no-zygote",
+    ],
   });
   const page = await browser.newPage();
   page.setDefaultNavigationTimeout(0);
@@ -55,15 +60,7 @@ const splitAudioIntoStems = async (
                 });
               }
 
-              const vocalsExist = await checkFileExists(
-                path.resolve(`output/${fileName}/vocals.mp3`)
-              );
-
-              const accompanimentExists = await checkFileExists(
-                path.resolve(`output/${fileName}/accompaniment.mp3`)
-              );
-
-              const downloadViaStream = async (url, section) => {
+              const downloadViaStream = (url, section) => {
                 const filePath = `output/${fileName}/${section}.mp3`;
 
                 const download = wget.download(url, filePath);
@@ -101,15 +98,37 @@ const splitAudioIntoStems = async (
                 }
               };
 
+              const vocalsExist = await checkFileExists(
+                path.resolve(`output/${fileName}/vocals.mp3`)
+              );
+
+              const accompanimentExists = await checkFileExists(
+                path.resolve(`output/${fileName}/accompaniment.mp3`)
+              );
+
               if (request.url().includes("vocals")) {
                 if (!vocalsExist) {
                   downloadViaStream(request.url(), "vocals");
+                }
+
+                if (!accompanimentExists) {
+                  downloadViaStream(
+                    request.url().replace("vocals", "accompaniment"),
+                    "accompaniment"
+                  );
                 }
               }
 
               if (request.url().includes("accompaniment")) {
                 if (!accompanimentExists) {
                   downloadViaStream(request.url(), "accompaniment");
+                }
+
+                if (!vocalsExist) {
+                  downloadViaStream(
+                    request.url().replace("accompaniment", "vocals"),
+                    "vocals"
+                  );
                 }
               }
             }
