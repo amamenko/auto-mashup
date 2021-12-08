@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 const cron = require("node-cron");
+const exec = require("child_process").exec;
 const loopCurrentCharts = require("./functions/search/loopCurrentCharts");
 const checkLoopProgress = require("./functions/search/checkLoopProgress");
 const loopSongs = require("./functions/search/loopSongs");
@@ -43,6 +44,9 @@ cron.schedule("0,30 * * * *", () => {
 
 // Loop next song position of current in-progress chart (if any) every 5 minutes
 cron.schedule("*/5 * * * *", () => {
+  // Kill up all leftover Puppeteer processes
+  exec("pkill -9 -f puppeteer");
+
   const currentMinutes = format(Date.now(), "mm");
 
   if (
@@ -51,6 +55,9 @@ cron.schedule("*/5 * * * *", () => {
     currentMinutes !== "20" &&
     currentMinutes !== "40"
   ) {
+    // Clean up cache manually on RAM for AWS
+    exec("sync; echo 3 > /proc/sys/vm/drop_caches");
+
     loopSongs(spotifyApi);
   } else {
     // Retrieve an access token
