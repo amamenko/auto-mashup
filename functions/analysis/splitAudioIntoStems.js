@@ -72,8 +72,6 @@ const splitAudioIntoStems = async (
                 if (download) {
                   const start = Date.now();
 
-                  download.req.abort();
-
                   download.on("error", (err) => {
                     const errorStatement = `Received an error when attempting to wget from the URL "${url}"`;
 
@@ -180,6 +178,7 @@ const splitAudioIntoStems = async (
   const uploadEl = await page.$("input[type=file]");
   await uploadEl.uploadFile(`${fileName}.mp3`);
   await page.waitForTimeout(5000);
+
   await page.evaluate(() => {
     const submitEl = document.querySelector("input[id=formSubmit]");
 
@@ -188,22 +187,22 @@ const splitAudioIntoStems = async (
     }
   });
 
-  // Wait a minute split to finish
+  // Wait a minute for split to finish
   await page.waitForTimeout(60000);
 
   // Try clicking on media playback elements
   await page.evaluate(() => {
-    const allReadyEl = document.querySelectorAll("vm-player[audio][ready]");
+    const playerEl = document.querySelector(
+      "vm-player[id=playerAccompaniment][ready]"
+    );
 
-    for (let i = 0; i < allReadyEl.length; i++) {
-      setTimeout(() => {
-        allReadyEl[i].play();
-      }, i * 1500);
+    if (playerEl) {
+      playerEl.play();
     }
   });
 
   // Wait another 5 seconds
-  await page.waitForTimeout(5000);
+  await page.waitForTimeout(50000);
 
   await browser.close();
 
