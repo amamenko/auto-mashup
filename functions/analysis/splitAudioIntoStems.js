@@ -187,8 +187,8 @@ const splitAudioIntoStems = async (
     }
   });
 
-  // Wait a minute for split to finish
-  await page.waitForTimeout(60000);
+  // Wait 2 minutes for split to finish
+  await page.waitForTimeout(120000);
 
   // Try clicking on media playback elements
   await page.evaluate(() => {
