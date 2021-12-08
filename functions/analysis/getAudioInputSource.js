@@ -84,7 +84,7 @@ const getAudioInputSource = async (
         if (download.req) {
           download.req.abort();
 
-          const abortStatement = `Aborted wget download from the URL "${url}". Download took more than a minute!`;
+          const abortStatement = `Aborted wget download from the URL "${mp3Link}". Download took more than a minute!`;
 
           if (process.env.NODE_ENV === "production") {
             logger.log(abortStatement);

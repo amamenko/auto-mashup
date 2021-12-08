@@ -49,7 +49,7 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
       formattedVideoTitle.includes(trackTitleWithoutAlias) &&
       artistArr.some((artist) => formattedVideoTitle.includes(artist)) &&
       video.duration >= 80 &&
-      video.duration <= 990 &&
+      video.duration <= 360 &&
       video.views >= viewsMinimum
     );
   });
@@ -156,7 +156,11 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                 }
               });
 
-              if (videoDescription && typeof videoDescription === "string") {
+              if (
+                videoDescription &&
+                typeof videoDescription === "string" &&
+                !videoDescription.includes("official music video")
+              ) {
                 videoDescription = videoDescription.toLowerCase();
 
                 if (
