@@ -35,32 +35,37 @@ const loopSongs = async (spotifyApi) => {
               const lastChartIndex = fields.currentSongs.length - 1;
               const chartID = res.items[0].sys.id;
 
-              const resolveTrack = () => {
-                return getTrack(
-                  fields.name,
-                  fields.url,
-                  fields.currentSongs,
-                  fields.goat,
-                  spotifyApi,
-                  currentIndex
-                );
-              };
+              if (currentIndex === lastChartIndex) {
+                const currentChart = {
+                  name: fields.name,
+                  id: chartID,
+                };
 
-              resolveTrack();
-
-              const currentChart = {
-                name: fields.name,
-                id: chartID,
-              };
-
-              setTimeout(() => {
-                // If last iteration
-                if (currentIndex === lastChartIndex) {
-                  updateChartLoopInProgress(currentChart, "done");
-                } else {
+                updateChartLoopInProgress(currentChart, "done");
+              } else {
+                if (currentIndex !== 0) {
                   addSongPositionValue(chartID, currentIndex);
                 }
-              }, 240000);
+
+                const resolveTrack = () => {
+                  return getTrack(
+                    fields.name,
+                    fields.url,
+                    fields.currentSongs,
+                    fields.goat,
+                    spotifyApi,
+                    currentIndex
+                  );
+                };
+
+                resolveTrack();
+
+                setTimeout(() => {
+                  if (currentIndex === 0) {
+                    addSongPositionValue(chartID, currentIndex);
+                  }
+                }, 240000);
+              }
             }
           }
         }

@@ -1,11 +1,14 @@
 const fs = require("fs");
-const axios = require("axios");
+const puppeteer = require("puppeteer-extra");
+const StealthPlugin = require("puppeteer-extra-plugin-stealth");
 const wget = require("wget-improved");
 const { logger } = require("../logger/initializeLogger");
 const checkFileExists = require("../utils/checkFileExists");
 const { trimInputAudio } = require("./trimInputAudio");
 const { splitAudioIntoStems } = require("./splitAudioIntoStems");
 require("dotenv").config();
+
+puppeteer.use(StealthPlugin());
 
 const getAudioInputSource = async (
   audioStart,
@@ -23,33 +26,53 @@ const getAudioInputSource = async (
     console.log(downloadingStatement);
   }
 
-  // Download 128kbps MP3 file
-  const mp3Link = await axios
-    .get(`https://www.yt-download.org/api/button/mp3/${videoID}`)
-    .then((res) => res.data)
-    .then((data) => {
-      if (data) {
-        if (data.split('<a href="')[4]) {
-          return data.split('<a href="')[4].split('" class="shadow-xl')[0];
-        }
-      }
-      return "";
-    })
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: [
+      "--disable-setuid-sandbox",
+      "--single-process",
+      "--no-sandbox",
+      "--no-zygote",
+    ],
+  });
+  const page = await browser.newPage();
+  page.setDefaultNavigationTimeout(0);
+
+  await page.goto(
+    `https://320ytmp3.com/en24/download?url=${videoID}&type=ytmp3`,
+    {
+      waitUntil: "networkidle2",
+    }
+  );
+
+  await page.waitForTimeout(5000);
+
+  await page.evaluate(() => {
+    const convertButton = document.querySelector("button[id=cvt-btn]");
+
+    if (convertButton) {
+      convertButton.click();
+    }
+  });
+
+  // Wait for conversion
+  await page.waitForTimeout(45000);
+
+  // Get MP3 Link (defaults to 128 kbps)
+  const mp3Link = await page
+    .$eval("a[id=mp3-dl-btn]", (anchor) => anchor.getAttribute("href"))
     .catch((err) => {
+      const couldntFindStatement =
+        "Couldn't find HREF anchor tag on MP3 download page. Moving on to next song!";
+
       if (process.env.NODE_ENV === "production") {
-        logger.error(
-          `Something went wrong when accessing yt-download.org with video ID "${videoID}"`,
-          {
-            indexMeta: true,
-            meta: {
-              message: err.message,
-            },
-          }
-        );
+        logger.log(couldntFindStatement);
       } else {
-        console.error(err);
+        console.log(couldntFindStatement);
       }
     });
+
+  await browser.close();
 
   const filePath =
     matchDuration <= 240 ? "YouTubeAudio.mp3" : "YouTubeAudioInitial.mp3";
@@ -103,9 +126,17 @@ const getAudioInputSource = async (
     });
 
     download.on("end", async () => {
-      const doneTimestampStatement = `\nDone in ${
-        (Date.now() - start) / 1000
-      }s\nSaved to ${filePath}.`;
+      let doneTimestampStatement = "";
+
+      if (await checkFileExists(filePath)) {
+        doneTimestampStatement = `The input audio source was successfully saved to ${filePath}. The process took ${
+          (Date.now() - start) / 1000
+        } seconds.`;
+      } else {
+        doneTimestampStatement = `The downloading process of audio to ${filePath} was aborted. The process took ${
+          (Date.now() - start) / 1000
+        } seconds.`;
+      }
 
       if (process.env.NODE_ENV === "production") {
         logger.log(doneTimestampStatement);
