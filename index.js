@@ -55,9 +55,6 @@ cron.schedule("*/5 * * * *", () => {
     currentMinutes !== "20" &&
     currentMinutes !== "40"
   ) {
-    // Clean RAM cache manually for AWS
-    exec("sync; echo 3 > /proc/sys/vm/drop_caches");
-
     loopSongs(spotifyApi);
   } else {
     // Retrieve an access token
