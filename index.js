@@ -47,74 +47,91 @@ cron.schedule("*/5 * * * *", () => {
   // Kill up all leftover Puppeteer processes
   exec("pkill -9 -f puppeteer");
 
+  const restartTimesArr = ["01", "04", "07", "10", "13", "16", "19", "22"];
+  const currentHours = format(Date.now(), "HH");
   const currentMinutes = format(Date.now(), "mm");
 
   if (
-    spotifyApi.getAccessToken() &&
-    currentMinutes !== "00" &&
-    currentMinutes !== "20" &&
-    currentMinutes !== "40"
+    currentMinutes === "00" &&
+    restartTimesArr.includes(currentHours.toString())
   ) {
-    loopSongs(spotifyApi);
-  } else {
-    // Retrieve an access token
-    spotifyApi
-      .clientCredentialsGrant()
-      .then(
-        (data) => {
-          if (process.env.NODE_ENV === "production") {
-            logger.log("Retrieved new access token:", {
-              indexMeta: true,
-              meta: {
-                access_token: data.body["access_token"],
-              },
-            });
-          } else {
-            console.log(
-              "Retrieved new access token: " + data.body["access_token"]
-            );
-          }
+    const restartingStatement = "Restarting server on purpose!";
 
-          // Save the access token so that it's used in future calls
-          spotifyApi.setAccessToken(data.body["access_token"]);
-        },
-        (err) => {
+    if (process.env.NODE_ENV === "production") {
+      logger.log(restartingStatement);
+    } else {
+      console.log(restartingStatement);
+    }
+
+    throw restartingStatement;
+  } else {
+    if (
+      spotifyApi.getAccessToken() &&
+      currentMinutes !== "00" &&
+      currentMinutes !== "20" &&
+      currentMinutes !== "40"
+    ) {
+      loopSongs(spotifyApi);
+    } else {
+      // Retrieve an access token
+      spotifyApi
+        .clientCredentialsGrant()
+        .then(
+          (data) => {
+            if (process.env.NODE_ENV === "production") {
+              logger.log("Retrieved new access token:", {
+                indexMeta: true,
+                meta: {
+                  access_token: data.body["access_token"],
+                },
+              });
+            } else {
+              console.log(
+                "Retrieved new access token: " + data.body["access_token"]
+              );
+            }
+
+            // Save the access token so that it's used in future calls
+            spotifyApi.setAccessToken(data.body["access_token"]);
+          },
+          (err) => {
+            if (process.env.NODE_ENV === "production") {
+              logger.error(
+                "Something went wrong when retrieving an access token",
+                {
+                  indexMeta: true,
+                  meta: {
+                    message: err.message,
+                  },
+                }
+              );
+            } else {
+              console.error(
+                "Something went wrong when retrieving an access token",
+                err.message
+              );
+            }
+          }
+        )
+        .then(() => loopSongs(spotifyApi))
+        .catch((error) => {
           if (process.env.NODE_ENV === "production") {
             logger.error(
-              "Something went wrong when retrieving an access token",
+              "Something went wrong when granting Spotify client credentials.",
               {
                 indexMeta: true,
                 meta: {
-                  message: err.message,
+                  message: error.message,
                 },
               }
             );
           } else {
-            console.error(
-              "Something went wrong when retrieving an access token",
-              err.message
-            );
+            console.error(error);
           }
-        }
-      )
-      .then(() => loopSongs(spotifyApi))
-      .catch((error) => {
-        if (process.env.NODE_ENV === "production") {
-          logger.error(
-            "Something went wrong when granting Spotify client credentials.",
-            {
-              indexMeta: true,
-              meta: {
-                message: error.message,
-              },
-            }
-          );
-        } else {
-          console.error(error);
-        }
 
-        return;
-      });
+          return;
+        });
+    }
   }
 });
 

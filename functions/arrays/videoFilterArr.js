@@ -54,6 +54,8 @@ const filterArray = [
   "conan",
   "ferguson",
   "kimmel",
+  "sabrina carpenter",
+  "pomplamoose",
   "jay leno",
   "jon stewart",
   "trevor noah",
