@@ -316,6 +316,10 @@ const getTrack = async (
                                     "YouTubeAudioTrimmed.mp3"
                                   );
 
+                                const outputExists = await checkFileExists(
+                                  "output"
+                                );
+
                                 const runAudioAnalysis = async () => {
                                   // Clean up leftover audio input just in case
                                   if (youtubeAudioFileExists) {
@@ -328,6 +332,14 @@ const getTrack = async (
                                   // Clean up leftover trimmed audio input just in case
                                   if (youtubeTrimmedAudioFileExists) {
                                     fs.rmSync("YouTubeAudioTrimmed.mp3", {
+                                      recursive: true,
+                                      force: true,
+                                    });
+                                  }
+
+                                  // Clean up output directory just in case
+                                  if (outputExists) {
+                                    fs.rmSync("output", {
                                       recursive: true,
                                       force: true,
                                     });
