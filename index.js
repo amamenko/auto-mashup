@@ -63,7 +63,7 @@ cron.schedule("*/5 * * * *", () => {
       console.log(restartingStatement);
     }
 
-    throw restartingStatement;
+    process.exit(1);
   } else {
     if (
       spotifyApi.getAccessToken() &&
