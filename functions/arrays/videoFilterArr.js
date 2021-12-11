@@ -121,6 +121,8 @@ const filterArray = [
   "perform",
   "cmt",
   "version",
+  "baby shark",
+  "nursery",
   "acoustic",
   "amazingmusic",
   "behind the scenes",
