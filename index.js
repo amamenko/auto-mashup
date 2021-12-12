@@ -43,7 +43,7 @@ cron.schedule("0,30 * * * *", () => {
 });
 
 // Loop next song position of current in-progress chart (if any) every 5 minutes
-cron.schedule("*/5 * * * *", () => {
+cron.schedule("*/5 * * * *", async () => {
   // Kill up all leftover Puppeteer processes
   exec("pkill -9 -f puppeteer");
 
@@ -55,6 +55,10 @@ cron.schedule("*/5 * * * *", () => {
     currentMinutes === "00" &&
     restartTimesArr.includes(currentHours.toString())
   ) {
+    const timeoutPromiseFunction = (ms) => {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    };
+
     const restartingStatement = "Restarting server on purpose!";
 
     if (process.env.NODE_ENV === "production") {
@@ -62,6 +66,8 @@ cron.schedule("*/5 * * * *", () => {
     } else {
       console.log(restartingStatement);
     }
+
+    await timeoutPromiseFunction(5000);
 
     process.exit(1);
   } else {
