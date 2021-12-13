@@ -67,12 +67,12 @@ const cleanUpLoopsOnExit = async () => {
                                 .getEntry(res.items[0].sys.id)
                                 .then((updatedEntry) => {
                                   updatedEntry.publish().then(() => {
-                                    const serverKilledStatement = `Server killed. Songs loop for chart ${chartInProgress.fields.name} no longer in progress.`;
+                                    const noProgressStatement = `Songs loop for chart ${chartInProgress.fields.name} no longer in progress.`;
 
                                     if (process.env.NODE_ENV === "production") {
-                                      logger.log(serverKilledStatement);
+                                      logger.log(noProgressStatement);
                                     } else {
-                                      console.log(serverKilledStatement);
+                                      console.log(noProgressStatement);
                                     }
                                     return;
                                   });
@@ -90,13 +90,12 @@ const cleanUpLoopsOnExit = async () => {
         }
       }
 
-      const serverKilledNoLoopsStatement =
-        "Server killed. No song loops happening at the moment.";
+      const noProgressStatement = "No song loops happening at the moment.";
 
       if (process.env.NODE_ENV === "production") {
-        logger.log(serverKilledNoLoopsStatement);
+        logger.log(noProgressStatement);
       } else {
-        console.log(serverKilledNoLoopsStatement);
+        console.log(noProgressStatement);
       }
 
       return;

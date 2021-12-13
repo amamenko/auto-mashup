@@ -56,7 +56,7 @@ const getAudioInputSource = async (
   });
 
   // Wait for conversion
-  await page.waitForTimeout(45000);
+  await page.waitForTimeout(60000);
 
   // Get MP3 Link (defaults to 128 kbps)
   const mp3Link = await page
