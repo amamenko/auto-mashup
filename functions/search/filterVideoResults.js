@@ -156,6 +156,10 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                 }
               });
 
+              const videoTitle = removeAccents(
+                firstFour[i].original_title
+              ).toLowerCase();
+
               if (
                 videoDescription &&
                 typeof videoDescription === "string" &&
@@ -214,6 +218,7 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                     const videoTitle = removeAccents(
                       firstFour[i].original_title
                     ).toLowerCase();
+
                     let artistMatches = 0;
 
                     for (const artist of artistArr) {
