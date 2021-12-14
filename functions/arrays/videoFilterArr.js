@@ -2,7 +2,8 @@
 const foreignChar = /([^\x00-\x7F]+)/gim;
 const cleanMatch = /(?<!so)((^clean)|(clean$)|\W+clean\W+)(?!\W*bandit)/gim;
 const styleMatch = /(?<!(gangnam)\s*)(?<!(harry)\s*)(style)/gim;
-const coverMatch = /\b(covers*)\b/gim;
+const coverMatch = /((?<!(on the\s))\b(covers*)\b)/gim;
+const karaokeMatch = /(?<!like(\s))(karaoke)/gim;
 
 const filterArray = [
   "piano",
@@ -125,7 +126,7 @@ const filterArray = [
   "how to sing",
   "tik tok",
   "tiktok",
-  "karaoke",
+  karaokeMatch,
   "shorts",
   "loop",
   "hour",
@@ -178,7 +179,7 @@ const filterArray = [
 
 const descriptionFilterArray = [
   coverMatch,
-  "karaoke",
+  karaokeMatch,
   "acapella",
   "parody",
   "parodie",
