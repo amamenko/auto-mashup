@@ -2,7 +2,7 @@
 const foreignChar = /([^\x00-\x7F]+)/gim;
 const cleanMatch = /(?<!so)((^clean)|(clean$)|\W+clean\W+)(?!\W*bandit)/gim;
 const styleMatch = /(?<!(gangnam)\s*)(?<!(harry)\s*)(style)/gim;
-const coverMatch = /\b(cover)\b/gim;
+const coverMatch = /\b(covers*)\b/gim;
 
 const filterArray = [
   "piano",
@@ -22,6 +22,8 @@ const filterArray = [
   "commentary",
   "interview",
   "american idol",
+  "backing track",
+  "backingtrack",
   "masked singer",
   "playlist",
   "free for profit",
@@ -32,6 +34,7 @@ const filterArray = [
   "easter eggs",
   "programmers",
   "hall of fame",
+  "power ballad",
   "trump",
   "obama",
   "swap",
@@ -154,6 +157,7 @@ const filterArray = [
   "verified",
   "parody",
   "parodia",
+  "parodie",
   "spoof",
   "pronunciation",
   "meaning",
@@ -176,6 +180,7 @@ const descriptionFilterArray = [
   "karaoke",
   "acapella",
   "parody",
+  "parodie",
   "reworked",
   "parodia",
   "pangilinan",
@@ -188,6 +193,8 @@ const descriptionFilterArray = [
   "grammy's",
   "live earth",
   "interview",
+  "backing track",
+  "backingtrack",
   "american idol",
   "masked singer",
   "christmas special",
@@ -246,6 +253,7 @@ const channelAboutFilterArray = [
   "acapella",
   "parody",
   "parodia",
+  "parodie",
 ];
 
 const mustContainArray = [
