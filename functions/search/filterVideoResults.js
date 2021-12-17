@@ -164,7 +164,9 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                 videoDescription &&
                 typeof videoDescription === "string" &&
                 !videoDescription.includes("official music video") &&
-                !videoTitle.includes("official music video")
+                !videoDescription.includes("official video") &&
+                !videoTitle.includes("official music video") &&
+                !videoTitle.includes("official video")
               ) {
                 videoDescription = videoDescription.toLowerCase();
 
