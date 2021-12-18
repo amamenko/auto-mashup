@@ -37,7 +37,7 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
         : 500
       : 500;
 
-    return (
+    const shouldKeep =
       !filterArray.some((item) =>
         item instanceof RegExp
           ? item.test(formattedVideoTitle)
@@ -50,8 +50,9 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
       artistArr.some((artist) => formattedVideoTitle.includes(artist)) &&
       video.duration >= 80 &&
       video.duration <= 360 &&
-      video.views >= viewsMinimum
-    );
+      video.views >= viewsMinimum;
+
+    return shouldKeep;
   });
 
   if (filteredVids.length > 0) {
