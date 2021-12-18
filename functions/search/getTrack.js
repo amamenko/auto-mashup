@@ -23,7 +23,14 @@ const getTrack = async (
   const songRank = currentSongs[index].rank;
   let songCover = currentSongs[index].cover;
 
-  updatePreviousEntries(topSong, songRank, currentChart, goat, currentSongs);
+  updatePreviousEntries(
+    topSong,
+    songRank,
+    currentChartName,
+    currentChart,
+    goat,
+    currentSongs
+  );
 
   // Access to Contentful Delivery API
   const client = contentful.createClient({

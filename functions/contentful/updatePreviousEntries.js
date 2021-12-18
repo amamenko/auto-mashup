@@ -6,6 +6,7 @@ require("dotenv").config();
 const updatePreviousEntries = async (
   topSong,
   songRank,
+  currentChartName,
   currentChart,
   goat,
   currentSongs
@@ -76,9 +77,21 @@ const updatePreviousEntries = async (
                                 charts.length > 0 ||
                                 appearsAnywhereInCurrentChart
                               ) {
-                                entry.fields.charts = {
-                                  "en-US": charts,
-                                };
+                                if (charts.length > 0) {
+                                  entry.fields.charts = {
+                                    "en-US": charts,
+                                  };
+                                } else {
+                                  entry.fields.charts = {
+                                    "en-US": [
+                                      {
+                                        chartName: currentChartName,
+                                        chartURL: currentChart,
+                                        rank: appearsAnywhereInCurrentChart.rank,
+                                      },
+                                    ],
+                                  };
+                                }
 
                                 entry.update().then(() => {
                                   environment
