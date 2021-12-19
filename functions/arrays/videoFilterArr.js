@@ -17,6 +17,7 @@ const filterArray = [
   "except it",
   "gets faster",
   "speeds up",
+  " vs ",
   "j.fla",
   "kellyoke",
   "blog",
