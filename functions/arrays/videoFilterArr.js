@@ -18,6 +18,8 @@ const filterArray = [
   "gets faster",
   "speeds up",
   " vs ",
+  " vs. ",
+  " versus ",
   "j.fla",
   "kellyoke",
   "blog",
