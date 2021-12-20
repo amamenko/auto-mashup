@@ -22,6 +22,7 @@ const filterArray = [
   " versus ",
   "j.fla",
   "kellyoke",
+  "pt/eng",
   "blog",
   "grammys",
   "grammy's",
