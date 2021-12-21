@@ -26,6 +26,7 @@ const filterArray = [
   "blog",
   "grammys",
   "grammy's",
+  "on stage america",
   "tutorial",
   "ucla",
   "commentator",
