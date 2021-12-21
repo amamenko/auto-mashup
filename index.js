@@ -11,7 +11,6 @@ const { format } = require("date-fns");
 const { logger } = require("./functions/logger/initializeLogger");
 const { onLoggerShutdown } = require("./functions/logger/onLoggerShutdown");
 const testSearch = require("./functions/search/testSearch");
-const { filterArray } = require("./functions/arrays/videoFilterArr");
 require("dotenv").config();
 
 const port = process.env.PORT || 4000;

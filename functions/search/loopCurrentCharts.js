@@ -46,7 +46,7 @@ const loopCurrentCharts = async (goat) => {
                 return list.map((item) => {
                   return {
                     rank: item.rank,
-                    title: item.title,
+                    title: item.title.split("\n")[0],
                     artist: item.artist,
                     cover: item.cover,
                   };
