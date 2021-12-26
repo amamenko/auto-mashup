@@ -97,8 +97,11 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                 });
 
                 if (
-                  channelDescription &&
-                  typeof channelDescription === "string"
+                  (channelDescription &&
+                    typeof channelDescription === "string") ||
+                  firstFour[i].channel_name
+                    .toLowerCase()
+                    .includes("pomplamoose")
                 ) {
                   channelDescription = channelDescription.toLowerCase();
 
@@ -123,7 +126,10 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                           return false;
                         }
                       }
-                    })
+                    }) ||
+                    firstFour[i].channel_name
+                      .toLowerCase()
+                      .includes("pomplamoose")
                   ) {
                     const coverChannelStatement = `The channel for this video (${firstFour[i].channel_name}) appears to be a cover channel. Moving on to next available video!`;
 
