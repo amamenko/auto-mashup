@@ -1,6 +1,6 @@
 const contentful = require("contentful");
 const updateChartLoopInProgress = require("../contentful/updateChartLoopInProgress");
-const { isBefore, parseISO } = require("date-fns");
+const { isBefore, parseISO, getDay } = require("date-fns");
 const cleanUpLoopsOnExit = require("../contentful/cleanUpLoopsOnExit");
 const { logger } = require("../logger/initializeLogger");
 require("dotenv").config();
@@ -41,6 +41,7 @@ const checkLoopProgress = async () => {
                       const nameArr = res.items.map((item) => {
                         return {
                           name: item.fields.name,
+                          goat: item.fields.goat,
                           id: item.sys.id,
                         };
                       });
@@ -48,25 +49,40 @@ const checkLoopProgress = async () => {
                       const firstChart = nameArr[0];
 
                       if (firstChart) {
-                        await updateChartLoopInProgress(
-                          firstChart,
-                          "in progress"
-                        ).catch((err) => {
+                        const isGoat = firstChart.goat;
+
+                        const currentDay = getDay(new Date());
+
+                        if ((currentDay === 2 || currentDay === 3) && isGoat) {
+                          const goatLoopStatement =
+                            "Not starting any GOAT loops on Tuesday or Wednesday!";
+
                           if (process.env.NODE_ENV === "production") {
-                            logger.error(
-                              "Error updating chart to 'in progress' within checkLoopProgress function!",
-                              {
-                                indexMeta: true,
-                                meta: {
-                                  message: err.message,
-                                },
-                              }
-                            );
+                            logger.log(goatLoopStatement);
                           } else {
-                            console.error(err);
+                            console.log(goatLoopStatement);
                           }
-                          cleanUpLoopsOnExit();
-                        });
+                        } else {
+                          await updateChartLoopInProgress(
+                            firstChart,
+                            "in progress"
+                          ).catch((err) => {
+                            if (process.env.NODE_ENV === "production") {
+                              logger.error(
+                                "Error updating chart to 'in progress' within checkLoopProgress function!",
+                                {
+                                  indexMeta: true,
+                                  meta: {
+                                    message: err.message,
+                                  },
+                                }
+                              );
+                            } else {
+                              console.error(err);
+                            }
+                            cleanUpLoopsOnExit();
+                          });
+                        }
                       }
                     }
                   }

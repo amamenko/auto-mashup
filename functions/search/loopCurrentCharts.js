@@ -106,7 +106,7 @@ const loopCurrentCharts = async (goat) => {
                                 };
 
                                 entry.fields.updatedThisWeek = {
-                                  "en-US": changed,
+                                  "en-US": true,
                                 };
 
                                 entry.fields.loopedThisWeek = {
