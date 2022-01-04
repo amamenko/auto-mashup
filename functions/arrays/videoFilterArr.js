@@ -14,6 +14,7 @@ const filterArray = [
   "lesson",
   "but everytime",
   "but every time",
+  "but every",
   "except it",
   "gets faster",
   "speeds up",
