@@ -101,7 +101,10 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                     typeof channelDescription === "string") ||
                   firstFour[i].channel_name
                     .toLowerCase()
-                    .includes("pomplamoose")
+                    .includes("pomplamoose") ||
+                  firstFour[i].channel_name
+                    .toLowerCase()
+                    .includes("100d audio's")
                 ) {
                   channelDescription = channelDescription.toLowerCase();
 
@@ -129,7 +132,10 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                     }) ||
                     firstFour[i].channel_name
                       .toLowerCase()
-                      .includes("pomplamoose")
+                      .includes("pomplamoose") ||
+                    firstFour[i].channel_name
+                      .toLowerCase()
+                      .includes("100d audio's")
                   ) {
                     const coverChannelStatement = `The channel for this video (${firstFour[i].channel_name}) appears to be a cover channel. Moving on to next available video!`;
 
