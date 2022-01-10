@@ -297,7 +297,12 @@ const channelAboutFilterArray = [
   "parodie",
 ];
 
-const blacklistedChannels = ["pomplamoose", "nossa toca", "100d audio's"];
+const blacklistedChannels = [
+  "pomplamoose",
+  "nossa toca",
+  "100d audio's",
+  "trap city",
+];
 
 const mustContainArray = [
   "video",
