@@ -41,6 +41,7 @@ const filterArray = [
   "masked singer",
   "playlist",
   "free for profit",
+  "nossa toca",
   "sample",
   "type beat",
   "story behind",
@@ -90,6 +91,7 @@ const filterArray = [
   "mr. rogers",
   "angela ricci",
   "acoustic cover",
+  "acústico",
   "pomplamoose",
   "jay leno",
   "jon stewart",
@@ -295,6 +297,8 @@ const channelAboutFilterArray = [
   "parodie",
 ];
 
+const blacklistedChannels = ["pomplamoose", "nossa toca", "100d audio's"];
+
 const mustContainArray = [
   "video",
   "audio",
@@ -310,5 +314,6 @@ module.exports = {
   filterArray,
   descriptionFilterArray,
   channelAboutFilterArray,
+  blacklistedChannels,
   mustContainArray,
 };

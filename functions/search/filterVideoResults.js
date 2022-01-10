@@ -4,6 +4,7 @@ const {
   filterArray,
   descriptionFilterArray,
   channelAboutFilterArray,
+  blacklistedChannels,
 } = require("../arrays/videoFilterArr");
 const getEachArtist = require("./getEachArtist");
 const timeStampToSeconds = require("../utils/timeStampToSeconds");
@@ -99,12 +100,9 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                 if (
                   (channelDescription &&
                     typeof channelDescription === "string") ||
-                  firstFour[i].channel_name
-                    .toLowerCase()
-                    .includes("pomplamoose") ||
-                  firstFour[i].channel_name
-                    .toLowerCase()
-                    .includes("100d audio's")
+                  blacklistedChannels.some((item) =>
+                    firstFour[i].channel_name.toLowerCase().includes(item)
+                  )
                 ) {
                   channelDescription = channelDescription.toLowerCase();
 
@@ -130,12 +128,9 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                         }
                       }
                     }) ||
-                    firstFour[i].channel_name
-                      .toLowerCase()
-                      .includes("pomplamoose") ||
-                    firstFour[i].channel_name
-                      .toLowerCase()
-                      .includes("100d audio's")
+                    blacklistedChannels.some((item) =>
+                      firstFour[i].channel_name.toLowerCase().includes(item)
+                    )
                   ) {
                     const coverChannelStatement = `The channel for this video (${firstFour[i].channel_name}) appears to be a cover channel. Moving on to next available video!`;
 
