@@ -3,14 +3,7 @@ const contentfulManagement = require("contentful-management");
 const { logger } = require("../logger/initializeLogger");
 require("dotenv").config();
 
-const updatePreviousEntries = async (
-  topSong,
-  songRank,
-  currentChartName,
-  currentChart,
-  goat,
-  currentSongs
-) => {
+const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
   const title = topSong.title;
   const artist = topSong.artist;
 
@@ -19,10 +12,6 @@ const updatePreviousEntries = async (
     space: process.env.CONTENTFUL_SPACE_ID,
     accessToken: process.env.CONTENTFUL_ACCESS_TOKEN,
   });
-
-  const appearsAnywhereInCurrentChart = currentSongs.find(
-    (item) => item.title === title && item.artist === artist
-  );
 
   return await client
     .getEntries({
@@ -73,25 +62,10 @@ const updatePreviousEntries = async (
                               charts.splice(indexCurrentChart, 1);
                               // If entry appears on more charts
                               // -> Leave entry, just update charts it appears on
-                              if (
-                                charts.length > 0 ||
-                                appearsAnywhereInCurrentChart
-                              ) {
-                                if (charts.length > 0) {
-                                  entry.fields.charts = {
-                                    "en-US": charts,
-                                  };
-                                } else {
-                                  entry.fields.charts = {
-                                    "en-US": [
-                                      {
-                                        chartName: currentChartName,
-                                        chartURL: currentChart,
-                                        rank: appearsAnywhereInCurrentChart.rank,
-                                      },
-                                    ],
-                                  };
-                                }
+                              if (charts.length > 0) {
+                                entry.fields.charts = {
+                                  "en-US": charts,
+                                };
 
                                 entry.update().then(() => {
                                   environment
