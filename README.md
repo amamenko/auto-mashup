@@ -89,7 +89,7 @@ mashup creation a more streamlined effort.
 blacklisted terms either in their video title, video description title, channel name, or channel description) and contain closed-captions. The timestamped closed-captions
 available on these videos are then compared to lyrics found on [Genius](https://genius.com/) (acquired via the [Genius Lyrics API](https://www.npmjs.com/package/genius-lyrics-api))
 with a string and character comparison function that attributes timestamps to the various sections of the song.
-* If a video with an adequate number of successfully timestamped song sections is found, the MP3 audio if it is download using a [Puppeteer](https://www.npmjs.com/package/puppeteer)
+* If a video with an adequate number of successfully timestamped song sections is found, its MP3 audio is downloaded using a [Puppeteer](https://www.npmjs.com/package/puppeteer)
 script that accesses [320ytmp3.com](https://320ytmp3.com). Audio is then trimmed to a maximum of 4 minutes long with [fluent-ffmpeg](https://www.npmjs.com/package/fluent-ffmpeg).
 * The MP3 audio is then split into instrumental and vocal stem MP3 files using a third-party website that relies on 
 [Deezer's Spleeter](https://github.com/deezer/spleeter) song separation library that uses pretrained models written in [Python](https://www.python.org/) that uses [Tensorflow](https://tensorflow.org/).
