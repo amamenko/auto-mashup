@@ -1,14 +1,17 @@
 [![MIT License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
 
-
-
 <!-- PROJECT LOGO -->
 <br />
 <p align="center">
-  <a href="https://github.com/amamenko/GlowLabs">
-    <img src="https://images.ctfassets.net/r8d0zt89au6z/3RAHaHvXM719XrM7JKoyxB/a078e6a8e5e8d019de03ede83502025b/automashup_logo.jpg" alt="Logo" width="150" />
+  <a href="https://github.com/amamenko/auto-mashup#gh-dark-mode-only">
+   <img src="https://images.ctfassets.net/r8d0zt89au6z/U08zxXPI7WotVcDYslYBF/1abd688f9038dba10e6aa96f30b84342/automashup_logo_white.svg" width="125" />
   </a>
+   <a href="https://github.com/amamenko/auto-mashup#gh-light-mode-only">
+    <img src="https://images.ctfassets.net/r8d0zt89au6z/2O6pZhJ8iQoqojzyNZCTRH/4e0020dda6a224a9460e49094417c9ff/automashup_logo.svg" width="125" />
+  </a>
+   
+  
 
   <h3 align="center">Auto Mashup</h3>
 
@@ -58,6 +61,8 @@ between her own song and Paramore’s 2007 song [“Misery Business."](https://e
 [Multiple mashups](https://www.youtube.com/results?search_query=good+4+u+misery+business+mashup) of 
 the two songs can be be found online. This is not an isolated incident - many songs across multiple genres and decades sound similar or can be manipulated 
 to sound similar - although perhaps not due to directly lifting elements from other musical works.
+
+Notable mashup artists including [Neil Cicierega](https://en.wikipedia.org/wiki/Neil_Cicierega) and [Girl Talk](https://en.wikipedia.org/wiki/Girl_Talk_(musician)) have released entire mashup albums such as [Mouth Sounds](https://en.wikipedia.org/wiki/Mouth_Sounds) and [Feed the Animals](https://en.wikipedia.org/wiki/Feed_the_Animals), respectively. Platforms such as [Tik Tok](https://www.tiktok.com/) and [YouTube](https://www.youtube.com/) have no dearth of mashup material - such creations have clearly become exceedingly popular. The question is - with the formulaic concepts and techniques involved in creating a musical mashup, can mashup-creation be automated?
 
 ## Functionality
 
