@@ -7,15 +7,15 @@
 <br />
 <p align="center">
   <a href="https://github.com/amamenko/GlowLabs">
-    <img src="https://images.ctfassets.net/r8d0zt89au6z/3RAHaHvXM719XrM7JKoyxB/a078e6a8e5e8d019de03ede83502025b/automashup_logo.jpg" alt="Logo" width="200" />
+    <img src="https://images.ctfassets.net/r8d0zt89au6z/3RAHaHvXM719XrM7JKoyxB/a078e6a8e5e8d019de03ede83502025b/automashup_logo.jpg" alt="Logo" width="150" />
   </a>
 
   <h3 align="center">Auto Mashup</h3>
 
   <p align="center">
-    Automated Music Mashups Created with Node.js
+    Music Mashups Automated with Node.js
     <br />
-    Featuring Songs from Today's Billboard Charts
+    Featuring Songs from Billboard Charts
     <br />
     <br />
     <a href="https://www.automashup.ml/">Website</a>
@@ -96,8 +96,7 @@ script that accesses [320ytmp3.com](https://320ytmp3.com). Audio is then trimmed
 Note that a local Node.js implementation of Spleeter is possible as [noted by my comment on this issue](https://github.com/deezer/spleeter/issues/358#issuecomment-914895894), however,
 Spleeter requires a substantial amount of RAM that quickly overwhelms an [AWC EC2 t2.micro instance](https://aws.amazon.com/ec2/instance-types/t2/).
 * Every beat position of the instrumental stem MP3 file is then determined for [beatmatching](https://en.wikipedia.org/wiki/Beatmatching) purposes using the [essentia.js](https://mtg.github.io/essentia.js/) library.
-* Vocal and accompaniment audio assets are uploaded to a Contentful CMS using Contentful's [Content Management API](https://www.npmjs.com/package/contentful-management) 
-and associated with the song's entry that is subsequently populated with all of the acquired data.
+* Vocal and accompaniment audio assets are uploaded to a Contentful CMS using Contentful's [Content Management API](https://www.npmjs.com/package/contentful-management). These assets are then associated with the song's entry. The enty is subsequently populated with all of the acquired data.
 
 ## Deployment
 
