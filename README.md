@@ -97,9 +97,9 @@ with a string and character comparison function that attributes timestamps to th
 * If a video with an adequate number of successfully timestamped song sections is found, its MP3 audio is downloaded using a [Puppeteer](https://www.npmjs.com/package/puppeteer)
 script that accesses [320ytmp3.com](https://320ytmp3.com). Audio is then trimmed to a maximum of 4 minutes long with [fluent-ffmpeg](https://www.npmjs.com/package/fluent-ffmpeg).
 * The MP3 audio is then split into instrumental and vocal stem MP3 files using a third-party website that relies on 
-[Deezer's Spleeter](https://github.com/deezer/spleeter) song separation library that uses pretrained models written in [Python](https://www.python.org/) that uses [Tensorflow](https://tensorflow.org/).
+[Deezer's Spleeter](https://github.com/deezer/spleeter). Spleeter is a song separation library that uses pretrained models written in [Python](https://www.python.org/) and [Tensorflow](https://tensorflow.org/).
 Note that a local Node.js implementation of Spleeter is possible as [noted by my comment on this issue](https://github.com/deezer/spleeter/issues/358#issuecomment-914895894), however,
-Spleeter requires a substantial amount of RAM that quickly overwhelms an [AWC EC2 t2.micro instance](https://aws.amazon.com/ec2/instance-types/t2/).
+Spleeter requires a substantial amount of RAM that quickly overwhelms an [AWC EC2 t2.micro instance](https://aws.amazon.com/ec2/instance-types/t2/). Even with [modular implementations](https://github.com/amo13/spleeter-wrapper) of Spleeter, the splitting process (even with a base 2-stem model) is memory-intensive.
 * Every beat position of the instrumental stem MP3 file is then determined for [beatmatching](https://en.wikipedia.org/wiki/Beatmatching) purposes using the [essentia.js](https://mtg.github.io/essentia.js/) library.
 * Vocal and accompaniment audio assets are uploaded to a Contentful CMS using Contentful's [Content Management API](https://www.npmjs.com/package/contentful-management). These assets are then associated with the song's entry. The enty is subsequently populated with all of the acquired data.
 
