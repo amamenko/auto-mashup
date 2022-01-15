@@ -11,8 +11,6 @@
     <img src="https://images.ctfassets.net/r8d0zt89au6z/2O6pZhJ8iQoqojzyNZCTRH/4e0020dda6a224a9460e49094417c9ff/automashup_logo.svg" width="125" />
   </a>
    
-  
-
   <h3 align="center">Auto Mashup</h3>
 
   <p align="center">
@@ -38,7 +36,7 @@
 
 A [mashup](https://en.wikipedia.org/wiki/Mashup_(music)), according to [Merriam-Webster's Dictionary](https://www.merriam-webster.com/dictionary/mash-up), is "a piece of music created by digitally overlaying 
 an instrumental track with a vocal track from a different recording." The idea of mashups has been around since the late 1960s - the first such creation, arguably,
-was found on Harry Nilsson's 1967 album [Pandemonium Shadow Show](https://en.wikipedia.org/wiki/Pandemonium_Shadow_Show), which features a cover of the Beatles' 
+was found on [Harry Nilsson's](https://en.wikipedia.org/wiki/Harry_Nilsson) 1967 album [Pandemonium Shadow Show](https://en.wikipedia.org/wiki/Pandemonium_Shadow_Show), which features a cover of [The Beatles'](https://en.wikipedia.org/wiki/The_Beatles) 
 ["You Can't Do That"](https://en.wikipedia.org/wiki/You_Can%27t_Do_That) with his own vocal recreations of more than a dozen other Beatles songs on the same instrumental track.
 
 Ideally, the vocal track of one song is superimposed seamlessly onto the instrumental track of a separate song, [modifying](https://en.wikipedia.org/wiki/Pitch_shift) 
