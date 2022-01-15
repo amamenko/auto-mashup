@@ -61,7 +61,7 @@ to sound similar - although perhaps not due to directly lifting elements from ot
 
 ## Functionality
 
-Auto Mashup project spans two repositories. 
+The Auto Mashup project spans two repositories. 
 
 The first repository ([the one you are visiting right now](https://github.com/amamenko/auto-mashup)) represents
 the [Node.js](https://nodejs.org/en/) and [Express](https://expressjs.com/) server that handles the weekly regular Billboard chart scraping, monthly GOAT 
