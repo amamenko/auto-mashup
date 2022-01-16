@@ -80,8 +80,65 @@ The basic functionality of this repository's code logic is:
 
 <strong>Billboard Chart Scraping:</strong>
 * Use [cheerio](https://www.npmjs.com/package/cheerio) to scrape song position data from charts on [billboard.com](https://www.billboard.com/) using logic modified from [billboard-top-100](https://www.npmjs.com/package/billboard-top-100).
-* Scrape regular Billboard charts via a CRON job set up by [node-cron](https://www.npmjs.com/package/node-cron) every Tuesday/Wednesday and greatest-of-all-time Billboard charts on the first Sunday of every month.
 * Remove any old entries and their associated instrumental and accompaniment audio assets if the song is no longer present on any Billboard chart.
+* Scrape regular Billboard charts via a CRON job set up via [node-cron](https://www.npmjs.com/package/node-cron) every Tuesday/Wednesday and greatest-of-all-time Billboard charts on the first Sunday of every month. The selected Billboard charts include:
+<br />
+<table align="center">
+  <tr>
+    <th>Regular Billboard Charts</th>
+    <th>GOAT Billboard Charts</th>
+  </tr>
+  <tr>
+    <td>The Hot 100</td>
+    <td>GOAT Hot 100 Songs</td>
+  </tr>
+  <tr>
+    <td>Billboard Global 200</td>
+    <td>GOAT Hot 100 Songs by Women</td>
+  </tr>
+  <tr>
+    <td>Radio Songs</td>
+    <td>GOAT Songs of the Summer</td>
+  </tr>
+  <tr>
+    <td>Hot Dance/Electronic Songs</td>
+    <td>GOAT Songs of the '80s</td>
+  </tr>
+  <tr>
+    <td>Hot Rap Songs</td>
+    <td>GOAT Songs of the '90s</td>
+  </tr>
+  <tr>
+    <td>Hot R&B/Hip-Hop Songs</td>
+    <td>GOAT Hot R&B/Hip-Hop Songs</td>
+  </tr>
+  <tr>
+    <td>Hot R&B Songs</td>
+    <td>GOAT Adult Alternative Songs</td>
+  </tr> 
+  <tr>
+    <td>Hot Alternative Songs</td>
+    <td>GOAT Alternative Songs</td>
+  </tr>
+  <tr>
+    <td>Hot Country Songs</td>
+    <td>GOAT Hot Country Songs</td>
+  </tr>
+  <tr>
+    <td>Hot Mainstream Rock Songs</td>
+    <td>GOAT Mainstream Rock Songs</td>
+  </tr>
+  <tr>
+    <td>Mexico Airplay</td>
+    <td>GOAT Pop Songs</td>
+  </tr>
+  <tr>
+    <td>Hot Latin Songs</td>
+    <td>GOAT Adult Pop Songs</td>
+  </tr>
+</table>
+<br />
+<br />
 
 <strong>Song Data Acquisition:</strong>
 * Use the [Spotify Web API](https://www.npmjs.com/package/spotify-web-api-node) to get an audio analysis for every track on the Billboard chart with a Spotify 
