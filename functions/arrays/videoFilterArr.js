@@ -25,6 +25,7 @@ const filterArray = [
   "kellyoke",
   "pt/eng",
   "blog",
+  "tay zonday",
   "grammys",
   "grammy's",
   "on stage america",
@@ -302,6 +303,7 @@ const channelAboutFilterArray = [
 
 const blacklistedChannels = [
   "pomplamoose",
+  "tayzonday",
   "nossa toca",
   "100d audio's",
   "trap city",
