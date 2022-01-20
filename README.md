@@ -81,7 +81,7 @@ The basic functionality of this repository's code logic is:
 <strong>Billboard Chart Scraping:</strong>
 * Use [cheerio](https://www.npmjs.com/package/cheerio) to scrape song position data from charts on [billboard.com](https://www.billboard.com/) using logic modified from [billboard-top-100](https://www.npmjs.com/package/billboard-top-100).
 * Remove any old entries and their associated instrumental and accompaniment audio assets if the song is no longer present on any Billboard chart.
-* Scrape regular Billboard charts via a CRON job set up via [node-cron](https://www.npmjs.com/package/node-cron) every Tuesday/Wednesday and greatest-of-all-time Billboard charts on the first Sunday of every month. The selected Billboard charts include:
+* Scrape regular Billboard charts via a CRON job set up via [node-cron](https://www.npmjs.com/package/node-cron) every Wednesday and greatest-of-all-time Billboard charts on the first Sunday of every month. The selected Billboard charts include:
 <br />
 <table align="center">
   <tr>
