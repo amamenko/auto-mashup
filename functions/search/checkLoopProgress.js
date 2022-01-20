@@ -53,9 +53,9 @@ const checkLoopProgress = async () => {
 
                         const currentDay = getDay(new Date());
 
-                        if ((currentDay === 2 || currentDay === 3) && isGoat) {
+                        if (currentDay === 3 && isGoat) {
                           const goatLoopStatement =
-                            "Not starting any GOAT loops on Tuesday or Wednesday!";
+                            "Not starting any GOAT loops on Wednesday!";
 
                           if (process.env.NODE_ENV === "production") {
                             logger.log(goatLoopStatement);

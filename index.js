@@ -24,8 +24,8 @@ const spotifyApi = new SpotifyWebApi(spotifyCredentials);
 
 onLoggerShutdown();
 
-// Run on Tuesdays/Wednesdays starting at noon and then every two minutes until 1 o'clock (for non-GOAT charts)
-cron.schedule("0,*/2 12-12 * * 2,3", () => {
+// Run on Wednesdays starting at noon and then every two minutes until 1 o'clock (for non-GOAT charts)
+cron.schedule("0,*/2 12-12 * * 3", () => {
   // Get state of previous week's charts
   loopCurrentCharts();
 });
