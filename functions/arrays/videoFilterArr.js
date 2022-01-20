@@ -26,6 +26,8 @@ const filterArray = [
   "pt/eng",
   "blog",
   "tay zonday",
+  "filippa giordano",
+  "golden buzzer",
   "grammys",
   "grammy's",
   "on stage america",
@@ -304,6 +306,7 @@ const channelAboutFilterArray = [
 const blacklistedChannels = [
   "pomplamoose",
   "tayzonday",
+  "filippa giordano",
   "nossa toca",
   "100d audio's",
   "trap city",
