@@ -308,6 +308,7 @@ const blacklistedChannels = [
   "tayzonday",
   "filippa giordano",
   "nossa toca",
+  "inglesemusica",
   "100d audio's",
   "trap city",
 ];
