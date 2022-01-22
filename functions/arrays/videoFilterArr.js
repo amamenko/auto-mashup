@@ -45,6 +45,7 @@ const filterArray = [
   "playlist",
   "free for profit",
   "nossa toca",
+  "chris rupp trio",
   "sample",
   "type beat",
   "story behind",
@@ -311,6 +312,7 @@ const blacklistedChannels = [
   "inglesemusica",
   "100d audio's",
   "trap city",
+  "chrisruppofficial",
 ];
 
 const mustContainArray = [
