@@ -312,6 +312,7 @@ const blacklistedChannels = [
   "inglesemusica",
   "100d audio's",
   "trap city",
+  "directionermusic",
   "chrisruppofficial",
 ];
 
