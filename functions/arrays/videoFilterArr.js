@@ -79,6 +79,8 @@ const filterArray = [
   "theater",
   "fallon",
   "ed sullivan",
+  "johnny depp",
+  "charlotte gainsbourg",
   "letterman",
   "conan",
   "ferguson",
@@ -231,6 +233,7 @@ const descriptionFilterArray = [
   "take on the",
   "live from",
   "live @",
+  "live at the",
   "singing live",
   "originally performed",
   "7thaveband",
@@ -314,6 +317,8 @@ const blacklistedChannels = [
   "trap city",
   "directionermusic",
   "chrisruppofficial",
+  "hong2145",
+  "murciélago sv",
 ];
 
 const mustContainArray = [
