@@ -210,6 +210,7 @@ const filterArray = [
   "mashup",
   "mash-up",
   "(cover)",
+  "cover by",
   cleanMatch,
   styleMatch,
   foreignChar,
@@ -319,6 +320,7 @@ const blacklistedChannels = [
   "chrisruppofficial",
   "hong2145",
   "murciélago sv",
+  "cimorellifan899",
 ];
 
 const mustContainArray = [
