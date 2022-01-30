@@ -93,6 +93,7 @@ const filterArray = [
   "8d audio",
   "8d sound",
   "9d audio",
+  "32d",
   "100d audio",
   "1000d audio",
   "5000d audio",
@@ -321,6 +322,7 @@ const blacklistedChannels = [
   "hong2145",
   "murciélago sv",
   "cimorellifan899",
+  "mannancial",
 ];
 
 const mustContainArray = [
