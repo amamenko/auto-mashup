@@ -100,6 +100,7 @@ const filterArray = [
   "20000d audio",
   "mr. rogers",
   "angela ricci",
+  "boyce avenue",
   "acoustic cover",
   "acústico",
   "pomplamoose",
@@ -321,6 +322,7 @@ const blacklistedChannels = [
   "chrisruppofficial",
   "hong2145",
   "murciélago sv",
+  "décio oliveira",
   "cimorellifan899",
   "mannancial",
 ];
