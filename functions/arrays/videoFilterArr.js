@@ -212,6 +212,7 @@ const filterArray = [
   "mashup",
   "mash-up",
   "(cover)",
+  "cover)",
   "cover by",
   cleanMatch,
   styleMatch,
@@ -325,6 +326,7 @@ const blacklistedChannels = [
   "décio oliveira",
   "cimorellifan899",
   "mannancial",
+  "mike boun",
 ];
 
 const mustContainArray = [
