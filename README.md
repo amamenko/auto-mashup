@@ -149,8 +149,7 @@ mashup creation a more streamlined effort.
 blacklisted terms either in their video title, video description title, channel name, or channel description) and contain closed-captions. The timestamped closed-captions
 available on these videos are then compared to lyrics found on [Genius](https://genius.com/) (acquired via the [Genius Lyrics API](https://www.npmjs.com/package/genius-lyrics-api))
 with a string and character comparison function that attributes timestamps to the various sections of the song.
-* If a video with an adequate number of successfully timestamped song sections is found, its MP3 audio is downloaded using a [Puppeteer](https://www.npmjs.com/package/puppeteer)
-script that accesses [320ytmp3.com](https://320ytmp3.com). Audio is then trimmed to a maximum of 4 minutes long with [fluent-ffmpeg](https://www.npmjs.com/package/fluent-ffmpeg).
+* If a video with an adequate number of successfully timestamped song sections is found, its MP3 audio is downloaded using [yt-dlp](https://github.com/yt-dlp/yt-dlp). Audio is then trimmed to a maximum of 4 minutes long with [fluent-ffmpeg](https://www.npmjs.com/package/fluent-ffmpeg).
 * The MP3 audio is then split into instrumental and vocal stem MP3 files using a third-party website that relies on 
 [Deezer's Spleeter](https://github.com/deezer/spleeter). Spleeter is a song separation library that uses pretrained models written in [Python](https://www.python.org/) and [Tensorflow](https://tensorflow.org/).
 Note that a local Node.js implementation of Spleeter is possible as [noted by my comment on this issue](https://github.com/deezer/spleeter/issues/358#issuecomment-914895894), however,
@@ -188,6 +187,7 @@ Project Link: [https://github.com/amamenko/auto-mashup](https://github.com/amame
 * [Genius](https://genius.com/)
 * [FFMPEG](https://ffmpeg.org/)
 * [fluent-ffmpeg](https://www.npmjs.com/package/fluent-ffmpeg)
+* [yt-dlp](https://github.com/yt-dlp/yt-dlp)
 * [essentia.js](https://mtg.github.io/essentia.js/)
 * [usetube](https://www.npmjs.com/package/usetube)
 * [billboard-top-100](https://www.npmjs.com/package/billboard-top-100)
