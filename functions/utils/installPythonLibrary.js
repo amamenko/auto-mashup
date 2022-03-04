@@ -1,12 +1,12 @@
 const { PythonShell } = require("python-shell");
 require("dotenv").config();
 
-const installYouTubeTranscriptAPI = () => {
+const installPythonLibrary = (libraryName) => {
   // In production server, installation is handled ahead of time
   return new Promise((resolve, reject) => {
     let result;
     const pyshell = new PythonShell("./python_scripts/install_package.py", {
-      args: ["youtube_transcript_api"],
+      args: [libraryName],
     });
 
     pyshell.on("message", (message) => {
@@ -29,4 +29,4 @@ const installYouTubeTranscriptAPI = () => {
   });
 };
 
-module.exports = installYouTubeTranscriptAPI;
+module.exports = { installPythonLibrary };

@@ -1,15 +1,20 @@
 const { decode } = require("html-entities");
 const { logger } = require("../logger/initializeLogger");
-const getTranscripts = require("../timestamps/getTranscripts");
-const installYouTubeTranscriptAPI = require("../timestamps/installYouTubeTranscriptAPI");
+const { installPythonLibrary } = require("../utils/installPythonLibrary");
 const secondsToTimestamp = require("../utils/secondsToTimestamp");
+const languageCodeArr = require("../arrays/languageCodeArr");
+const { runPythonFile } = require("../utils/runPythonFile");
 require("dotenv").config();
 
 const getVideoSubtitles = async (video_id) => {
   const getYouTubeTranscript = async (id) => {
-    return await installYouTubeTranscriptAPI()
+    return await installPythonLibrary("youtube_transcript_api")
       .then(async () => {
-        return await getTranscripts(id).catch((err) => {
+        return await runPythonFile({
+          fileName: "get_transcripts.py",
+          arg1: id.replace(/^-+/, "\\-"),
+          arg2: languageCodeArr.join(" "),
+        }).catch((err) => {
           if (process.env.NODE_ENV === "production") {
             logger.error(
               `Received error when getting transcripts for video ID ${id}.`,
