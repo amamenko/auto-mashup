@@ -327,6 +327,7 @@ const blacklistedChannels = [
   "cimorellifan899",
   "mannancial",
   "mike boun",
+  "postmodernjukebox",
 ];
 
 const mustContainArray = [
