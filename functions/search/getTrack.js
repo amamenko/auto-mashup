@@ -231,8 +231,8 @@ const getTrack = async (
                       const mode = trackDetails.mode === 1 ? "major" : "minor";
 
                       const trackDataJSON = {
-                        title: topSong.title,
-                        artist: topSong.artist,
+                        title: topSong.title.trim(),
+                        artist: topSong.artist.trim(),
                         rank: songRank,
                         cover: songCover,
                         tempo,
