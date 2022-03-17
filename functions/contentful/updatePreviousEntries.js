@@ -4,8 +4,8 @@ const { logger } = require("../logger/initializeLogger");
 require("dotenv").config();
 
 const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
-  const title = topSong.title;
-  const artist = topSong.artist;
+  const title = topSong.title.trim();
+  const artist = topSong.artist.trim();
 
   // Access to Contentful Delivery API
   const client = contentful.createClient({

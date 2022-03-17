@@ -31,10 +31,13 @@ const getTrack = async (
     accessToken: process.env.CONTENTFUL_ACCESS_TOKEN,
   });
 
+  const trimmedTitle = topSong.title.trim();
+  const trimmedArtist = topSong.artist.trim();
+
   return await client
     .getEntries({
-      "fields.title": topSong.title,
-      "fields.artist": topSong.artist,
+      "fields.title": trimmedTitle,
+      "fields.artist": trimmedArtist,
       content_type: "song",
     })
     .then(async (res) => {
@@ -113,7 +116,7 @@ const getTrack = async (
                           .then((updatedEntry) => {
                             updatedEntry.publish();
 
-                            const logStatement = `Entry update was successful and has been published for track "${topSong.title}" by ${topSong.artist}. Its associated charts have been updated to include its new ${currentChartName} rank.`;
+                            const logStatement = `Entry update was successful and has been published for track "${trimmedTitle}" by ${trimmedArtist}. Its associated charts have been updated to include its new ${currentChartName} rank.`;
 
                             if (process.env.NODE_ENV === "production") {
                               logger.log(logStatement);
@@ -141,7 +144,7 @@ const getTrack = async (
                   updateContentfulCharts();
                 }
               } else {
-                const noChangesStatement = `No changes in chart rank this week for "${topSong.title}" by ${topSong.artist}.`;
+                const noChangesStatement = `No changes in chart rank this week for "${trimmedTitle}" by ${trimmedArtist}.`;
 
                 if (process.env.NODE_ENV === "production") {
                   logger.log(noChangesStatement);
@@ -170,7 +173,7 @@ const getTrack = async (
             .map((item) => item.trim());
 
           return await spotifyApi
-            .searchTracks(`track:${topSong.title} artist:${filteredArtist[0]}`)
+            .searchTracks(`track:${trimmedTitle} artist:${filteredArtist[0]}`)
             .then(
               (data) => {
                 if (data) {
@@ -231,8 +234,8 @@ const getTrack = async (
                       const mode = trackDetails.mode === 1 ? "major" : "minor";
 
                       const trackDataJSON = {
-                        title: topSong.title.trim(),
-                        artist: topSong.artist.trim(),
+                        title: trimmedTitle,
+                        artist: trimmedArtist,
                         rank: songRank,
                         cover: songCover,
                         tempo,
@@ -245,10 +248,10 @@ const getTrack = async (
 
                       if (trackDetails.time_signature === 4) {
                         return await searchYouTube(
-                          topSong.title,
-                          topSong.artist
+                          trimmedTitle,
+                          trimmedArtist
                         ).then(async (match) => {
-                          const noMatchFoundStatement = `No match found for track "${topSong.title}" by ${topSong.artist}.`;
+                          const noMatchFoundStatement = `No match found for track "${trimmedTitle}" by ${trimmedArtist}.`;
 
                           if (match) {
                             if (match.arr) {
@@ -382,7 +385,7 @@ const getTrack = async (
                                   youtubeAudioFileExists ||
                                   youtubeTrimmedAudioFileExists
                                 ) {
-                                  const stillRunningStatement = `Whoops, a different song loop is still running! Delaying for one minute and then analyzing audio for track "${topSong.title}" by ${topSong.artist}.`;
+                                  const stillRunningStatement = `Whoops, a different song loop is still running! Delaying for one minute and then analyzing audio for track "${trimmedTitle}" by ${trimmedArtist}.`;
                                   if (process.env.NODE_ENV === "production") {
                                     logger.log(stillRunningStatement);
                                   } else {
@@ -422,7 +425,7 @@ const getTrack = async (
                           }
                         });
                       } else {
-                        const not4ErrorStatement = `Track "${topSong.title}" by ${topSong.artist} has a time signature that is not 4/4. Moving on to the next track.`;
+                        const not4ErrorStatement = `Track "${trimmedTitle}" by ${trimmedArtist} has a time signature that is not 4/4. Moving on to the next track.`;
 
                         if (process.env.NODE_ENV === "production") {
                           logger.log(not4ErrorStatement);
@@ -435,7 +438,7 @@ const getTrack = async (
                     (err) => {
                       if (process.env.NODE_ENV === "production") {
                         logger.error(
-                          `Something went wrong after fetching Spotify's audio analysis for "${topSong.title}" by ${filteredArtist[0]}.`,
+                          `Something went wrong after fetching Spotify's audio analysis for "${trimmedTitle}" by ${filteredArtist[0]}.`,
                           {
                             indexMeta: true,
                             meta: {
@@ -452,7 +455,7 @@ const getTrack = async (
                   .catch((err) => {
                     if (process.env.NODE_ENV === "production") {
                       logger.error(
-                        `Something went wrong when fetching Spotify's audio analysis for "${topSong.title}" by ${filteredArtist[0]}.`,
+                        `Something went wrong when fetching Spotify's audio analysis for "${trimmedTitle}" by ${filteredArtist[0]}.`,
                         {
                           indexMeta: true,
                           meta: {
@@ -467,7 +470,7 @@ const getTrack = async (
                     return;
                   });
               } else {
-                const noSongIDStatement = `Spotify did not return a song ID for "${topSong.title}" by ${filteredArtist[0]}. Moving on to next song!`;
+                const noSongIDStatement = `Spotify did not return a song ID for "${trimmedTitle}" by ${filteredArtist[0]}. Moving on to next song!`;
 
                 if (process.env.NODE_ENV === "production") {
                   logger.log(noSongIDStatement);
