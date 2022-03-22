@@ -88,8 +88,14 @@ const getChart = (name, date, cb) => {
       let rank = $("span.c-label", chartListItems[i]).text().trim();
 
       if (rank) {
-        const title = $("h3.c-title", chartListItems[i]).text().trim();
-        const artist = $("h3.c-title+span", chartListItems[i]).text().trim();
+        const title = $("h3.c-title", chartListItems[i])
+          .text()
+          .replace(/\t\t/gim, "") // Filter out tabs
+          .trim();
+        const artist = $("h3.c-title+span", chartListItems[i])
+          .text()
+          .replace(/\t\t/gim, "") // Filter out tabs
+          .trim();
         const cover = $("img", chartListItems[i]).eq(0).attr("data-lazy-src");
 
         const rankArr = rank.split(/\D+/gim);
