@@ -214,6 +214,8 @@ const filterArray = [
   "(cover)",
   "cover)",
   "cover by",
+  "no audio",
+  "no sound",
   cleanMatch,
   styleMatch,
   foreignChar,
