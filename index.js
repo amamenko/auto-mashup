@@ -10,7 +10,7 @@ const SpotifyWebApi = require("spotify-web-api-node");
 const { format } = require("date-fns");
 const { logger } = require("./functions/logger/initializeLogger");
 const { onLoggerShutdown } = require("./functions/logger/onLoggerShutdown");
-const testSearch = require("./functions/search/testSearch");
+// const testSearch = require("./functions/search/testSearch");
 require("dotenv").config();
 
 const port = process.env.PORT || 4000;
@@ -44,9 +44,6 @@ cron.schedule("0,30 * * * *", () => {
 
 // Loop next song position of current in-progress chart (if any) every 5 minutes
 cron.schedule("*/5 * * * *", async () => {
-  // Kill up all leftover Puppeteer processes
-  exec("pkill -9 -f puppeteer");
-
   const restartTimesArr = ["01", "04", "07", "10", "13", "16", "19", "22"];
   const currentHours = format(Date.now(), "HH");
   const currentMinutes = format(Date.now(), "mm");
