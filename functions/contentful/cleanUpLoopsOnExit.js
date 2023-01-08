@@ -1,7 +1,7 @@
 const process = require("process");
 const contentful = require("contentful");
 const contentfulManagement = require("contentful-management");
-const { logger } = require("../logger/initializeLogger");
+const { logger } = require("../../logger/logger");
 require("dotenv").config();
 
 const cleanUpLoopsOnExit = async () => {
@@ -70,7 +70,9 @@ const cleanUpLoopsOnExit = async () => {
                                     const noProgressStatement = `Songs loop for chart ${chartInProgress.fields.name} no longer in progress.`;
 
                                     if (process.env.NODE_ENV === "production") {
-                                      logger.log(noProgressStatement);
+                                      logger("server").info(
+                                        noProgressStatement
+                                      );
                                     } else {
                                       console.log(noProgressStatement);
                                     }
@@ -93,7 +95,7 @@ const cleanUpLoopsOnExit = async () => {
       const noProgressStatement = "No song loops happening at the moment.";
 
       if (process.env.NODE_ENV === "production") {
-        logger.log(noProgressStatement);
+        logger("server").info(noProgressStatement);
       } else {
         console.log(noProgressStatement);
       }
@@ -102,14 +104,8 @@ const cleanUpLoopsOnExit = async () => {
     })
     .catch((err) => {
       if (process.env.NODE_ENV === "production") {
-        logger.error(
-          "Something went wrong when checking Contentful entry chart loops in progress in 'cleanUpLoopsOnExist.js' function.",
-          {
-            indexMeta: true,
-            meta: {
-              message: err.message,
-            },
-          }
+        logger("server").error(
+          `Something went wrong when checking Contentful entry chart loops in progress in 'cleanUpLoopsOnExist.js' function: ${err.message}`
         );
       } else {
         console.log(err);

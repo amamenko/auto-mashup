@@ -1,5 +1,5 @@
 const { PythonShell } = require("python-shell");
-const { logger } = require("../logger/initializeLogger");
+const { logger } = require("../../logger/logger");
 require("dotenv").config();
 
 const runPythonFile = (argsObj) => {
@@ -17,14 +17,8 @@ const runPythonFile = (argsObj) => {
 
     pyshell.on("stderr", (stderr) => {
       if (process.env.NODE_ENV === "production") {
-        logger.error(
-          `Something went wrong when running the Python script ${fileName} within the function "runPythonFile.js"`,
-          {
-            indexMeta: true,
-            meta: {
-              message: stderr.message,
-            },
-          }
+        logger("server").error(
+          `Something went wrong when running the Python script ${fileName} within the function "runPythonFile.js": ${stderr.message}`
         );
       } else {
         console.error(stderr);
@@ -38,7 +32,7 @@ const runPythonFile = (argsObj) => {
         const successStatement = `Successfully ran ${fileName}.`;
 
         if (process.env.NODE_ENV === "production") {
-          logger.log(successStatement);
+          logger("server").info(successStatement);
         } else {
           console.log(successStatement);
         }

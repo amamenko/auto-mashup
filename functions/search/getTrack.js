@@ -6,7 +6,7 @@ const getAudioInputSource = require("../analysis/getAudioInputSource");
 const searchYouTube = require("./searchYouTube");
 const updatePreviousEntries = require("../contentful/updatePreviousEntries");
 const checkFileExists = require("../utils/checkFileExists");
-const { logger } = require("../logger/initializeLogger");
+const { logger } = require("../../logger/logger");
 const timeStampToSeconds = require("../utils/timeStampToSeconds");
 const secondsToTimestamp = require("../utils/secondsToTimestamp");
 require("dotenv").config();
@@ -119,7 +119,7 @@ const getTrack = async (
                             const logStatement = `Entry update was successful and has been published for track "${trimmedTitle}" by ${trimmedArtist}. Its associated charts have been updated to include its new ${currentChartName} rank.`;
 
                             if (process.env.NODE_ENV === "production") {
-                              logger.log(logStatement);
+                              logger("server").info(logStatement);
                             } else {
                               console.log(logStatement);
                             }
@@ -147,7 +147,7 @@ const getTrack = async (
                 const noChangesStatement = `No changes in chart rank this week for "${trimmedTitle}" by ${trimmedArtist}.`;
 
                 if (process.env.NODE_ENV === "production") {
-                  logger.log(noChangesStatement);
+                  logger("server").info(noChangesStatement);
                 } else {
                   console.log(noChangesStatement);
                 }
@@ -193,12 +193,9 @@ const getTrack = async (
               },
               (err) => {
                 if (process.env.NODE_ENV === "production") {
-                  logger.error("Something went wrong when searching Spotify!", {
-                    indexMeta: true,
-                    meta: {
-                      message: err.message,
-                    },
-                  });
+                  logger("server").error(
+                    `Something went wrong when searching Spotify: ${err.message}`
+                  );
                 } else {
                   console.log(
                     "Something went wrong when searching Spotify!",
@@ -358,14 +355,8 @@ const getTrack = async (
                                     trackDataJSON
                                   ).catch((err) => {
                                     if (process.env.NODE_ENV === "production") {
-                                      logger.error(
-                                        "Something went wrong when running audio analysis!",
-                                        {
-                                          indexMeta: true,
-                                          meta: {
-                                            message: err.message,
-                                          },
-                                        }
+                                      logger("server").error(
+                                        `Something went wrong when running audio analysis: ${err.message}`
                                       );
                                     } else {
                                       console.error(err);
@@ -387,7 +378,9 @@ const getTrack = async (
                                 ) {
                                   const stillRunningStatement = `Whoops, a different song loop is still running! Delaying for one minute and then analyzing audio for track "${trimmedTitle}" by ${trimmedArtist}.`;
                                   if (process.env.NODE_ENV === "production") {
-                                    logger.log(stillRunningStatement);
+                                    logger("server").info(
+                                      stillRunningStatement
+                                    );
                                   } else {
                                     console.log(stillRunningStatement);
                                   }
@@ -398,7 +391,7 @@ const getTrack = async (
                                 }
                               } else {
                                 if (process.env.NODE_ENV === "production") {
-                                  logger.error(noMatchFoundStatement);
+                                  logger("server").error(noMatchFoundStatement);
                                 } else {
                                   console.log(noMatchFoundStatement);
                                 }
@@ -407,7 +400,7 @@ const getTrack = async (
                               }
                             } else {
                               if (process.env.NODE_ENV === "production") {
-                                logger.error(noMatchFoundStatement);
+                                logger("server").error(noMatchFoundStatement);
                               } else {
                                 console.log(noMatchFoundStatement);
                               }
@@ -416,7 +409,7 @@ const getTrack = async (
                             }
                           } else {
                             if (process.env.NODE_ENV === "production") {
-                              logger.error(noMatchFoundStatement);
+                              logger("server").error(noMatchFoundStatement);
                             } else {
                               console.log(noMatchFoundStatement);
                             }
@@ -428,7 +421,7 @@ const getTrack = async (
                         const not4ErrorStatement = `Track "${trimmedTitle}" by ${trimmedArtist} has a time signature that is not 4/4. Moving on to the next track.`;
 
                         if (process.env.NODE_ENV === "production") {
-                          logger.log(not4ErrorStatement);
+                          logger("server").info(not4ErrorStatement);
                         } else {
                           console.log(not4ErrorStatement);
                         }
@@ -437,14 +430,8 @@ const getTrack = async (
                     },
                     (err) => {
                       if (process.env.NODE_ENV === "production") {
-                        logger.error(
-                          `Something went wrong after fetching Spotify's audio analysis for "${trimmedTitle}" by ${filteredArtist[0]}.`,
-                          {
-                            indexMeta: true,
-                            meta: {
-                              message: err.message,
-                            },
-                          }
+                        logger("server").error(
+                          `Something went wrong after fetching Spotify's audio analysis for "${trimmedTitle}" by ${filteredArtist[0]}: ${err.message}`
                         );
                       } else {
                         console.error(err);
@@ -454,14 +441,8 @@ const getTrack = async (
                   )
                   .catch((err) => {
                     if (process.env.NODE_ENV === "production") {
-                      logger.error(
-                        `Something went wrong when fetching Spotify's audio analysis for "${trimmedTitle}" by ${filteredArtist[0]}.`,
-                        {
-                          indexMeta: true,
-                          meta: {
-                            message: err.message,
-                          },
-                        }
+                      logger("server").error(
+                        `Something went wrong when fetching Spotify's audio analysis for "${trimmedTitle}" by ${filteredArtist[0]}: ${err.message}`
                       );
                     } else {
                       console.error(err);
@@ -473,7 +454,7 @@ const getTrack = async (
                 const noSongIDStatement = `Spotify did not return a song ID for "${trimmedTitle}" by ${filteredArtist[0]}. Moving on to next song!`;
 
                 if (process.env.NODE_ENV === "production") {
-                  logger.log(noSongIDStatement);
+                  logger("server").info(noSongIDStatement);
                 } else {
                   console.log(noSongIDStatement);
                 }

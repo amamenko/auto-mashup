@@ -10,7 +10,7 @@ const getEachArtist = require("./getEachArtist");
 const timeStampToSeconds = require("../utils/timeStampToSeconds");
 const getChannelDescription = require("./getChannelDescription");
 const getVideoDescription = require("./getVideoDescription");
-const { logger } = require("../logger/initializeLogger");
+const { logger } = require("../../logger/logger");
 require("dotenv").config();
 
 const filterVideoResults = async (videos, trackTitle, trackArtist) => {
@@ -73,7 +73,7 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
 
             setTimeout(async () => {
               if (process.env.NODE_ENV === "production") {
-                logger.log(gettingStatement);
+                logger("server").info(gettingStatement);
               } else {
                 console.log(gettingStatement);
               }
@@ -83,14 +83,8 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                   firstFour[i]
                 ).catch((err) => {
                   if (process.env.NODE_ENV === "production") {
-                    logger.error(
-                      `Something went wrong when getting channel description for YouTube video with title "${firstFour[i].original_title}".`,
-                      {
-                        indexMeta: true,
-                        meta: {
-                          message: err.message,
-                        },
-                      }
+                    logger("server").error(
+                      `Something went wrong when getting channel description for YouTube video with title "${firstFour[i].original_title}": ${err.message}`
                     );
                   } else {
                     console.error(err);
@@ -135,7 +129,7 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                     const coverChannelStatement = `The channel for this video (${firstFour[i].channel_name}) appears to be a cover channel. Moving on to next available video!`;
 
                     if (process.env.NODE_ENV === "production") {
-                      logger.log(coverChannelStatement);
+                      logger("server").info(coverChannelStatement);
                     } else {
                       console.log(coverChannelStatement);
                     }
@@ -150,14 +144,8 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                 firstFour[i].id
               ).catch((err) => {
                 if (process.env.NODE_ENV === "production") {
-                  logger.error(
-                    `Something went wrong when getting the video description for YouTube video with ID "${firstFour[i].id}"`,
-                    {
-                      indexMeta: true,
-                      meta: {
-                        message: err.message,
-                      },
-                    }
+                  logger("server").error(
+                    `Something went wrong when getting the video description for YouTube video with ID "${firstFour[i].id}": ${err.message}`
                   );
                 } else {
                   console.error(err);
@@ -205,7 +193,7 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                   const coverStatement = `The description for this video (https://www.youtube.com/watch?v=${firstFour[i].id}) appears to indicate that it is a cover or live performance. Moving on to next available video!`;
 
                   if (process.env.NODE_ENV === "production") {
-                    logger.log(coverStatement);
+                    logger("server").info(coverStatement);
                   } else {
                     console.log(coverStatement);
                   }
@@ -298,12 +286,9 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
                     "Subtitle function resulted in an error!";
 
                   if (process.env.NODE_ENV === "production") {
-                    logger.error(subtitleErrorStatement, {
-                      indexMeta: true,
-                      meta: {
-                        message: err.message,
-                      },
-                    });
+                    logger("server").error(
+                      `${subtitleErrorStatement} ${err.message}`
+                    );
                   } else {
                     console.log(subtitleErrorStatement);
                     console.error(err);
@@ -327,7 +312,7 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
           const allResolvedStatement = "All promises of Promise.all resolved!";
 
           if (process.env.NODE_ENV === "production") {
-            logger.log(allResolvedStatement);
+            logger("server").info(allResolvedStatement);
           } else {
             console.log(allResolvedStatement);
           }
@@ -337,12 +322,7 @@ const filterVideoResults = async (videos, trackTitle, trackArtist) => {
           const errorStatement = "Error in iterable promises of Promise.all";
 
           if (process.env.NODE_ENV === "production") {
-            logger.error(errorStatement, {
-              indexMeta: true,
-              meta: {
-                message: err.message,
-              },
-            });
+            logger("server").error(`${errorStatement} ${err.message}`);
           } else {
             console.log(errorStatement);
             console.error(err);

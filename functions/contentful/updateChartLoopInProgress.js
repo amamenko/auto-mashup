@@ -1,6 +1,6 @@
 const contentfulManagement = require("contentful-management");
 const { addMinutes } = require("date-fns");
-const { logger } = require("../logger/initializeLogger");
+const { logger } = require("../../logger/logger");
 require("dotenv").config();
 
 const updateChartLoopInProgress = async (chart, state) => {
@@ -53,7 +53,7 @@ const updateChartLoopInProgress = async (chart, state) => {
               }`;
 
               if (process.env.NODE_ENV === "production") {
-                logger.log(successStatement);
+                logger("server").info(successStatement);
               } else {
                 console.log(successStatement);
               }

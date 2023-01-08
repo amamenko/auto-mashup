@@ -2,7 +2,7 @@ const contentful = require("contentful-management");
 const fs = require("fs");
 const path = require("path");
 const checkFileExists = require("../utils/checkFileExists");
-const { logger } = require("../logger/initializeLogger");
+const { logger } = require("../../logger/logger");
 require("dotenv").config();
 
 const sendDataToContentful = async (
@@ -40,7 +40,7 @@ const sendDataToContentful = async (
       const deletedStatement = "Deleted output directory!";
 
       if (process.env.NODE_ENV === "production") {
-        logger.log(deletedStatement);
+        logger("server").info(deletedStatement);
       } else {
         console.log(deletedStatement);
       }
@@ -58,12 +58,9 @@ const sendDataToContentful = async (
   if (accompanimentFileExists && vocalsFileExists) {
     const getErrorLogs = (err) => {
       if (process.env.NODE_ENV === "production") {
-        logger.error("Received error during entry creation", {
-          indexMeta: true,
-          meta: {
-            message: err.message,
-          },
-        });
+        logger("server").error(
+          `Received error during entry creation: ${err.message}`
+        );
       } else {
         console.error(`Received error during entry creation: ${err}`);
       }
@@ -199,7 +196,7 @@ const sendDataToContentful = async (
                         "Successfully created new entry!";
 
                       if (process.env.NODE_ENV === "production") {
-                        logger.log(successStatement);
+                        logger("server").info(successStatement);
                       } else {
                         console.log(successStatement);
                       }
@@ -235,7 +232,7 @@ const sendDataToContentful = async (
       "Either vocals or accompaniment file does not exist! Moving on to next track.";
 
     if (process.env.NODE_ENV === "production") {
-      logger.log(doesntExistStatement);
+      logger("server").info(doesntExistStatement);
     } else {
       console.log(doesntExistStatement);
     }

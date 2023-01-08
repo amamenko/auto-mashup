@@ -1,15 +1,13 @@
 const express = require("express");
 const app = express();
 const cron = require("node-cron");
-const exec = require("child_process").exec;
 const loopCurrentCharts = require("./functions/search/loopCurrentCharts");
 const checkLoopProgress = require("./functions/search/checkLoopProgress");
 const loopSongs = require("./functions/search/loopSongs");
 const isFirstSundayOfMonth = require("./functions/utils/isFirstSundayOfMonth");
 const SpotifyWebApi = require("spotify-web-api-node");
 const { format } = require("date-fns");
-const { logger } = require("./functions/logger/initializeLogger");
-const { onLoggerShutdown } = require("./functions/logger/onLoggerShutdown");
+const { logger } = require("./logger/logger");
 // const testSearch = require("./functions/search/testSearch");
 require("dotenv").config();
 
@@ -21,8 +19,6 @@ const spotifyCredentials = {
 };
 
 const spotifyApi = new SpotifyWebApi(spotifyCredentials);
-
-onLoggerShutdown();
 
 // Run on Wednesdays starting at noon and then every two minutes until 1 o'clock (for non-GOAT charts)
 cron.schedule("0,*/2 12-12 * * 3", () => {
@@ -59,7 +55,7 @@ cron.schedule("*/5 * * * *", async () => {
     const restartingStatement = "Restarting server on purpose!";
 
     if (process.env.NODE_ENV === "production") {
-      logger.log(restartingStatement);
+      logger("server").info(restartingStatement);
     } else {
       console.log(restartingStatement);
     }
@@ -82,12 +78,9 @@ cron.schedule("*/5 * * * *", async () => {
         .then(
           (data) => {
             if (process.env.NODE_ENV === "production") {
-              logger.log("Retrieved new access token:", {
-                indexMeta: true,
-                meta: {
-                  access_token: data.body["access_token"],
-                },
-              });
+              logger("server").info(
+                `Retrieved new access token: ${data.body["access_token"]}`
+              );
             } else {
               console.log(
                 "Retrieved new access token: " + data.body["access_token"]
@@ -99,14 +92,8 @@ cron.schedule("*/5 * * * *", async () => {
           },
           (err) => {
             if (process.env.NODE_ENV === "production") {
-              logger.error(
-                "Something went wrong when retrieving an access token",
-                {
-                  indexMeta: true,
-                  meta: {
-                    message: err.message,
-                  },
-                }
+              logger("server").error(
+                `Something went wrong when retrieving an access token: ${err.message}`
               );
             } else {
               console.error(
@@ -119,14 +106,8 @@ cron.schedule("*/5 * * * *", async () => {
         .then(() => loopSongs(spotifyApi))
         .catch((error) => {
           if (process.env.NODE_ENV === "production") {
-            logger.error(
-              "Something went wrong when granting Spotify client credentials.",
-              {
-                indexMeta: true,
-                meta: {
-                  message: error.message,
-                },
-              }
+            logger("server").error(
+              `Something went wrong when granting Spotify client credentials: ${error.message}`
             );
           } else {
             console.error(error);
@@ -144,7 +125,7 @@ app.listen(port, () => {
   const portStatement = `Listening on port ${port}...`;
 
   if (process.env.NODE_ENV === "production") {
-    logger.log(portStatement);
+    logger("server").info(portStatement);
   } else {
     console.log(portStatement);
   }

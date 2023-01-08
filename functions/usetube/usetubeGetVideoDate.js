@@ -1,5 +1,5 @@
 const getData = require("./helpers/getData");
-const { logger } = require("../logger/initializeLogger");
+const { logger } = require("../../logger/logger");
 require("dotenv").config();
 
 const getVideoDate = async (id) => {
@@ -20,7 +20,7 @@ const getVideoDate = async (id) => {
     const failureStatement = "cannot get date for " + id + ", try again";
 
     if (process.env.NODE_ENV === "production") {
-      logger.log(failureStatement);
+      logger("server").info(failureStatement);
     } else {
       console.log(failureStatement);
     }

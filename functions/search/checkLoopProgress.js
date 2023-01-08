@@ -2,7 +2,7 @@ const contentful = require("contentful");
 const updateChartLoopInProgress = require("../contentful/updateChartLoopInProgress");
 const { isBefore, parseISO, getDay } = require("date-fns");
 const cleanUpLoopsOnExit = require("../contentful/cleanUpLoopsOnExit");
-const { logger } = require("../logger/initializeLogger");
+const { logger } = require("../../logger/logger");
 require("dotenv").config();
 
 const checkLoopProgress = async () => {
@@ -58,7 +58,7 @@ const checkLoopProgress = async () => {
                             "Not starting any GOAT loops on Wednesday!";
 
                           if (process.env.NODE_ENV === "production") {
-                            logger.log(goatLoopStatement);
+                            logger("server").info(goatLoopStatement);
                           } else {
                             console.log(goatLoopStatement);
                           }
@@ -68,14 +68,8 @@ const checkLoopProgress = async () => {
                             "in progress"
                           ).catch((err) => {
                             if (process.env.NODE_ENV === "production") {
-                              logger.error(
-                                "Error updating chart to 'in progress' within checkLoopProgress function!",
-                                {
-                                  indexMeta: true,
-                                  meta: {
-                                    message: err.message,
-                                  },
-                                }
+                              logger("server").error(
+                                `Error updating chart to 'in progress' within checkLoopProgress function: ${err.message}`
                               );
                             } else {
                               console.error(err);
@@ -90,14 +84,8 @@ const checkLoopProgress = async () => {
               })
               .catch((err) => {
                 if (process.env.NODE_ENV === "production") {
-                  logger.error(
-                    "Error getting Contentful chart entries within checkLoopProgress function!",
-                    {
-                      indexMeta: true,
-                      meta: {
-                        message: err.message,
-                      },
-                    }
+                  logger("server").error(
+                    `Error getting Contentful chart entries within checkLoopProgress function: ${err.message}`
                   );
                 } else {
                   console.error(err);
@@ -132,14 +120,8 @@ const checkLoopProgress = async () => {
     })
     .catch((err) => {
       if (process.env.NODE_ENV === "production") {
-        logger.error(
-          "Error getting Contentful chart loops in progress within checkLoopProgress function!",
-          {
-            indexMeta: true,
-            meta: {
-              message: err.message,
-            },
-          }
+        logger("server").error(
+          `Error getting Contentful chart loops in progress within checkLoopProgress function: ${err.message}`
         );
       } else {
         console.error(err);

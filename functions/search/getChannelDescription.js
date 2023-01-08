@@ -1,5 +1,5 @@
 const { searchChannel, getChannelDesc } = require("usetube");
-const { logger } = require("../logger/initializeLogger");
+const { logger } = require("../../logger/logger");
 require("dotenv").config();
 
 const getChannelDescription = async (video) => {
@@ -8,14 +8,8 @@ const getChannelDescription = async (video) => {
   if (video.channel_id) {
     description = await getChannelDesc(exactMatch.channel_id).catch((err) => {
       if (process.env.NODE_ENV === "production") {
-        logger.error(
-          `Something went wrong when getting channel description for channel ID ${exactMatch.channel_id}.`,
-          {
-            indexMeta: true,
-            meta: {
-              message: err.message,
-            },
-          }
+        logger("server").error(
+          `Something went wrong when getting channel description for channel ID ${exactMatch.channel_id}: ${err.message}`
         );
       } else {
         console.error(err);
@@ -35,14 +29,8 @@ const getChannelDescription = async (video) => {
                 return await getChannelDesc(exactMatch.channel_id).catch(
                   (err) => {
                     if (process.env.NODE_ENV === "production") {
-                      logger.error(
-                        `Something went wrong when getting channel description for channel ID ${exactMatch.channel_id}.`,
-                        {
-                          indexMeta: true,
-                          meta: {
-                            message: err.message,
-                          },
-                        }
+                      logger("server").error(
+                        `Something went wrong when getting channel description for channel ID ${exactMatch.channel_id}: ${err.message}`
                       );
                     } else {
                       console.error(err);
@@ -58,14 +46,8 @@ const getChannelDescription = async (video) => {
       })
       .catch((err) => {
         if (process.env.NODE_ENV === "production") {
-          logger.error(
-            `Something went wrong when getting channel description for channel name ${video.channel_name}.`,
-            {
-              indexMeta: true,
-              meta: {
-                message: err.message,
-              },
-            }
+          logger("server").error(
+            `Something went wrong when getting channel description for channel name ${video.channel_name}: ${err.message}`
           );
         } else {
           console.error(err);

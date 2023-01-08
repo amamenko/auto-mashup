@@ -3,7 +3,7 @@
 const getVideoDate = require("../usetubeGetVideoDate");
 const getDateFromText = require("./getDateFromText");
 const findVal = require("./findVal");
-const { logger } = require("../../logger/initializeLogger");
+const { logger } = require("../../../logger/logger");
 require("dotenv").config();
 
 const formatVideo = async (video, speedDate, description) => {
@@ -190,10 +190,11 @@ const formatVideo = async (video, speedDate, description) => {
       };
     }
   } catch (e) {
+    const formatFailureStatement = "Format video failed";
     if (process.env.NODE_ENV === "production") {
-      logger.log("Format video failed");
+      logger("server").info(formatFailureStatement);
     } else {
-      console.log("Format video failed");
+      console.log(formatFailureStatement);
     }
   }
 };

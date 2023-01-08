@@ -1,5 +1,5 @@
 const sendDataToContentful = require("../contentful/sendDataToContentful");
-const { logger } = require("../logger/initializeLogger");
+const { logger } = require("../../logger/logger");
 require("dotenv").config();
 
 // Get beat positions from accompaniment track
@@ -50,7 +50,7 @@ const beatSuccessCallback = async (
               "No beat positions returned from analysis!";
 
             if (process.env.NODE_ENV === "production") {
-              logger.log(noBeatPositionsStatement);
+              logger("server").info(noBeatPositionsStatement);
             } else {
               console.log(noBeatPositionsStatement);
             }
@@ -60,7 +60,7 @@ const beatSuccessCallback = async (
           const noBeatTicksStatement = "No beat ticks returned from analysis!";
 
           if (process.env.NODE_ENV === "production") {
-            logger.log(noBeatTicksStatement);
+            logger("server").info(noBeatTicksStatement);
           } else {
             console.log(noBeatTicksStatement);
           }
@@ -70,7 +70,7 @@ const beatSuccessCallback = async (
         const noBeatsStatement = "No beats returned from analysis!";
 
         if (process.env.NODE_ENV === "production") {
-          logger.log(noBeatsStatement);
+          logger("server").info(noBeatsStatement);
         } else {
           console.log(noBeatsStatement);
         }
@@ -81,7 +81,7 @@ const beatSuccessCallback = async (
         "No useful buffer provided to the Essentia beat matching function. Moving on to next track!";
 
       if (process.env.NODE_ENV === "production") {
-        logger.log(noUsefulBufferStatement);
+        logger("server").info(noUsefulBufferStatement);
       } else {
         console.log(noUsefulBufferStatement);
       }
@@ -93,7 +93,7 @@ const beatSuccessCallback = async (
       "Error with Essentia module. Cannot run beat matching function. Moving on to next track!";
 
     if (process.env.NODE_ENV === "production") {
-      logger.log(errorEssentiaStatement);
+      logger("server").info(errorEssentiaStatement);
     } else {
       console.log(errorEssentiaStatement);
     }

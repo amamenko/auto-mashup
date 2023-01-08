@@ -3,7 +3,7 @@ const updateChartLoopInProgress = require("../contentful/updateChartLoopInProgre
 const cleanUpLoopsOnExit = require("../contentful/cleanUpLoopsOnExit");
 const addSongPositionValue = require("../contentful/addSongPositionValue");
 const getTrack = require("./getTrack");
-const { logger } = require("../logger/initializeLogger");
+const { logger } = require("../../logger/logger");
 require("dotenv").config();
 
 const loopSongs = async (spotifyApi) => {
@@ -72,14 +72,8 @@ const loopSongs = async (spotifyApi) => {
       })
       .catch((err) => {
         if (process.env.NODE_ENV === "production") {
-          logger.error(
-            "Something went wrong when getting Contentful entries in the 'loopSongs' function!",
-            {
-              indexMeta: true,
-              meta: {
-                message: err.message,
-              },
-            }
+          logger("server").error(
+            `Something went wrong when getting Contentful entries in the 'loopSongs' function: ${err.message}`
           );
         } else {
           console.error(err);
@@ -92,7 +86,7 @@ const loopSongs = async (spotifyApi) => {
       "No valid Spotify API instance was supplied to the 'loopSongs' function!";
 
     if (process.env.NODE_ENV === "production") {
-      logger.log(notValidStatement);
+      logger("server").info(notValidStatement);
     } else {
       console.log(notValidStatement);
     }

@@ -2,7 +2,7 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
 const { getChartObjects } = require("./getChartObjects");
-const { logger } = require("../logger/initializeLogger");
+const { logger } = require("../../logger/logger");
 require("dotenv").config();
 
 const BILLBOARD_BASE_URL = "http://www.billboard.com";
@@ -19,14 +19,8 @@ const listCharts = async (cb) => {
     .then((res) => res.data)
     .catch((err) => {
       if (process.env.NODE_ENV === "production") {
-        logger.error(
-          `Something went wrong when performing a GET request to the Billboard URL "${BILLBOARD_CHARTS_URL}" in the listCharts.js function.`,
-          {
-            indexMeta: true,
-            meta: {
-              message: err.message,
-            },
-          }
+        logger("server").error(
+          `Something went wrong when performing a GET request to the Billboard URL "${BILLBOARD_CHARTS_URL}" in the listCharts.js function: ${err.message}`
         );
       } else {
         console.error(err);
@@ -95,14 +89,8 @@ const listCharts = async (cb) => {
       })
       .catch((err) => {
         if (process.env.NODE_ENV === "production") {
-          logger.error(
-            "Something went wrong when waiting for all promises to resolve in the listCharts.js function",
-            {
-              indexMeta: true,
-              meta: {
-                message: err.message,
-              },
-            }
+          logger("server").error(
+            `Something went wrong when waiting for all promises to resolve in the listCharts.js function: ${err.message}`
           );
         } else {
           console.error(err);

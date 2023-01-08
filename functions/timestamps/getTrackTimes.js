@@ -2,7 +2,7 @@ const { searchSong } = require("genius-lyrics-api");
 const removeAccents = require("remove-accents");
 const timeStampToSeconds = require("../utils/timeStampToSeconds");
 const getRelevantGeniusLyrics = require("./getRelevantGeniusLyrics");
-const { logger } = require("../logger/initializeLogger");
+const { logger } = require("../../logger/logger");
 require("dotenv").config();
 
 const getTrackTimes = async (
@@ -70,14 +70,8 @@ const getTrackTimes = async (
               })
               .catch((err) => {
                 if (process.env.NODE_ENV === "production") {
-                  logger.error(
-                    `Something went wrong when searching for song "${title}" by ${artist} with the Genius API (second pass).`,
-                    {
-                      indexMeta: true,
-                      meta: {
-                        message: err.message,
-                      },
-                    }
+                  logger("server").error(
+                    `Something went wrong when searching for song "${title}" by ${artist} with the Genius API (second pass): ${err.message}`
                   );
                 } else {
                   console.error(err);
@@ -100,14 +94,8 @@ const getTrackTimes = async (
     })
     .catch((err) => {
       if (process.env.NODE_ENV === "production") {
-        logger.error(
-          `Something went wrong when searching for song "${title}" by ${artist} with the Genius API (first pass).`,
-          {
-            indexMeta: true,
-            meta: {
-              message: err.message,
-            },
-          }
+        logger("server").error(
+          `Something went wrong when searching for song "${title}" by ${artist} with the Genius API (first pass): ${err.message}`
         );
       } else {
         console.error(err);

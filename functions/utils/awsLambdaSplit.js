@@ -4,7 +4,7 @@ const stream = require("stream");
 const { retry, isTooManyTries } = require("ts-retry");
 const { createReadStream } = require("fs");
 const { promisify } = require("util");
-const { logger } = require("../logger/initializeLogger");
+const { logger } = require("../../logger/logger");
 require("dotenv").config();
 
 const writeFileAsync = promisify(fs.writeFile);
@@ -45,7 +45,7 @@ const awsLambdaSplit = async (fileName, matchID) => {
           uploadData
         )}`;
         if (process.env.NODE_ENV === "production") {
-          logger.log(successStatement);
+          logger("server").info(successStatement);
         } else {
           console.log(successStatement);
         }
@@ -93,7 +93,7 @@ const awsLambdaSplit = async (fileName, matchID) => {
                 const successStatement =
                   "Successfully split track into two stems!";
                 if (process.env.NODE_ENV === "production") {
-                  logger.error(successStatement);
+                  logger("server").error(successStatement);
                 } else {
                   console.error(successStatement);
                 }
@@ -111,13 +111,13 @@ const awsLambdaSplit = async (fileName, matchID) => {
             const noResponseError =
               "Did not receive accompaniment and vocal stems after over a minute of waiting!";
             if (process.env.NODE_ENV === "production") {
-              logger.error(noResponseError);
+              logger("server").error(noResponseError);
             } else {
               console.error(noResponseError);
             }
           } else {
             if (process.env.NODE_ENV === "production") {
-              logger.error(err);
+              logger("server").error(err);
             } else {
               console.error(err);
             }
@@ -127,7 +127,7 @@ const awsLambdaSplit = async (fileName, matchID) => {
     })
     .catch((err) => {
       if (process.env.NODE_ENV === "production") {
-        logger.error(err);
+        logger("server").error(err);
       } else {
         console.error(err);
       }

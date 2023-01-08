@@ -1,6 +1,6 @@
 const searchVideo = require("../usetube/usetubeSearchVideo");
 const filterVideoResults = require("./filterVideoResults");
-const { logger } = require("../logger/initializeLogger");
+const { logger } = require("../../logger/logger");
 require("dotenv").config();
 
 const searchYouTube = async (trackTitle, trackArtist) => {
@@ -17,7 +17,7 @@ const searchYouTube = async (trackTitle, trackArtist) => {
               const noResultsStatement = "No results found!";
 
               if (process.env.NODE_ENV === "production") {
-                logger.log(noResultsStatement);
+                logger("server").info(noResultsStatement);
               } else {
                 console.log(noResultsStatement);
               }
@@ -28,14 +28,8 @@ const searchYouTube = async (trackTitle, trackArtist) => {
       })
       .catch((err) => {
         if (process.env.NODE_ENV === "production") {
-          logger.error(
-            `Something went wrong when attempting to search for YouTube video with search term "${searchTerm}"`,
-            {
-              indexMeta: true,
-              meta: {
-                message: err.message,
-              },
-            }
+          logger("server").error(
+            `Something went wrong when attempting to search for YouTube video with search term "${searchTerm}": ${err.message}`
           );
         } else {
           console.error(err);
@@ -48,14 +42,8 @@ const searchYouTube = async (trackTitle, trackArtist) => {
     true
   ).catch((err) => {
     if (process.env.NODE_ENV === "production") {
-      logger.error(
-        `Something went wrong when attempting to search for YouTube video with search term "${trackTitle} ${trackArtist} lyrics"`,
-        {
-          indexMeta: true,
-          meta: {
-            message: err.message,
-          },
-        }
+      logger("server").error(
+        `Something went wrong when attempting to search for YouTube video with search term "${trackTitle} ${trackArtist} lyrics": ${err.message}`
       );
     } else {
       console.error(err);
@@ -71,14 +59,8 @@ const searchYouTube = async (trackTitle, trackArtist) => {
       trackArtist
     ).catch((err) => {
       if (process.env.NODE_ENV === "production") {
-        logger.error(
-          "Something went wrong when attempting to filter all YouTube video results!",
-          {
-            indexMeta: true,
-            meta: {
-              message: err.message,
-            },
-          }
+        logger("server").error(
+          `Something went wrong when attempting to filter all YouTube video results: ${err.message}`
         );
       } else {
         console.error(err);
@@ -89,7 +71,7 @@ const searchYouTube = async (trackTitle, trackArtist) => {
       return filtered;
     } else {
       if (process.env.NODE_ENV === "production") {
-        logger.log(noApplicableVideosStatement);
+        logger("server").info(noApplicableVideosStatement);
       } else {
         console.log(noApplicableVideosStatement);
       }
@@ -97,7 +79,7 @@ const searchYouTube = async (trackTitle, trackArtist) => {
     }
   } else {
     if (process.env.NODE_ENV === "production") {
-      logger.log(noApplicableVideosStatement);
+      logger("server").info(noApplicableVideosStatement);
     } else {
       console.log(noApplicableVideosStatement);
     }

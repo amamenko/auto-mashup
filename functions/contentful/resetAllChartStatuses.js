@@ -1,6 +1,6 @@
 const contentfulManagement = require("contentful-management");
 const contentful = require("contentful");
-const { logger } = require("../logger/initializeLogger");
+const { logger } = require("../../logger/logger");
 require("dotenv").config();
 
 const resetAllChartStatuses = async () => {
@@ -58,7 +58,7 @@ const resetAllChartStatuses = async () => {
                                   const successStatement = `Entry update was successful! ${item.fields.name} chart's status was reset.`;
 
                                   if (process.env.NODE_ENV === "production") {
-                                    logger.log(successStatement);
+                                    logger("server").info(successStatement);
                                   } else {
                                     console.log(successStatement);
                                   }

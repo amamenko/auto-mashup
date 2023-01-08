@@ -2,7 +2,7 @@ const fs = require("fs");
 const ffmpeg = require("fluent-ffmpeg");
 const checkFileExists = require("../utils/checkFileExists");
 const { splitAudioIntoStems } = require("./splitAudioIntoStems");
-const { logger } = require("../logger/initializeLogger");
+const { logger } = require("../../logger/logger");
 require("dotenv").config();
 
 const trimInputAudio = async (
@@ -41,12 +41,7 @@ const trimInputAudio = async (
           "FFMPEG received an error when attempting to trim the audio input. Output: ";
 
         if (process.env.NODE_ENV === "production") {
-          logger.error(errorStatement, {
-            indexMeta: true,
-            meta: {
-              message: err.message,
-            },
-          });
+          logger("server").error(`${errorStatement}${err.message}`);
         } else {
           console.error(errorStatement + err.message);
         }
@@ -71,7 +66,7 @@ const trimInputAudio = async (
         }s\nSuccessfully trimmed input track.`;
 
         if (process.env.NODE_ENV === "production") {
-          logger.log(doneStatement);
+          logger("server").info(doneStatement);
         } else {
           console.log(doneStatement);
         }
@@ -94,12 +89,7 @@ const trimInputAudio = async (
             "Something went wrong with the song splitting function in splitAudioStems.js! Moving on to next song.";
 
           if (process.env.NODE_ENV === "production") {
-            logger.error(errorLog, {
-              indexMeta: true,
-              meta: {
-                err,
-              },
-            });
+            logger("server").error(`${errorLog}\n${err}`);
           } else {
             console.error(errorLog);
             console.error(err);
@@ -114,7 +104,7 @@ const trimInputAudio = async (
       "YouTube audio input doesn't exist. Moving on to next song!";
 
     if (process.env.NODE_ENV === "production") {
-      logger.log(doesntExistStatement);
+      logger("server").info(doesntExistStatement);
     } else {
       console.log(doesntExistStatement);
     }

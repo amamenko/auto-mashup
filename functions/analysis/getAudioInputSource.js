@@ -1,5 +1,5 @@
 const fs = require("fs");
-const { logger } = require("../logger/initializeLogger");
+const { logger } = require("../../logger/logger");
 const checkFileExists = require("../utils/checkFileExists");
 const { trimInputAudio } = require("./trimInputAudio");
 const { splitAudioIntoStems } = require("./splitAudioIntoStems");
@@ -18,7 +18,7 @@ const getAudioInputSource = async (
 ) => {
   const downloadingStatement = `Now downloading video: ${matchTitle}`;
   if (process.env.NODE_ENV === "production") {
-    logger.log(downloadingStatement);
+    logger("server").info(downloadingStatement);
   } else {
     console.log(downloadingStatement);
   }
@@ -36,14 +36,8 @@ const getAudioInputSource = async (
           arg2: `${fileName}.%(ext)s`,
         }).catch((err) => {
           if (process.env.NODE_ENV === "production") {
-            logger.error(
-              `Received error when download audio for YouTube video with ID ${videoID}.`,
-              {
-                indexMeta: true,
-                meta: {
-                  message: err.message,
-                },
-              }
+            logger("server").error(
+              `Received error when download audio for YouTube video with ID ${videoID}: ${err.message}`
             );
           } else {
             console.error(err);
@@ -52,12 +46,9 @@ const getAudioInputSource = async (
       })
       .catch((err) => {
         if (process.env.NODE_ENV === "production") {
-          logger.error("Received error when installing yt-dlp.", {
-            indexMeta: true,
-            meta: {
-              message: err.message,
-            },
-          });
+          logger("server").error(
+            `Received error when installing yt-dlp: ${err.message}`
+          );
         } else {
           console.error(err);
         }
@@ -73,7 +64,7 @@ const getAudioInputSource = async (
       } seconds.`;
 
       if (process.env.NODE_ENV === "production") {
-        logger.log(doneTimestampStatement);
+        logger("server").info(doneTimestampStatement);
       } else {
         console.log(doneTimestampStatement);
       }
@@ -99,12 +90,7 @@ const getAudioInputSource = async (
           }
 
           if (process.env.NODE_ENV === "production") {
-            logger.error(errorLog, {
-              indexMeta: true,
-              meta: {
-                err,
-              },
-            });
+            logger("server").error(`${errorLog}\n${err}`);
           } else {
             console.error(errorLog);
             console.error(err);
@@ -123,14 +109,8 @@ const getAudioInputSource = async (
     })
     .catch((err) => {
       if (process.env.NODE_ENV === "production") {
-        logger.error(
-          `Received error when getting YouTube audio for video ID ${videoID}.`,
-          {
-            indexMeta: true,
-            meta: {
-              message: err.message,
-            },
-          }
+        logger("server").error(
+          `Received error when getting YouTube audio for video ID ${videoID}: ${err.message}`
         );
       } else {
         console.error(err);

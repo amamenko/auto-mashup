@@ -3,7 +3,7 @@ const contentfulManagement = require("contentful-management");
 const { getChart } = require("../billboard/getChart");
 const { format, startOfWeek, addDays } = require("date-fns");
 const deepEqual = require("deep-equal");
-const { logger } = require("../logger/initializeLogger");
+const { logger } = require("../../logger/logger");
 require("dotenv").config();
 
 const loopCurrentCharts = async (goat) => {
@@ -28,14 +28,8 @@ const loopCurrentCharts = async (goat) => {
             getChart(fields.url, async (err, upcomingChart) => {
               if (err) {
                 if (process.env.NODE_ENV === "production") {
-                  logger.error(
-                    `Something went wrong when getting chart with URL: ${fields.url}.`,
-                    {
-                      indexMeta: true,
-                      meta: {
-                        message: err.message,
-                      },
-                    }
+                  logger("server").error(
+                    `Something went wrong when getting chart with URL: ${fields.url}: ${err.message}`
                   );
                 } else {
                   console.error(err);
@@ -130,7 +124,9 @@ const loopCurrentCharts = async (goat) => {
                                         if (
                                           process.env.NODE_ENV === "production"
                                         ) {
-                                          logger.log(successStatement);
+                                          logger("server").info(
+                                            successStatement
+                                          );
                                         } else {
                                           console.log(successStatement);
                                         }
@@ -138,14 +134,8 @@ const loopCurrentCharts = async (goat) => {
                                   })
                                   .catch((err) => {
                                     if (process.env.NODE_ENV === "production") {
-                                      logger.error(
-                                        `Something went wrong when updating the chart enty for ${fields.name}.`,
-                                        {
-                                          indexMeta: true,
-                                          meta: {
-                                            message: err.message,
-                                          },
-                                        }
+                                      logger("server").error(
+                                        `Something went wrong when updating the chart enty for ${fields.name}: ${err.message}`
                                       );
                                     } else {
                                       console.error(err);
@@ -158,14 +148,8 @@ const loopCurrentCharts = async (goat) => {
                     })
                     .catch((err) => {
                       if (process.env.NODE_ENV === "production") {
-                        logger.error(
-                          `Something went wrong when getting chart with URL: ${fields.url}.`,
-                          {
-                            indexMeta: true,
-                            meta: {
-                              message: err.message,
-                            },
-                          }
+                        logger("server").error(
+                          `Something went wrong when getting chart with URL: ${fields.url}: ${err.message}`
                         );
                       } else {
                         console.error(err);
@@ -180,14 +164,8 @@ const loopCurrentCharts = async (goat) => {
     })
     .catch((err) => {
       if (process.env.NODE_ENV === "production") {
-        logger.error(
-          "Something went wrong when getting the Contentful management space!",
-          {
-            indexMeta: true,
-            meta: {
-              message: err.message,
-            },
-          }
+        logger("server").error(
+          `Something went wrong when getting the Contentful management space: ${err.message}`
         );
       } else {
         console.error(err);

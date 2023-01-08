@@ -1,6 +1,6 @@
 const contentful = require("contentful");
 const contentfulManagement = require("contentful-management");
-const { logger } = require("../logger/initializeLogger");
+const { logger } = require("../../logger/logger");
 require("dotenv").config();
 
 const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
@@ -78,7 +78,7 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
                                       if (
                                         process.env.NODE_ENV === "production"
                                       ) {
-                                        logger.log(successStatement);
+                                        logger("server").info(successStatement);
                                       } else {
                                         console.log(successStatement);
                                       }
@@ -109,7 +109,9 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
                                       if (
                                         process.env.NODE_ENV === "production"
                                       ) {
-                                        logger.log(unpublishedStatement);
+                                        logger("server").info(
+                                          unpublishedStatement
+                                        );
                                       } else {
                                         console.log(unpublishedStatement);
                                       }
@@ -124,7 +126,7 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
                                       if (
                                         process.env.NODE_ENV === "production"
                                       ) {
-                                        logger.log(deletedStatement);
+                                        logger("server").info(deletedStatement);
                                       } else {
                                         console.log(deletedStatement);
                                       }
@@ -148,7 +150,7 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
                                                     process.env.NODE_ENV ===
                                                     "production"
                                                   ) {
-                                                    logger.log(
+                                                    logger("server").info(
                                                       accompanimentUnpublishedStatement
                                                     );
                                                   } else {
@@ -169,7 +171,7 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
                                                   process.env.NODE_ENV ===
                                                   "production"
                                                 ) {
-                                                  logger.log(
+                                                  logger("server").info(
                                                     accompanimentDeletedStatement
                                                   );
                                                 } else {
@@ -198,7 +200,9 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
                                                                 .NODE_ENV ===
                                                               "production"
                                                             ) {
-                                                              logger.log(
+                                                              logger(
+                                                                "server"
+                                                              ).info(
                                                                 voxUnpublishedStatement
                                                               );
                                                             } else {
@@ -222,7 +226,9 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
                                                               .NODE_ENV ===
                                                             "production"
                                                           ) {
-                                                            logger.log(
+                                                            logger(
+                                                              "server"
+                                                            ).info(
                                                               voxDeletedStatement
                                                             );
                                                           } else {
@@ -239,15 +245,10 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
                                                               .NODE_ENV ===
                                                             "production"
                                                           ) {
-                                                            logger.error(
-                                                              `Error unpublishing and deleting vocals asset for track "${fields.title}" by ${fields.artist}`,
-                                                              {
-                                                                indexMeta: true,
-                                                                meta: {
-                                                                  message:
-                                                                    err.message,
-                                                                },
-                                                              }
+                                                            logger(
+                                                              "server"
+                                                            ).error(
+                                                              `Error unpublishing and deleting vocals asset for track "${fields.title}" by ${fields.artist}: ${err.message}`
                                                             );
                                                           } else {
                                                             console.error(err);
@@ -261,14 +262,8 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
                                                   process.env.NODE_ENV ===
                                                   "production"
                                                 ) {
-                                                  logger.error(
-                                                    `Error unpublishing and deleting accompaniment asset for track "${fields.title}" by ${fields.artist}`,
-                                                    {
-                                                      indexMeta: true,
-                                                      meta: {
-                                                        message: err.message,
-                                                      },
-                                                    }
+                                                  logger("server").error(
+                                                    `Error unpublishing and deleting accompaniment asset for track "${fields.title}" by ${fields.artist}: ${err.message}`
                                                   );
                                                 } else {
                                                   console.error(err);
@@ -281,14 +276,8 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
                                       if (
                                         process.env.NODE_ENV === "production"
                                       ) {
-                                        logger.error(
-                                          `Error unpublishing and deleting Contentful entry for track "${fields.title}" by ${fields.artist}`,
-                                          {
-                                            indexMeta: true,
-                                            meta: {
-                                              message: err.message,
-                                            },
-                                          }
+                                        logger("server").error(
+                                          `Error unpublishing and deleting Contentful entry for track "${fields.title}" by ${fields.artist}: ${err.message}`
                                         );
                                       } else {
                                         console.error(err);
@@ -310,14 +299,8 @@ const updatePreviousEntries = async (topSong, songRank, currentChart, goat) => {
     })
     .catch((err) => {
       if (process.env.NODE_ENV === "production") {
-        logger.error(
-          "Error getting Contentful entries within updatePreviousEntries.js file.",
-          {
-            indexMeta: true,
-            meta: {
-              message: err.message,
-            },
-          }
+        logger("server").error(
+          `Error getting Contentful entries within updatePreviousEntries.js file: ${err.message}`
         );
       } else {
         console.error(err);

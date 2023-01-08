@@ -1,5 +1,5 @@
 const { decode } = require("html-entities");
-const { logger } = require("../logger/initializeLogger");
+const { logger } = require("../../logger/logger");
 const { installPythonLibrary } = require("../utils/installPythonLibrary");
 const secondsToTimestamp = require("../utils/secondsToTimestamp");
 const languageCodeArr = require("../arrays/languageCodeArr");
@@ -16,14 +16,8 @@ const getVideoSubtitles = async (video_id) => {
           arg2: languageCodeArr.join(" "),
         }).catch((err) => {
           if (process.env.NODE_ENV === "production") {
-            logger.error(
-              `Received error when getting transcripts for video ID ${id}.`,
-              {
-                indexMeta: true,
-                meta: {
-                  message: err.message,
-                },
-              }
+            logger("server").error(
+              `Received error when getting transcripts for video ID ${id}: ${err.message}`
             );
           } else {
             console.error(err);
@@ -32,14 +26,8 @@ const getVideoSubtitles = async (video_id) => {
       })
       .catch((err) => {
         if (process.env.NODE_ENV === "production") {
-          logger.error(
-            "Received error when installing youtube_transcript_api.",
-            {
-              indexMeta: true,
-              meta: {
-                message: err.message,
-              },
-            }
+          logger("server").error(
+            `Received error when installing youtube_transcript_api: ${err.message}`
           );
         } else {
           console.error(err);
@@ -50,14 +38,8 @@ const getVideoSubtitles = async (video_id) => {
   const lyricsArrayAsString = await getYouTubeTranscript(video_id).catch(
     (err) => {
       if (process.env.NODE_ENV === "production") {
-        logger.error(
-          `Received error when getting YouTube transcript for video ID ${video_id}.`,
-          {
-            indexMeta: true,
-            meta: {
-              message: err.message,
-            },
-          }
+        logger("server").error(
+          `Received error when getting YouTube transcript for video ID ${video_id}: ${err.message}`
         );
       } else {
         console.error(err);
@@ -128,7 +110,7 @@ const getVideoSubtitles = async (video_id) => {
         return sortedSubtitleArr;
       } else {
         if (process.env.NODE_ENV === "production") {
-          logger.log(noUsableStatement);
+          logger("server").info(noUsableStatement);
         } else {
           console.log(noUsableStatement);
         }
@@ -136,7 +118,7 @@ const getVideoSubtitles = async (video_id) => {
       }
     } else {
       if (process.env.NODE_ENV === "production") {
-        logger.log(noUsableStatement);
+        logger("server").info(noUsableStatement);
       } else {
         console.log(noUsableStatement);
       }
@@ -146,7 +128,7 @@ const getVideoSubtitles = async (video_id) => {
     const noSubtitlesFoundStatement = "No subtitles found for this video!";
 
     if (process.env.NODE_ENV === "production") {
-      logger.log(noSubtitlesFoundStatement);
+      logger("server").info(noSubtitlesFoundStatement);
     } else {
       console.log(noSubtitlesFoundStatement);
     }

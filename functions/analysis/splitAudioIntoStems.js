@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const checkFileExists = require("../utils/checkFileExists");
-const { logger } = require("../logger/initializeLogger");
+const { logger } = require("../../logger/logger");
 const getBeatPositions = require("./getBeatPositions");
 const { beatSuccessCallback } = require("./beatSuccessCallback");
 const esPkg = require("essentia.js");
@@ -29,7 +29,7 @@ const splitAudioIntoStems = async (
       "Now attempting to split audio into vocal and accompaniment sections...";
 
     if (process.env.NODE_ENV === "production") {
-      logger.log(startingSplitAttemptStatement);
+      logger("server").info(startingSplitAttemptStatement);
     } else {
       console.log(startingSplitAttemptStatement);
     }
@@ -53,7 +53,7 @@ const splitAudioIntoStems = async (
       const successStatement = "Successfully split track into two stems!";
 
       if (process.env.NODE_ENV === "production") {
-        logger.log(successStatement);
+        logger("server").info(successStatement);
       } else {
         console.log(successStatement);
       }
@@ -70,14 +70,8 @@ const splitAudioIntoStems = async (
         );
       } catch (err) {
         if (process.env.NODE_ENV === "production") {
-          logger.error(
-            "Error getting beat positions within 'splitAudioIntoStems.js' function!",
-            {
-              indexMeta: true,
-              meta: {
-                message: err.message,
-              },
-            }
+          logger("server").error(
+            `Error getting beat positions within 'splitAudioIntoStems.js' function: ${err.message}`
           );
         } else {
           console.error(err);
@@ -89,7 +83,7 @@ const splitAudioIntoStems = async (
         "Either vocals or accompaniment did not get split successfully. Cannot get beat positions. Moving on to next song!";
 
       if (process.env.NODE_ENV === "production") {
-        logger.log(unsuccessfulSplitStatement);
+        logger("server").info(unsuccessfulSplitStatement);
       } else {
         console.log(unsuccessfulSplitStatement);
       }
@@ -111,7 +105,7 @@ const splitAudioIntoStems = async (
     const noExistStatement = `${fileName}.mp3 input audio file does not exist! Moving on to next song.`;
 
     if (process.env.NODE_ENV === "production") {
-      logger.log(noExistStatement);
+      logger("server").info(noExistStatement);
     } else {
       console.log(noExistStatement);
     }

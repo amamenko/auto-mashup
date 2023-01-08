@@ -3,7 +3,7 @@ const audioCtx = new AudioContext();
 const fs = require("fs");
 const path = require("path");
 const checkFileExists = require("../utils/checkFileExists");
-const { logger } = require("../logger/initializeLogger");
+const { logger } = require("../../logger/logger");
 const Lame = require("node-lame").Lame;
 require("dotenv").config();
 
@@ -30,7 +30,7 @@ const getBeatPositions = async (
       const outputDeletedStatement = "Deleted output directory!";
 
       if (process.env.NODE_ENV === "production") {
-        logger.log(outputDeletedStatement);
+        logger("server").info(outputDeletedStatement);
       } else {
         console.log(outputDeletedStatement);
       }
@@ -45,7 +45,7 @@ const getBeatPositions = async (
       const localFileDeletedStatement = "Deleted local YouTube audio MP3 file!";
 
       if (process.env.NODE_ENV === "production") {
-        logger.log(localFileDeletedStatement);
+        logger("server").info(localFileDeletedStatement);
       } else {
         console.log(localFileDeletedStatement);
       }
@@ -80,12 +80,9 @@ const getBeatPositions = async (
               ),
             (err) => {
               if (process.env.NODE_ENV === "production") {
-                logger.error("Error with decoding audio data", {
-                  indexMeta: true,
-                  meta: {
-                    err,
-                  },
-                });
+                logger("server").error(
+                  `Error with decoding audio data: ${err}`
+                );
               } else {
                 console.error("Error with decoding audio data " + err);
               }
@@ -98,7 +95,7 @@ const getBeatPositions = async (
             "Audio buffer cannot be read for beat position decoding with Essentia. Moving on to next track!";
 
           if (process.env.NODE_ENV === "production") {
-            logger.log(badAudioBufferStatement);
+            logger("server").info(badAudioBufferStatement);
           } else {
             console.log(badAudioBufferStatement);
           }
@@ -109,14 +106,8 @@ const getBeatPositions = async (
         cleanUpOutputDir();
 
         if (process.env.NODE_ENV === "production") {
-          logger.error(
-            "Something went wrong when getting audio buffer with Lame encoder.",
-            {
-              indexMeta: true,
-              meta: {
-                message: err,
-              },
-            }
+          logger("server").error(
+            `Something went wrong when getting audio buffer with Lame encoder: ${err}`
           );
         } else {
           console.error(err);
@@ -128,7 +119,7 @@ const getBeatPositions = async (
       "No local accompaniment MP3 file was found. Cannot get beat positions. Moving on to next track!";
 
     if (process.env.NODE_ENV === "production") {
-      logger.log(noMP3Statement);
+      logger("server").info(noMP3Statement);
     } else {
       console.log(noMP3Statement);
     }

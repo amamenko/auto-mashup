@@ -3,7 +3,7 @@
 const getData = require("./helpers/getData");
 const formatVideo = require("./helpers/formatVideo");
 const findVal = require("./helpers/findVal");
-const { logger } = require("../logger/initializeLogger");
+const { logger } = require("../../logger/logger");
 require("dotenv").config();
 
 const searchVideo = async (terms, token, apikey, captionsOnly) => {
@@ -55,7 +55,7 @@ const searchVideo = async (terms, token, apikey, captionsOnly) => {
     const errorStatement = "search videos error, terms: " + terms;
 
     if (process.env.NODE_ENV === "production") {
-      logger.log(errorStatement);
+      logger("server").info(errorStatement);
     } else {
       console.log(errorStatement);
     }
