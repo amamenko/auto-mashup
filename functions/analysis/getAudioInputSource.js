@@ -28,7 +28,7 @@ const getAudioInputSource = async (
   const filePath = `${fileName}.mp3`;
 
   const getYouTubeAudio = async () => {
-    return await installPythonLibrary("yt-dlp.py")
+    return await installPythonLibrary("yt-dlp")
       .then(async () => {
         return await runPythonFile({
           fileName: "yt-dlp.py",

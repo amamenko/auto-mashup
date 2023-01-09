@@ -6,10 +6,10 @@ const getChannelDescription = async (video) => {
   let description = "";
 
   if (video.channel_id) {
-    description = await getChannelDesc(exactMatch.channel_id).catch((err) => {
+    description = await getChannelDesc(video.channel_id).catch((err) => {
       if (process.env.NODE_ENV === "production") {
         logger("server").error(
-          `Something went wrong when getting channel description for channel ID ${exactMatch.channel_id}: ${err.message}`
+          `Something went wrong when getting channel description for channel ID ${video.channel_id}: ${err.message}`
         );
       } else {
         console.error(err);

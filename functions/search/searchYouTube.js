@@ -10,12 +10,9 @@ const searchYouTube = async (trackTitle, trackArtist) => {
         if (results) {
           if (results.videos) {
             if (results.videos.length > 0) {
-              const allResultsArr = results.videos;
-
-              return allResultsArr;
+              return results.videos;
             } else {
               const noResultsStatement = "No results found!";
-
               if (process.env.NODE_ENV === "production") {
                 logger("server").info(noResultsStatement);
               } else {
@@ -66,7 +63,6 @@ const searchYouTube = async (trackTitle, trackArtist) => {
         console.error(err);
       }
     });
-
     if (filtered) {
       return filtered;
     } else {

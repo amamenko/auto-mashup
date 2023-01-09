@@ -6,6 +6,7 @@ const findVal = require("./findVal");
 
 const getData = async (urlstring) => {
   const dataRegex = /var\ ytInitialData\ \=\ \'(.*)\'\;<\/script>/;
+  const playerRegex = /var\ ytInitialPlayerResponse\ \=\ (.*)id\=\"player\"/s;
 
   const dateRegex = /publishDate":"(.*)","ownerChannelName/;
   const apiRegex = /"innertubeApiKey":"(.*?)"/;
@@ -56,6 +57,7 @@ const getData = async (urlstring) => {
       const apikey = apiRegex.exec(body)[1] || "";
 
       let data = JSON.parse(decodeHex(raw));
+      // let fs = require('fs'); fs.writeFile('raw.json', decodeHex(raw), (e)=>{console.log(e)})
       data.apikey = apikey;
       return data;
     }

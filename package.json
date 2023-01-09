@@ -35,7 +35,7 @@
     "spotify-web-api-node": "^5.0.2",
     "string-similarity": "^4.0.4",
     "ts-retry": "^4.1.1",
-    "usetube": "^2.1.4",
+    "usetube": "^2.2.2",
     "web-audio-api": "^0.2.2",
     "winston": "^3.8.2",
     "winston-papertrail-transport": "^1.0.9"

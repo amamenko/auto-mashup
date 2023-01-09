@@ -9,12 +9,15 @@ require("dotenv").config();
 const formatVideo = async (video, speedDate, description) => {
   try {
     if (
+      video.videoWithContextRenderer ||
       video.compactVideoRenderer ||
       video.gridVideoRenderer ||
       video.videoRenderer ||
       video.playlistVideoRenderer
     ) {
-      if (video.compactVideoRenderer) {
+      if (video.videoWithContextRenderer) {
+        video = video.videoWithContextRenderer;
+      } else if (video.compactVideoRenderer) {
         video = video.compactVideoRenderer;
       } else if (video.gridVideoRenderer) {
         video = video.gridVideoRenderer;
@@ -26,22 +29,24 @@ const formatVideo = async (video, speedDate, description) => {
       let id = video.videoId;
       let durationDatas = 0;
       // get title
-      if (video.title.simpleText) {
-        video.title = video.title.simpleText;
-      } else if (video.title.runs[0].text) {
-        video.title = video.title.runs[0].text;
+      if (video?.title?.simpleText) {
+        video.title = video?.title?.simpleText;
+      } else if (video?.title?.runs[0].text) {
+        video.title = video?.title?.runs[0].text;
+      } else if (video?.headline?.runs[0].text) {
+        video.title = video?.headline?.runs[0].text;
       } else {
         video.title = "";
       }
       // title formating
       video.original_title = video.title;
 
-      if (video.title.split("-").length === 1) {
+      if (video?.title?.split("-").length === 1) {
         video.artist = "";
       } else {
-        let splited = video.original_title.match(/([^,]*)-(.*)/);
-        video.artist = splited[1];
-        video.title = splited[2];
+        let splited = video?.original_title?.match(/([^,]*)-(.*)/);
+        video.artist = splited ? splited[1] : "";
+        video.title = splited ? splited[2] : "";
       }
       // duration formating
       if (video.lengthText) {
@@ -97,49 +102,42 @@ const formatVideo = async (video, speedDate, description) => {
         if (video.accessibility.accessibilityData) {
           if (video.accessibility.accessibilityData.label) {
             const fullLabel = video.accessibility.accessibilityData.label;
-
             channel_name = fullLabel
-              .split("Go to channel - ")[1]
-              .split(" - ")[0];
+              ? fullLabel.split("Go to channel - ")[1].split(" - ")[0]
+              : "";
           }
         }
       }
 
       let channel_id = "";
 
-      if (video.longBylineText) {
-        if (video.longBylineText.runs && video.longBylineText.length > 0) {
-          if (video.longBylineText.runs[0]) {
-            if (video.longBylineText.runs[0].navigationEndpoint) {
-              if (
-                video.longBylineText.runs[0].navigationEndpoint.browseEndpoint
-              ) {
-                if (
-                  video.longBylineText.runs[0].navigationEndpoint.browseEndpoint
-                    .browseId
-                ) {
-                  channel_id =
-                    video.longBylineText.runs[0].navigationEndpoint
-                      .browseEndpoint.browseId;
-                }
-              }
-            }
-          }
-        }
+      if (
+        video?.channelThumbnail?.channelThumbnailWithLinkRenderer
+          ?.navigationEndpoint?.browseEndpoint?.browseId
+      ) {
+        channel_id =
+          video.channelThumbnail.channelThumbnailWithLinkRenderer
+            .navigationEndpoint.browseEndpoint.browseId;
       }
 
       let views = 0;
 
-      if (video.viewCountText) {
-        if (video.viewCountText.runs) {
-          if (video.viewCountText.runs[0]) {
-            if (video.viewCountText.runs[0].text) {
-              const viewNumStr = video.viewCountText.runs[0].text
-                .split(" ")[0]
-                .split(",")
-                .join("");
-
-              views = Number(viewNumStr);
+      if (video.shortViewCountText) {
+        if (video.shortViewCountText.runs) {
+          if (video.shortViewCountText.runs[0]) {
+            if (video.shortViewCountText.runs[0].text) {
+              const viewNumStr =
+                video.shortViewCountText.runs[0].text.split(" ")[0];
+              const numArr = viewNumStr.match(/[a-z]+|[^a-z]+/gi);
+              let finalNum = Number(numArr[0]);
+              if (numArr[1] === "K") {
+                finalNum *= 1000;
+              } else {
+                if (numArr[1] === "M") {
+                  finalNum *= 1000000;
+                }
+              }
+              views = finalNum;
             }
           }
         }
@@ -156,9 +154,8 @@ const formatVideo = async (video, speedDate, description) => {
           }
         }
       }
-
       return {
-        id: id,
+        id,
         original_title: video.original_title.trim(),
         title: video.title.trim(),
         artist: video.artist.trim(),
@@ -186,13 +183,12 @@ const formatVideo = async (video, speedDate, description) => {
         channel_id: "",
         relativePublishedTime: "",
         publishedAt: new Date(Date.now()),
-        views: 0,
       };
     }
   } catch (e) {
-    const formatFailureStatement = "Format video failed";
+    const formatFailureStatement = `Format video failed: ${e}`;
     if (process.env.NODE_ENV === "production") {
-      logger("server").info(formatFailureStatement);
+      logger("server").error(formatFailureStatement);
     } else {
       console.log(formatFailureStatement);
     }
