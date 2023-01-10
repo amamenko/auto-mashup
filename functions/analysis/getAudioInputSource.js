@@ -24,7 +24,7 @@ const getAudioInputSource = async (
   }
 
   const fileName =
-    matchDuration <= 240 ? "YouTubeAudio" : "YouTubeAudioInitial";
+    matchDuration <= 180 ? "YouTubeAudio" : "YouTubeAudioInitial";
   const filePath = `${fileName}.mp3`;
 
   const getYouTubeAudio = async () => {
@@ -69,7 +69,7 @@ const getAudioInputSource = async (
         console.log(doneTimestampStatement);
       }
 
-      if (matchDuration <= 240) {
+      if (matchDuration <= 180) {
         try {
           splitAudioIntoStems(
             videoID,
