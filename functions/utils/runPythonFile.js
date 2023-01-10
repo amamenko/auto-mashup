@@ -18,7 +18,7 @@ const runPythonFile = (argsObj) => {
     pyshell.on("stderr", (stderr) => {
       if (process.env.NODE_ENV === "production") {
         logger("server").error(
-          `Something went wrong when running the Python script ${fileName} within the function "runPythonFile.js": ${stderr.message}`
+          `Something went wrong when running the Python script ${fileName} within the function "runPythonFile.js": ${stderr}`
         );
       } else {
         console.error(stderr);
