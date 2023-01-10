@@ -41,7 +41,7 @@ const formatVideo = async (video, speedDate, description) => {
       // title formating
       video.original_title = video.title;
 
-      if (video?.title?.split("-").length === 1) {
+      if (video.title && video.title?.split("-").length === 1) {
         video.artist = "";
       } else {
         let splited = video?.original_title?.match(/([^,]*)-(.*)/);
@@ -102,9 +102,10 @@ const formatVideo = async (video, speedDate, description) => {
         if (video.accessibility.accessibilityData) {
           if (video.accessibility.accessibilityData.label) {
             const fullLabel = video.accessibility.accessibilityData.label;
-            channel_name = fullLabel
-              ? fullLabel.split("Go to channel - ")[1].split(" - ")[0]
+            const firstSplit = fullLabel
+              ? fullLabel.split("Go to channel - ")[1]
               : "";
+            channel_name = firstSplit ? firstSplit.split(" - ")[0] : "";
           }
         }
       }

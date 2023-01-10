@@ -104,14 +104,15 @@ const awsLambdaSplit = async (fileName, matchID) => {
             },
             {
               delay: 5000,
-              maxTry: 14,
+              // Wait at most 2 minutes
+              maxTry: 24,
               until: (lastResult) => lastResult === 2,
             }
           );
         } catch (err) {
           if (isTooManyTries(err)) {
             const noResponseError =
-              "Did not receive accompaniment and vocal stems after over a minute of waiting!";
+              "Did not receive accompaniment and vocal stems after 2 minutes of waiting!";
             if (process.env.NODE_ENV === "production") {
               logger("server").error(noResponseError);
             } else {
