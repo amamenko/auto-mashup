@@ -52,46 +52,55 @@ const awsLambdaSplit = async (fileName, matchID) => {
         try {
           return await retryAsync(
             async () => {
-              const foundOutputFiles = [];
               const listData = await s3
                 .listObjects({
                   Bucket: process.env.AWS_S3_OUTPUT_BUCKET_NAME,
-                  MaxKeys: 5,
                 })
                 .promise();
               if (listData.Contents) {
-                for (const item of listData.Contents) {
-                  if (item.Key.includes(fileName)) {
-                    const foundObjectData = await s3
-                      .getObject({
-                        Key: item.Key,
-                        Bucket: process.env.AWS_S3_OUTPUT_BUCKET_NAME,
-                      })
-                      .promise();
-                    const buffer = Buffer.from(foundObjectData.Body, "base64");
-                    if (
-                      !fs.existsSync("output") ||
-                      !fs.existsSync(`output/${fileName}`)
-                    )
-                      fs.mkdirSync(`output/${fileName}`, {
-                        recursive: true,
-                      });
-                    await writeFileAsync(
-                      `output/${fileName}/${
-                        item.Key.includes("vocals") ? "vocals" : "accompaniment"
-                      }.mp3`,
-                      buffer
-                    );
-                    foundOutputFiles.push(item.Key);
-                  }
-                }
+                await Promise.allSettled(
+                  listData.Contents.map(async (item) => {
+                    if (item.Key.includes(`${fileName}_${matchID}`)) {
+                      const foundObjectData = await s3
+                        .getObject({
+                          Key: item.Key,
+                          Bucket: process.env.AWS_S3_OUTPUT_BUCKET_NAME,
+                        })
+                        .promise();
+                      const buffer = Buffer.from(
+                        foundObjectData.Body,
+                        "base64"
+                      );
+                      if (
+                        !fs.existsSync("output") ||
+                        !fs.existsSync(`output/${fileName}`)
+                      ) {
+                        fs.mkdirSync(`output/${fileName}`, {
+                          recursive: true,
+                        });
+                      }
+                      return await writeFileAsync(
+                        `output/${fileName}/${
+                          item.Key.includes("vocals")
+                            ? "vocals"
+                            : "accompaniment"
+                        }.mp3`,
+                        buffer
+                      );
+                    } else {
+                      return;
+                    }
+                  })
+                );
               }
               if (
-                foundOutputFiles.find((el) => el.includes("accompaniment")) &&
-                foundOutputFiles.find((el) => el.includes("vocals"))
+                fs.existsSync("output") &&
+                fs.existsSync(`output/${fileName}`) &&
+                fs.readdirSync(`output/${fileName}`).length === 2
               ) {
-                return foundOutputFiles.length;
+                return 2;
               }
+              return;
             },
             {
               delay: 5000,
