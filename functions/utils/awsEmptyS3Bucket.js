@@ -11,7 +11,7 @@ const s3 = new S3({
   secretAccessKey,
 });
 
-const deleteBucket = async (Bucket) => {
+const emptyBucket = async (Bucket) => {
   try {
     const { Contents } = await s3.listObjects({ Bucket }).promise();
     if (Contents.length > 0) {
@@ -41,4 +41,4 @@ const deleteBucket = async (Bucket) => {
   }
 };
 
-module.exports = { deleteBucket };
+module.exports = { emptyBucket };
