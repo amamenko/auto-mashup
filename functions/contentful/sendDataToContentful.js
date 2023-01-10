@@ -31,6 +31,7 @@ const sendDataToContentful = async (
   } = trackDataJSON;
 
   const deleteOutputDir = async () => {
+    // Clean up output directory
     if (await checkFileExists(path.resolve(__dirname, "../../output"))) {
       fs.rmSync(path.resolve(__dirname, "../../output"), {
         recursive: true,
@@ -43,6 +44,22 @@ const sendDataToContentful = async (
         logger("server").info(deletedStatement);
       } else {
         console.log(deletedStatement);
+      }
+    }
+
+    // Make sure local audio file is deleted, just in case
+    if (await checkFileExists("YouTubeAudio.mp3")) {
+      fs.rmSync(path.resolve("YouTubeAudio.mp3"), {
+        recursive: true,
+        force: true,
+      });
+
+      const localFileDeletedStatement = "Deleted local YouTube audio MP3 file!";
+
+      if (process.env.NODE_ENV === "production") {
+        logger("server").info(localFileDeletedStatement);
+      } else {
+        console.log(localFileDeletedStatement);
       }
     }
   };

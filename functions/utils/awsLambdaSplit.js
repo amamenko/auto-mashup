@@ -1,7 +1,7 @@
 const S3 = require("aws-sdk/clients/s3");
 const fs = require("fs");
 const stream = require("stream");
-const { retry, isTooManyTries } = require("ts-retry");
+const { retryAsync, isTooManyTries } = require("ts-retry");
 const { createReadStream } = require("fs");
 const { promisify } = require("util");
 const { logger } = require("../../logger/logger");
@@ -50,7 +50,7 @@ const awsLambdaSplit = async (fileName, matchID) => {
           console.log(successStatement);
         }
         try {
-          return await retry(
+          return await retryAsync(
             async () => {
               const foundOutputFiles = [];
               const listData = await s3
