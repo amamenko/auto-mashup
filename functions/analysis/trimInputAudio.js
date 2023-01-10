@@ -33,8 +33,8 @@ const trimInputAudio = async (
 
     ffmpeg()
       .input("YouTubeAudioInitial.mp3")
-      // Cap input audio to 4 minutes
-      .audioFilters(`atrim=start=${audioStart ? audioStart : 0}:duration=240`)
+      // Cap input audio to 3 minutes
+      .audioFilters(`atrim=start=${audioStart ? audioStart : 0}:duration=180`)
       .output("YouTubeAudio.mp3")
       .on("error", async (err, stdout, stderr) => {
         const errorStatement =

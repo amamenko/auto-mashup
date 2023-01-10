@@ -272,9 +272,9 @@ const getTrack = async (
                                   matchArr[0].start
                                 );
 
-                                // If entire track length is less than 4 minutes, start at beginning, otherwise start with respect to first section
+                                // If entire track length is less than 3 minutes, start at beginning, otherwise start with respect to first section
                                 let audioStart =
-                                  matchDuration <= 240
+                                  matchDuration <= 180
                                     ? 0
                                     : firstSectionStart - 9 >= 0
                                     ? firstSectionStart - 9
