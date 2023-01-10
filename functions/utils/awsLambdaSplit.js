@@ -90,13 +90,6 @@ const awsLambdaSplit = async (fileName, matchID) => {
                 foundOutputFiles.find((el) => el.includes("accompaniment")) &&
                 foundOutputFiles.find((el) => el.includes("vocals"))
               ) {
-                const successStatement =
-                  "Successfully split track into two stems!";
-                if (process.env.NODE_ENV === "production") {
-                  logger("server").error(successStatement);
-                } else {
-                  console.error(successStatement);
-                }
                 return foundOutputFiles.length;
               }
             },
