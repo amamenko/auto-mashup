@@ -1,4 +1,5 @@
 const S3 = require("aws-sdk/clients/s3");
+const { logger } = require("../../logger/logger");
 require("dotenv").config();
 
 const region = process.env.AWS_S3_BUCKET_REGION;
@@ -11,20 +12,20 @@ const s3 = new S3({
   secretAccessKey,
 });
 
-const emptyBucket = async (Bucket) => {
+const emptyBucket = async (bucketName) => {
   try {
-    const { Contents } = await s3.listObjects({ Bucket }).promise();
+    const { Contents } = await s3.listObjects({ Bucket: bucketName }).promise();
     if (Contents.length > 0) {
       await s3
         .deleteObjects({
-          Bucket,
+          Bucket: bucketName,
           Delete: {
             Objects: Contents.map(({ Key }) => ({ Key })),
           },
         })
         .promise();
     }
-    const emptiedBucketStatement = `Successfully emptied ${Bucket} S3 bucket!`;
+    const emptiedBucketStatement = `Successfully emptied ${bucketName} S3 bucket!`;
     if (process.env.NODE_ENV === "production") {
       logger("server").info(emptiedBucketStatement);
     } else {
