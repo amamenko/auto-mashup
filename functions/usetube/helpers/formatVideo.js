@@ -29,12 +29,12 @@ const formatVideo = async (video, speedDate, description) => {
       let id = video.videoId;
       let durationDatas = 0;
       // get title
-      if (video?.title?.simpleText) {
-        video.title = video?.title?.simpleText;
-      } else if (video?.title?.runs[0].text) {
-        video.title = video?.title?.runs[0].text;
-      } else if (video?.headline?.runs[0].text) {
-        video.title = video?.headline?.runs[0].text;
+      if (video.title?.simpleText) {
+        video.title = video.title?.simpleText;
+      } else if (video.title?.runs[0].text) {
+        video.title = video.title?.runs[0].text;
+      } else if (video.headline?.runs[0].text) {
+        video.title = video.headline?.runs[0].text;
       } else {
         video.title = "";
       }
@@ -44,7 +44,7 @@ const formatVideo = async (video, speedDate, description) => {
       if (video.title && video.title?.split("-").length === 1) {
         video.artist = "";
       } else {
-        let splited = video?.original_title?.match(/([^,]*)-(.*)/);
+        let splited = video.original_title?.match(/([^,]*)-(.*)/);
         video.artist = splited ? splited[1] : "";
         video.title = splited ? splited[2] : "";
       }
@@ -113,7 +113,7 @@ const formatVideo = async (video, speedDate, description) => {
       let channel_id = "";
 
       if (
-        video?.channelThumbnail?.channelThumbnailWithLinkRenderer
+        video.channelThumbnail?.channelThumbnailWithLinkRenderer
           ?.navigationEndpoint?.browseEndpoint?.browseId
       ) {
         channel_id =
