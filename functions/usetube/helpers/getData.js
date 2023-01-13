@@ -50,10 +50,10 @@ const getData = async (urlstring) => {
     };
     body = (await axios(urlstring, headers)).data;
     if (isDate) {
-      const raw = dateRegex.exec(body)?.[1] || "{}";
+      const raw = dateRegex.exec(body) ? dateRegex.exec(body)[1] : "{}";
       return raw;
     } else {
-      const raw = dataRegex.exec(body)?.[1] || "{}";
+      const raw = dateRegex.exec(body) ? dateRegex.exec(body)[1] : "{}";
       const apikey = apiRegex.exec(body)[1] || "";
 
       let data = JSON.parse(decodeHex(raw));
