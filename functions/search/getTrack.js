@@ -431,7 +431,9 @@ const getTrack = async (
                     (err) => {
                       if (process.env.NODE_ENV === "production") {
                         logger("server").error(
-                          `Something went wrong after fetching Spotify's audio analysis for "${trimmedTitle}" by ${filteredArtist[0]}: ${err.message}`
+                          `Something went wrong after fetching Spotify's audio analysis for "${trimmedTitle}" by ${
+                            filteredArtist[0]
+                          }: ${JSON.stringify(err.message)}`
                         );
                       } else {
                         console.error(err);
@@ -442,7 +444,9 @@ const getTrack = async (
                   .catch((err) => {
                     if (process.env.NODE_ENV === "production") {
                       logger("server").error(
-                        `Something went wrong when fetching Spotify's audio analysis for "${trimmedTitle}" by ${filteredArtist[0]}: ${err.message}`
+                        `Something went wrong when fetching Spotify's audio analysis for "${trimmedTitle}" by ${
+                          filteredArtist[0]
+                        }: ${JSON.stringify(err.message)}`
                       );
                     } else {
                       console.error(err);
