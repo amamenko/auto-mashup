@@ -146,8 +146,12 @@ const awsLambdaSplit = async (fileName, matchID) => {
                 await Promise.allSettled(
                   listBucketObjectsResponse.ListBucketResult.Contents.map(
                     async (item) => {
-                      if (item.Key.includes(`${fileName}_${matchID}`)) {
-                        return await getBucketObject(fileName, keyName);
+                      if (
+                        item.Key &&
+                        Array.isArray(item.Key) &&
+                        item.Key[0].includes(`${fileName}_${matchID}`)
+                      ) {
+                        return await getBucketObject(fileName, item.Key[0]);
                       } else {
                         return;
                       }
