@@ -116,7 +116,7 @@ const awsLambdaSplit = async (fileName, matchID) => {
       const uploadResponse = await uploadAudioToBucket(keyName, data);
       if (uploadResponse) {
         const successStatement = `Successfully uploaded audio: ${JSON.stringify(
-          uploadResponse.data
+          uploadResponse
         )}`;
         if (process.env.NODE_ENV === "production") {
           logger("server").info(successStatement);
