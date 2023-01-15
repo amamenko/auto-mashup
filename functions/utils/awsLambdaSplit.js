@@ -1,23 +1,98 @@
-const S3 = require("aws-sdk/clients/s3");
+const {
+  S3Client,
+  GetObjectCommand,
+  PutObjectCommand,
+  ListObjectsCommand,
+} = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const fs = require("fs");
 const stream = require("stream");
 const { retryAsync, isTooManyTries } = require("ts-retry");
 const { createReadStream } = require("fs");
 const { promisify } = require("util");
 const { logger } = require("../../logger/logger");
+const xml2js = require("xml2js");
+const axios = require("axios");
 require("dotenv").config();
-
-const writeFileAsync = promisify(fs.writeFile);
 
 const region = process.env.AWS_S3_BUCKET_REGION;
 const accessKeyId = process.env.AWS_S3_ACCESS_KEY_ID;
 const secretAccessKey = process.env.AWS_S3_SECRET_ACCESS_KEY;
 
-const s3 = new S3({
+const s3Client = new S3Client({
   region,
-  accessKeyId,
-  secretAccessKey,
+  credentials: {
+    accessKeyId,
+    secretAccessKey,
+  },
 });
+
+const xmlToString = async (xmlData) => {
+  return await xml2js
+    .parseStringPromise(xmlData)
+    .then((res) => res)
+    .catch((err) => console.error(err));
+};
+
+const uploadAudioToBucket = async (keyName, data) => {
+  const uploadBucketParams = {
+    Bucket: process.env.AWS_S3_INPUT_BUCKET_NAME,
+    Key: keyName,
+    Body: Buffer.concat(data),
+    ContentType: "audio/mpeg",
+  };
+  const uploadCommand = new PutObjectCommand(uploadBucketParams);
+  const uploadSignedUrl = await getSignedUrl(s3Client, uploadCommand, {
+    expiresIn: 3600,
+  });
+  const uploadResponse = await axios.put(
+    uploadSignedUrl,
+    uploadBucketParams.Body
+  );
+  if (uploadResponse.status === 200 || uploadResponse.statusText === "OK")
+    return true;
+  return;
+};
+
+const listBucketObjects = async (listUrl) => {
+  const listResponse = await axios.get(listUrl);
+  const xmlData = listResponse.data;
+  return await xmlToString(xmlData);
+};
+
+const getBucketObject = async (fileName, keyName) => {
+  try {
+    const getBucketObjectParams = {
+      Key: keyName,
+      Bucket: process.env.AWS_S3_OUTPUT_BUCKET_NAME,
+    };
+    const getBucketObjectCommand = new GetObjectCommand(getBucketObjectParams);
+    const getObjectUrl = await getSignedUrl(s3Client, getBucketObjectCommand, {
+      expiresIn: 3600,
+    });
+    if (!fs.existsSync("output") || !fs.existsSync(`output/${fileName}`)) {
+      fs.mkdirSync(`output/${fileName}`, {
+        recursive: true,
+      });
+    }
+    await axios.get(getObjectUrl, { responseType: "stream" }).then((res) => {
+      const destination = fs.createWriteStream(
+        `output/${fileName}/${
+          keyName.includes("vocals") ? "vocals" : "accompaniment"
+        }.mp3`
+      );
+      res.data.pipe(destination);
+    });
+    return true;
+  } catch (err) {
+    if (process.env.NODE_ENV === "production") {
+      logger("server").error(err);
+    } else {
+      console.error(err);
+    }
+    return;
+  }
+};
 
 const awsLambdaSplit = async (fileName, matchID) => {
   const audioFileName = `${fileName}.mp3`;
@@ -28,21 +103,20 @@ const awsLambdaSplit = async (fileName, matchID) => {
   });
   const data = [];
   readStream.on("data", (chunk) => data.push(chunk));
-  readStream.on("error", (err) => console.error(err));
+  readStream.on("error", (err) => {
+    if (process.env.NODE_ENV === "production") {
+      logger("server").error(err);
+    } else {
+      console.error(err);
+    }
+  });
   const run = async () => await finished(readStream);
   return await run()
     .then(async () => {
-      const uploadData = await s3
-        .upload({
-          Bucket: process.env.AWS_S3_INPUT_BUCKET_NAME,
-          Key: keyName,
-          Body: Buffer.concat(data),
-          ContentType: "audio/mpeg",
-        })
-        .promise();
-      if (uploadData) {
+      const uploadResponse = await uploadAudioToBucket(keyName, data);
+      if (uploadResponse) {
         const successStatement = `Successfully uploaded audio: ${JSON.stringify(
-          uploadData
+          uploadResponse.data
         )}`;
         if (process.env.NODE_ENV === "production") {
           logger("server").info(successStatement);
@@ -50,47 +124,35 @@ const awsLambdaSplit = async (fileName, matchID) => {
           console.log(successStatement);
         }
         try {
+          const listBucketObjectsParams = {
+            Bucket: process.env.AWS_S3_OUTPUT_BUCKET_NAME,
+          };
+          const listBucketObjectsCommand = new ListObjectsCommand(
+            listBucketObjectsParams
+          );
+          const listUrl = await getSignedUrl(
+            s3Client,
+            listBucketObjectsCommand,
+            {
+              expiresIn: 3600,
+            }
+          );
           return await retryAsync(
             async () => {
-              const listData = await s3
-                .listObjects({
-                  Bucket: process.env.AWS_S3_OUTPUT_BUCKET_NAME,
-                })
-                .promise();
-              if (listData.Contents) {
+              const listBucketObjectsResponse = await listBucketObjects(
+                listUrl
+              );
+              if (listBucketObjectsResponse?.ListBucketResult?.Contents) {
                 await Promise.allSettled(
-                  listData.Contents.map(async (item) => {
-                    if (item.Key.includes(`${fileName}_${matchID}`)) {
-                      const foundObjectData = await s3
-                        .getObject({
-                          Key: item.Key,
-                          Bucket: process.env.AWS_S3_OUTPUT_BUCKET_NAME,
-                        })
-                        .promise();
-                      const buffer = Buffer.from(
-                        foundObjectData.Body,
-                        "base64"
-                      );
-                      if (
-                        !fs.existsSync("output") ||
-                        !fs.existsSync(`output/${fileName}`)
-                      ) {
-                        fs.mkdirSync(`output/${fileName}`, {
-                          recursive: true,
-                        });
+                  listBucketObjectsResponse.ListBucketResult.Contents.map(
+                    async (item) => {
+                      if (item.Key.includes(`${fileName}_${matchID}`)) {
+                        return await getBucketObject(fileName, keyName);
+                      } else {
+                        return;
                       }
-                      return await writeFileAsync(
-                        `output/${fileName}/${
-                          item.Key.includes("vocals")
-                            ? "vocals"
-                            : "accompaniment"
-                        }.mp3`,
-                        buffer
-                      );
-                    } else {
-                      return;
                     }
-                  })
+                  )
                 );
               }
               if (
@@ -137,4 +199,4 @@ const awsLambdaSplit = async (fileName, matchID) => {
     });
 };
 
-module.exports = { awsLambdaSplit };
+module.exports = { awsLambdaSplit, xmlToString };
