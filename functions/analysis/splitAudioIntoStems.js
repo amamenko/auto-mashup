@@ -6,7 +6,7 @@ const getBeatPositions = require("./getBeatPositions");
 const { beatSuccessCallback } = require("./beatSuccessCallback");
 const esPkg = require("essentia.js");
 const { awsLambdaSplit } = require("../utils/awsLambdaSplit");
-const { emptyBucket } = require("../utils/awsEmptyS3Bucket");
+// const { emptyBucket } = require("../utils/awsEmptyS3Bucket");
 require("dotenv").config();
 let essentia;
 
@@ -59,8 +59,8 @@ const splitAudioIntoStems = async (
         console.log(successStatement);
       }
 
-      await emptyBucket(process.env.AWS_S3_INPUT_BUCKET_NAME);
-      await emptyBucket(process.env.AWS_S3_OUTPUT_BUCKET_NAME);
+      // await emptyBucket(process.env.AWS_S3_INPUT_BUCKET_NAME);
+      // await emptyBucket(process.env.AWS_S3_OUTPUT_BUCKET_NAME);
 
       try {
         return getBeatPositions(

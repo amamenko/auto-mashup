@@ -169,9 +169,9 @@ const awsLambdaSplit = async (fileName, matchID) => {
               return;
             },
             {
-              delay: 5000,
+              delay: 30000,
               // Wait at most 2 minutes
-              maxTry: 24,
+              maxTry: 4,
               until: (lastResult) => lastResult === 2,
             }
           );
