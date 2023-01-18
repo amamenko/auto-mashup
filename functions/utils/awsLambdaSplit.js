@@ -126,7 +126,6 @@ const awsLambdaSplit = async (fileName, matchID) => {
         try {
           const listBucketObjectsParams = {
             Bucket: process.env.AWS_S3_OUTPUT_BUCKET_NAME,
-            MaxKeys: 4,
           };
           const listBucketObjectsCommand = new ListObjectsCommand(
             listBucketObjectsParams
