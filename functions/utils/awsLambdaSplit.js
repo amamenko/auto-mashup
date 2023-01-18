@@ -126,6 +126,7 @@ const awsLambdaSplit = async (fileName, matchID) => {
         try {
           const listBucketObjectsParams = {
             Bucket: process.env.AWS_S3_OUTPUT_BUCKET_NAME,
+            MaxKeys: 4,
           };
           const listBucketObjectsCommand = new ListObjectsCommand(
             listBucketObjectsParams
@@ -170,8 +171,8 @@ const awsLambdaSplit = async (fileName, matchID) => {
             },
             {
               delay: 30000,
-              // Wait at most 2 minutes
-              maxTry: 4,
+              // Wait at most 2 minutes 30 seconds
+              maxTry: 5,
               until: (lastResult) => lastResult === 2,
             }
           );
