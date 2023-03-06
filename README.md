@@ -70,7 +70,7 @@ the [Node.js](https://nodejs.org/en/) and [Express](https://expressjs.com/) serv
 Billboard chart scraping, individual song data/audio stem acquisition logic, and writing to a [Contentful Content Management System](https://www.contentful.com/).
 
 The second repository
-([https://github.com/amamenko/auto-mashup-mix](https://github.com/amamenko/auto-mashup-mix)) contains both the client-side website logic of [automashup.ml](https://www.automashup.ml/)
+([https://github.com/amamenko/auto-mashup-mix](https://github.com/amamenko/auto-mashup-mix)) contains both the client-side website logic of [auto-mashup.vercel.app](https://auto-mashup.vercel.app)
 (built with [React](https://reactjs.org/)) and the Node.js/Express server that uses the song data acquired in Contentful to find and create automated song mashups
 with [FFMPEG](https://ffmpeg.org/) and create and upload a weekly video of mashups to the [Auto Mashup YouTube channel](https://www.youtube.com/channel/UCbjaDBiyXCqWGT4inY8LCmQ)
 and a post to the [@automaticmashup Instagram page](https://www.instagram.com/automaticmashup/).
@@ -151,7 +151,7 @@ The basic functionality of this repository's code logic is:
   available on these videos are then compared to lyrics found on [Genius](https://genius.com/) (acquired via the [Genius Lyrics API](https://www.npmjs.com/package/genius-lyrics-api))
   with a string and character comparison function that attributes timestamps to the various sections of the song.
 - If a video with an adequate number of successfully timestamped song sections is found, its MP3 audio is downloaded using [yt-dlp](https://github.com/yt-dlp/yt-dlp). Audio is then trimmed to a maximum of 3 minutes long with [fluent-ffmpeg](https://www.npmjs.com/package/fluent-ffmpeg).
-- The MP3 audio is then split into instrumental and vocal stem MP3 files using a third-party website that relies on
+- The MP3 audio is then split into instrumental and vocal stem MP3 files uploaded to an output AWS S3 bucket using a custom [Dockerized AWS Lambda function](https://github.com/amamenko/lambda-spleeter-docker) that relies on
   [Deezer's Spleeter](https://github.com/deezer/spleeter). Spleeter is a song separation library that uses pretrained models written in [Python](https://www.python.org/) and [Tensorflow](https://tensorflow.org/).
   Note that a local Node.js implementation of Spleeter is possible as [noted by my comment on this issue](https://github.com/deezer/spleeter/issues/358#issuecomment-914895894), however,
   Spleeter requires a substantial amount of RAM that quickly overwhelms an [AWC EC2 t2.micro instance](https://aws.amazon.com/ec2/instance-types/t2/). Even with [modular implementations](https://github.com/amo13/spleeter-wrapper) of Spleeter, the splitting process (even with a base 2-stem model) is memory-intensive.
@@ -160,7 +160,7 @@ The basic functionality of this repository's code logic is:
 
 ## Deployment
 
-Server deployed via [AWS EC2](https://aws.amazon.com/ec2/) instance. Client-side website deployed with [Vercel](https://vercel.com/). Custom domain from [Freenom](https://www.freenom.com/) with DNS routing by [Cloudflare](https://www.cloudflare.com/).
+Server deployed via [AWS EC2](https://aws.amazon.com/ec2/) instance. Client-side website deployed with [Vercel](https://vercel.com/).
 
 <!-- LICENSE -->
 
@@ -185,6 +185,7 @@ Project Link: [https://github.com/amamenko/auto-mashup](https://github.com/amame
 - [YouTube](https://www.youtube.com/)
 - [Billboard](https://www.billboard.com/)
 - [Contentful](https://www.contentful.com/)
+- [AWS](https://aws.amazon.com/)
 - [node-cron](https://www.npmjs.com/package/node-cron)
 - [Spotify](https://www.spotify.com/us/)
 - [Genius](https://genius.com/)
